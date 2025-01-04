@@ -1,0 +1,4 @@
+- Ajouter les emplacements libres (fichier map, board, display)
+- Rendre les pos de la map standardisées (entre 0 et 1) pour adapter à la résolution de l'écran
+- Rajouter les différentes factions : Chat, Piafs, Rebelles, Vagabond, Loutre, Lézard
+- Rajouter les règles communes à toutes les factions
