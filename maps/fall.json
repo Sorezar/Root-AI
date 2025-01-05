@@ -3,7 +3,7 @@
     { "id": 1, "type": "Renard", "pos": [0.05, 0.1], "slots": 1 },
     { "id": 2, "type": "Lapin", "pos": [0.5, 0.1], "slots": 2 },
     { "id": 3, "type": "Souris", "pos": [0.9, 0.15], "slots": 2 },
-    { "id": 4, "type": "Lapin", "pos": [0.4, 0.25], "slots": 2 },
+    { "id": 4, "type": "Lapin", "pos": [0.4, 0.3], "slots": 2 },
     { "id": 5, "type": "Souris", "pos": [0.05, 0.35], "slots": 2 },
     { "id": 6, "type": "Renard", "pos": [0.3, 0.55], "slots": 2 },
     { "id": 7, "type": "Souris", "pos": [0.6, 0.45], "slots": 3 },
@@ -32,6 +32,18 @@
     [9, 10],
     [10,11],
     [11,12]
+  ],
+  "forests": [
+    { "id": "F1", "adjacent_clearings": [1, 2, 4], "items": [] },
+    { "id": "F2", "adjacent_clearings": [2, 3, 4], "items": [] },
+    { "id": "F3", "adjacent_clearings": [1, 4, 5, 6], "items": [] },
+    { "id": "F4", "adjacent_clearings": [4, 6, 7], "items": [] },
+    { "id": "F5", "adjacent_clearings": [3, 4, 7, 8], "items": [] },
+    { "id": "F6", "adjacent_clearings": [5, 6, 9], "items": [] },
+    { "id": "F7", "adjacent_clearings": [6, 9, 10, 11], "items": [] },
+    { "id": "F8", "adjacent_clearings": [6, 7, 11], "items": [] },
+    { "id": "F9", "adjacent_clearings": [7, 11, 12], "items": [] },
+    { "id": "F10", "adjacent_clearings": [7, 8, 12], "items": [] }
   ],
   "rivers": [
     [2, 4],

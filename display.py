@@ -5,7 +5,7 @@ COLORS = {
     "forests": (34, 139, 34),       # Vert forêt
     "nodes": (255, 255, 255),       # Blanc pour les clairières
     "edges": (0, 0, 0),             # Noir pour les connexions
-    "rivers": (0, 0, 255),          # Bleu pour les rivières
+    "rivers": (119,181,254),          # Bleu pour les rivières
     "text": (0, 0, 0),              # Noir pour le texte
     "control": (0, 0, 0),           # Noir pour le contrôle par défaut
     "background": (245, 245, 220),  # Beige pour le fond
@@ -41,7 +41,22 @@ class RootDisplay:
         # Remplir l'écran avec la couleur de fond beige
         self.screen.fill(COLORS["background"])
         
-        nodes, edges, rivers = self.board.get_nodes_and_edges()
+        nodes, edges, rivers, forests = self.board.get_nodes_and_edges()
+        
+        # Dessiner les forêts en premier (pour qu'elles soient en arrière-plan)
+        for forest_id, forest_data in forests.items():
+            points = self.board.get_forest_polygon_points(forest_id)
+            if points:
+                # Dessiner le polygone de la forêt
+                pygame.draw.polygon(self.screen, COLORS["forests"], points)
+                # Ajouter une bordure au polygone
+                pygame.draw.polygon(self.screen, COLORS["edges"], points, 2)
+                
+                # Ajouter le texte d'identification de la forêt
+                forest_center = forest_data["center"]
+                text = self.font.render(forest_id, True, COLORS["text"])
+                text_rect = text.get_rect(center=forest_center)
+                self.screen.blit(text, text_rect)
         
         # Dessine les connexions (arêtes)
         for edge in edges:
