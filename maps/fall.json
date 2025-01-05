@@ -1,17 +1,17 @@
 {
     "nodes": [
-    { "id": 1, "type": "Renard", "pos": [50, 50] },
-    { "id": 2, "type": "Lapin", "pos": [225, 50] },
-    { "id": 3, "type": "Souris", "pos": [350, 100] },
-    { "id": 4, "type": "Lapin", "pos": [175, 125] },
-    { "id": 5, "type": "Souris", "pos": [50, 150] },
-    { "id": 6, "type": "Renard", "pos": [125, 225] },
-    { "id": 7, "type": "Souris", "pos": [250, 200] },
-    { "id": 8, "type": "Renard", "pos": [350, 200] },
-    { "id": 9, "type": "Lapin", "pos": [50, 275] },
-    { "id": 10, "type": "Renard", "pos": [125, 325] },
-    { "id": 11, "type": "Souris", "pos": [200, 275] },
-    { "id": 12, "type": "Lapin", "pos": [325, 300] }
+    { "id": 1, "type": "Renard", "pos": [0.05, 0.1], "slots": 1 },
+    { "id": 2, "type": "Lapin", "pos": [0.5, 0.1], "slots": 2 },
+    { "id": 3, "type": "Souris", "pos": [0.9, 0.15], "slots": 2 },
+    { "id": 4, "type": "Lapin", "pos": [0.4, 0.25], "slots": 2 },
+    { "id": 5, "type": "Souris", "pos": [0.05, 0.35], "slots": 2 },
+    { "id": 6, "type": "Renard", "pos": [0.3, 0.55], "slots": 2 },
+    { "id": 7, "type": "Souris", "pos": [0.6, 0.45], "slots": 3 },
+    { "id": 8, "type": "Renard", "pos": [0.95, 0.5], "slots": 2 },
+    { "id": 9, "type": "Lapin", "pos": [0.1, 0.8], "slots": 1 },
+    { "id": 10, "type": "Renard", "pos": [0.35, 0.85], "slots": 2 },
+    { "id": 11, "type": "Souris", "pos": [0.55, 0.75], "slots": 2 },
+    { "id": 12, "type": "Lapin", "pos": [0.9, 0.85], "slots": 1 }
   ],
   "edges": [
     [1, 2],

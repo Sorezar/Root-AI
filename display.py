@@ -1,4 +1,5 @@
 import pygame
+import config
 
 COLORS = {
     "forests": (34, 139, 34),       # Vert forêt
@@ -8,7 +9,8 @@ COLORS = {
     "text": (0, 0, 0),              # Noir pour le texte
     "control": (0, 0, 0),           # Noir pour le contrôle par défaut
     "background": (245, 245, 220),  # Beige pour le fond
-    "units": {"Marquise de Chat": (255, 165, 0), "Alliance": (0, 255, 0)}
+    "units": {"Marquise de Chat": (255, 165, 0), "Alliance": (0, 255, 0)},
+    "buildings": {"default": (128, 128, 128)}
 }
 
 SYMBOL_COLORS = {
@@ -18,18 +20,19 @@ SYMBOL_COLORS = {
 }
 
 # Dimensions
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = config.WIDTH, config.HEIGHT
 NODE_RADIUS = 30
 UNIT_RADIUS = 10
 SYMBOL_SIZE = 12
 CONTROL_RADIUS = NODE_RADIUS
+BUILDING_RADIUS = 15
 
 class RootDisplay:
     def __init__(self, board):
         self.board = board
         pygame.init()
         pygame.display.set_caption("Root")
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), config.get_screen_mode())
         self.clock  = pygame.time.Clock()
         self.font   = pygame.font.SysFont(None, 24)
         self.unit_font = pygame.font.SysFont(None, 18)
@@ -39,21 +42,6 @@ class RootDisplay:
         self.screen.fill(COLORS["background"])
         
         nodes, edges, rivers = self.board.get_nodes_and_edges()
-
-
-        '''
-        A modifier, car forêt = clairière pour ce vagabond de merde
-        '''
-        
-        # Calculer les limites du rectangle vert
-        min_x = min(node[1]["pos"][0] for node in nodes) - NODE_RADIUS
-        max_x = max(node[1]["pos"][0] for node in nodes) + NODE_RADIUS
-        min_y = min(node[1]["pos"][1] for node in nodes) - NODE_RADIUS
-        max_y = max(node[1]["pos"][1] for node in nodes) + NODE_RADIUS
-
-        # Dessiner un rectangle vert autour des clairières
-        pygame.draw.rect(self.screen, COLORS["forests"], (min_x, min_y, max_x - min_x, max_y - min_y))
-        
         
         # Dessine les connexions (arêtes)
         for edge in edges:
@@ -100,12 +88,23 @@ class RootDisplay:
                 self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
                 offset += 15 # Décalage pour les unités suivantes
 
+            # Dessine les bâtiments dans la clairière
+            offset = -20  # Décalage initial pour le premier bâtiment
+            for building_type, faction in data["buildings"].items():
+                building_color = COLORS["units"].get(faction, COLORS["buildings"]["default"])
+                building_pos = (pos[0] + offset, pos[1] + 20)
+                pygame.draw.circle(self.screen, building_color, building_pos, BUILDING_RADIUS)
+                offset += 20  # Décalage pour les bâtiments suivants
+                
     def run(self):
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_f:
+                        pygame.display.toggle_fullscreen()
 
             self.draw_board()
             pygame.display.flip()

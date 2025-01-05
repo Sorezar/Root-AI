@@ -1,5 +1,6 @@
 import networkx as nx
 import json
+import config
 
 class RootBoard:
     def __init__(self, map_file):
@@ -13,13 +14,16 @@ class RootBoard:
             with open(map_file, "r") as f:
                 data = json.load(f)
 
-            # Ajout des clairières (noeuds)
+            # # Ajout des clairières et forêts (noeuds)
             for node in data["nodes"]:
+                pos = (node["pos"][0] * config.WIDTH, node["pos"][1] * config.HEIGHT)
                 self.graph.add_node(node["id"], 
                                     type=node["type"], 
-                                    pos=tuple(node["pos"]), 
+                                    pos=pos, 
                                     control=None, 
-                                    units={})
+                                    units={},
+                                    slots=node.get("slots", 0),
+                                    buildings={})
 
             # Ajout des connexions (arêtes)
             for edge in data["edges"]:
@@ -27,7 +31,7 @@ class RootBoard:
                 
             # Ajout des rivières
             for river in data["rivers"]:
-                self.graph.add_edge(*river)
+                self.graph.add_edge(*river, is_river=True)
                 self.rivers.append(tuple(river))
 
         except FileNotFoundError:
@@ -51,6 +55,20 @@ class RootBoard:
         else:
             print(f"Clairière {clearing_id} non trouvée.")
 
+    def place_building(self, faction_name, clearing_id, building_type):
+        if faction_name not in self.factions:
+            print(f"Faction {faction_name} non trouvée.")
+            return
+
+        if clearing_id in self.graph.nodes:
+            clearing = self.graph.nodes[clearing_id]
+            if len(clearing["buildings"]) < clearing["slots"]:
+                clearing["buildings"][building_type] = faction_name
+            else:
+                print(f"Pas assez de slots disponibles dans la clairière {clearing_id}.")
+        else:
+            print(f"Clairière {clearing_id} non trouvée.")
+    
     def get_nodes_and_edges(self):
         nodes  = [(n, self.graph.nodes[n]) for n in self.graph.nodes]
         edges  = [(u, v) for u, v, d in self.graph.edges(data=True) if not d.get('is_river', False)]
