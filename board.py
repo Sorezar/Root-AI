@@ -4,11 +4,12 @@ import json
 import config
 
 class RootBoard:
-    def __init__(self, map_file):
+    def __init__(self, map_file, players):
         self.graph = nx.Graph()
         self.factions = {}
         self.rivers = []
         self.forests = {}
+        self.scores = {player: 0 for player in players}
         self._load_map(map_file)
 
     def _load_map(self, map_file):
@@ -86,38 +87,21 @@ class RootBoard:
                 print(f"Pas assez de slots disponibles dans la clairière {clearing_id}.")
         else:
             print(f"Clairière {clearing_id} non trouvée.")
-            
-    def _normalize_vector(self, vector):
-        """Normalise un vecteur 2D"""
-        length = math.sqrt(vector[0]**2 + vector[1]**2)
-        if length == 0:
-            return (0, 0)
-        return (vector[0]/length, vector[1]/length)
 
     def _shrink_point(self, point, center, shrink_factor):
-        """Rapproche un point du centre selon un facteur de rétrécissement"""
-        # Calculer le vecteur du centre au point
         dx = point[0] - center[0]
         dy = point[1] - center[1]
-        # Appliquer le facteur de rétrécissement
         new_x = center[0] + dx * shrink_factor
         new_y = center[1] + dy * shrink_factor
         return (new_x, new_y)
     
     def get_forest_polygon_points(self, forest_id, shrink_factor=0.8):
-        """Calcule les points du polygone pour une forêt donnée avec rétrécissement"""
         forest = self.forests.get(forest_id)
         if not forest:
             return []
-        
-        # Récupérer les positions des clairières adjacentes
         points = [self.graph.nodes[n]["pos"] for n in forest["adjacent_clearings"]]
         center = forest["center"]
-        
-        # Trier les points par angle par rapport au centre
         points.sort(key=lambda p: math.atan2(p[1] - center[1], p[0] - center[0]))
-        
-        # Rétrécir les points vers le centre
         shrunk_points = [self._shrink_point(p, center, shrink_factor) for p in points]
         
         return shrunk_points
@@ -170,3 +154,10 @@ class RootBoard:
                 adjacent_forests.append(forest_id)
                 
         return adjacent_forests
+    
+    def add_points(self, faction_name, points):
+        if faction_name in self.scores:
+            self.scores[faction_name] += points
+    
+    def get_scores(self):
+        return self.scores

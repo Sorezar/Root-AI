@@ -5,12 +5,13 @@ COLORS = {
     "forests": (34, 139, 34),       # Vert forêt
     "nodes": (255, 255, 255),       # Blanc pour les clairières
     "edges": (0, 0, 0),             # Noir pour les connexions
-    "rivers": (119,181,254),          # Bleu pour les rivières
+    "rivers": (119,181,254),       # Bleu pour les rivières
     "text": (0, 0, 0),              # Noir pour le texte
     "control": (0, 0, 0),           # Noir pour le contrôle par défaut
     "background": (245, 245, 220),  # Beige pour le fond
     "units": {"Marquise de Chat": (255, 165, 0), "Alliance": (0, 255, 0)},
-    "buildings": {"default": (128, 128, 128)}
+    "buildings": {"default": (128, 128, 128)},
+    "panel_bg": (200, 200, 200)    # Gris clair pour les panneaux
 }
 
 SYMBOL_COLORS = {
@@ -20,10 +21,15 @@ SYMBOL_COLORS = {
 }
 
 # Dimensions
+SCALE = 0.7
 WIDTH, HEIGHT = config.WIDTH, config.HEIGHT
-NODE_RADIUS = 30
-UNIT_RADIUS = 10
-SYMBOL_SIZE = 12
+GAME_WIDTH   = int(WIDTH * SCALE)
+GAME_HEIGHT  = int(HEIGHT * SCALE)
+PANEL_WIDTH  = WIDTH - GAME_WIDTH
+PANEL_HEIGHT = HEIGHT
+NODE_RADIUS  = 30
+UNIT_RADIUS  = 10
+SYMBOL_SIZE  = 12
 CONTROL_RADIUS = NODE_RADIUS
 BUILDING_RADIUS = 15
 
@@ -36,93 +42,96 @@ class RootDisplay:
         self.clock  = pygame.time.Clock()
         self.font   = pygame.font.SysFont(None, 24)
         self.unit_font = pygame.font.SysFont(None, 18)
+        self.action_history = []
 
     def draw_board(self):
-        # Remplir l'écran avec la couleur de fond beige
         self.screen.fill(COLORS["background"])
-        
+        # Dessiner la zone de jeu
+        pygame.draw.rect(self.screen, COLORS["panel_bg"], (GAME_WIDTH, 0, PANEL_WIDTH, PANEL_HEIGHT))
+
         nodes, edges, rivers, forests = self.board.get_nodes_and_edges()
-        
+
+        # Scaling
+        def scale_pos(pos):
+            return (int(pos[0] * SCALE), int(pos[1] * SCALE))
+
         # Dessiner les forêts en premier (pour qu'elles soient en arrière-plan)
         for forest_id, forest_data in forests.items():
-            points = self.board.get_forest_polygon_points(forest_id)
+            points = [scale_pos(p) for p in self.board.get_forest_polygon_points(forest_id)]
             if points:
-                # Dessiner le polygone de la forêt
                 pygame.draw.polygon(self.screen, COLORS["forests"], points)
-                # Ajouter une bordure au polygone
                 pygame.draw.polygon(self.screen, COLORS["edges"], points, 2)
-                
-                # Ajouter le texte d'identification de la forêt
-                forest_center = forest_data["center"]
+                forest_center = scale_pos(forest_data["center"])
                 text = self.font.render(forest_id, True, COLORS["text"])
                 text_rect = text.get_rect(center=forest_center)
                 self.screen.blit(text, text_rect)
-        
-        # Dessine les connexions (arêtes)
+
+        # Dessiner les chemins
         for edge in edges:
-            pos1 = nodes[edge[0] - 1][1]["pos"]
-            pos2 = nodes[edge[1] - 1][1]["pos"]
+            pos1 = scale_pos(nodes[edge[0] - 1][1]["pos"])
+            pos2 = scale_pos(nodes[edge[1] - 1][1]["pos"])
             pygame.draw.line(self.screen, COLORS["edges"], pos1, pos2, 3)
-        
-        # Dessine la rivière
+
+        # Dessiner la rivière
         for river in rivers:
-            pos1 = nodes[river[0] - 1][1]["pos"]
-            pos2 = nodes[river[1] - 1][1]["pos"]
+            pos1 = scale_pos(nodes[river[0] - 1][1]["pos"])
+            pos2 = scale_pos(nodes[river[1] - 1][1]["pos"])
             pygame.draw.line(self.screen, COLORS["rivers"], pos1, pos2, 3)
 
-        # Dessine les clairières et les unités
+        # Dessiner les clairières et les unités
         for node, data in nodes:
-            pos = data["pos"]
-            
-            # Dessine la clairière
+            pos = scale_pos(data["pos"])
             pygame.draw.circle(self.screen, COLORS["nodes"], pos, NODE_RADIUS)
             text = self.font.render(str(node), True, COLORS["text"])
             self.screen.blit(text, (pos[0] - 10, pos[1] - 10))
-            
-            # Dessine le cercle de contrôle
+
             control_color = COLORS["control"]
             if data["control"]:
                 control_color = COLORS["units"].get(data["control"], COLORS["control"])
             pygame.draw.circle(self.screen, control_color, pos, CONTROL_RADIUS, 3)
 
-            # Dessine le symbole graphique de type de clairière
             clearing_type = data["type"]
             if clearing_type in SYMBOL_COLORS:
                 symbol_pos = (pos[0] + NODE_RADIUS - 10, pos[1] + NODE_RADIUS - 10)
                 pygame.draw.circle(self.screen, SYMBOL_COLORS[clearing_type], symbol_pos, SYMBOL_SIZE // 2)
 
-            # Dessine les unités dans la clairière
-            offset = -20  # Décalage initial pour la première unité
+            offset = -20
             for faction, count in data["units"].items():
                 faction_color = COLORS["units"].get(faction, (200, 200, 200))
                 unit_pos = (pos[0] + offset, pos[1])
                 pygame.draw.circle(self.screen, faction_color, unit_pos, UNIT_RADIUS)
-                
-                # Affiche le nombre d'unités
                 unit_text = self.unit_font.render(str(count), True, COLORS["text"])
                 self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
-                offset += 15 # Décalage pour les unités suivantes
+                offset += 15
 
-            # Dessine les bâtiments dans la clairière
-            offset = -20  # Décalage initial pour le premier bâtiment
-            for building_type, faction in data["buildings"].items():
-                building_color = COLORS["units"].get(faction, COLORS["buildings"]["default"])
-                building_pos = (pos[0] + offset, pos[1] + 20)
-                pygame.draw.circle(self.screen, building_color, building_pos, BUILDING_RADIUS)
-                offset += 20  # Décalage pour les bâtiments suivants
-                
-    def run(self):
+    def draw_panel(self, player_turn, scores):
+        y_offset = 20
+        for player, score in scores.items():
+            color = COLORS["units"].get(player, COLORS["text"])
+            if player == player_turn:
+                color = (255, 0, 0)  # Rouge pour le joueur dont c'est le tour
+            text = self.font.render(f"{player}: {score} points", True, color)
+            self.screen.blit(text, (GAME_WIDTH + 10, y_offset))
+            y_offset += 30
+
+        # Historique des actions
+        y_offset += 20
+        for action in self.action_history[-10:]:
+            text = self.font.render(action, True, COLORS["text"])
+            self.screen.blit(text, (GAME_WIDTH + 10, y_offset))
+            y_offset += 20
+
+    def add_action(self, action):
+        self.action_history.append(action)
+
+    def run(self, player_turn, scores):
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_f:
-                        pygame.display.toggle_fullscreen()
-
             self.draw_board()
+            self.draw_panel(player_turn, scores)
             pygame.display.flip()
             self.clock.tick(30)
-
         pygame.quit()

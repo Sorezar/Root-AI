@@ -1,12 +1,17 @@
 from board import RootBoard
 from display import RootDisplay
 from test import RootTest
+from config import *
 
 if __name__ == "__main__":
-    map_file = "maps/fall.json"
-    board    = RootBoard(map_file)
+    # Configuration initiale
+    players = ["Marquise de Chat", "Dynastie de la Canopée"]
+    current_player_index = 0
+    turn_number = 1
+    
+    board    = RootBoard(MAP_FILE, players)
     test     = RootTest()
-
+    
     # Ajout des factions
     board.add_faction("Marquise de Chat", (255, 165, 0))
     board.add_faction("Alliance", (0, 255, 0))
@@ -23,6 +28,6 @@ if __name__ == "__main__":
     test.test_control(board)
 
     display = RootDisplay(board)
-    display.run()
+    display.run(players[current_player_index], board.get_scores())
     
     
