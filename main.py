@@ -2,9 +2,6 @@ from board import RootBoard
 from display import RootDisplay
 
 def test_adjacency(board):
-    """
-    Teste les fonctions d'adjacence du plateau
-    """
     print("\n=== Test des adjacences ===\n")
     
     # Test depuis une clairière
@@ -19,6 +16,8 @@ def test_adjacency(board):
     print(f"Clairières adjacentes: {board.get_adjacent_clearings(forest_id)}")
     
 def test_control(board):
+    print("\n=== Test du contrôle des clairières ===\n")
+    
     # Test de contrôle des clairières
     for node_id, node_data in board.graph.nodes(data=True):
         print(f"Clairière {node_id} contrôlée par : {node_data['control']}")
