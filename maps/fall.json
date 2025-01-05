@@ -34,16 +34,16 @@
     [11,12]
   ],
   "forests": [
-    { "id": "F1", "adjacent_clearings": [1, 2, 4], "items": [] },
-    { "id": "F2", "adjacent_clearings": [2, 3, 4], "items": [] },
-    { "id": "F3", "adjacent_clearings": [1, 4, 5, 6], "items": [] },
-    { "id": "F4", "adjacent_clearings": [4, 6, 7], "items": [] },
-    { "id": "F5", "adjacent_clearings": [3, 4, 7, 8], "items": [] },
-    { "id": "F6", "adjacent_clearings": [5, 6, 9], "items": [] },
-    { "id": "F7", "adjacent_clearings": [6, 9, 10, 11], "items": [] },
-    { "id": "F8", "adjacent_clearings": [6, 7, 11], "items": [] },
-    { "id": "F9", "adjacent_clearings": [7, 11, 12], "items": [] },
-    { "id": "F10", "adjacent_clearings": [7, 8, 12], "items": [] }
+    { "id": "F1",  "adjacent_clearings": [1, 2, 4]},
+    { "id": "F2",  "adjacent_clearings": [2, 3, 4]},
+    { "id": "F3",  "adjacent_clearings": [1, 4, 5, 6]},
+    { "id": "F4",  "adjacent_clearings": [4, 6, 7]},
+    { "id": "F5",  "adjacent_clearings": [3, 4, 7, 8]},
+    { "id": "F6",  "adjacent_clearings": [5, 6, 9]},
+    { "id": "F7",  "adjacent_clearings": [6, 9, 10, 11]},
+    { "id": "F8",  "adjacent_clearings": [6, 7, 11]},
+    { "id": "F9",  "adjacent_clearings": [7, 11, 12]},
+    { "id": "F10", "adjacent_clearings": [7, 8, 12]}
   ],
   "rivers": [
     [2, 4],
