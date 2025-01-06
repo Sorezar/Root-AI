@@ -6,3 +6,4 @@
 - Rajouter les 54 cartes
 - Rajouter le système de tour
 - Rajouter les animations de mouvement
+- Ajouter les items sur le board

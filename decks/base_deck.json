@@ -1,0 +1,456 @@
+[
+    {
+        "id": 1,
+        "name": "Ambush",
+        "color": "bird",
+        "type": "ambush"
+    },
+    {
+        "id": 2,
+        "name": "Ambush",
+        "color": "bird",
+        "type": "ambush"
+    },
+    {
+        "id": 3,
+        "name": "Birdy Bindle",
+        "color": "bird",
+        "cost": 1,
+        "cost_type": "mouse",
+        "item" : "bag",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 4,
+        "name": "Armorers",
+        "color": "bird",
+        "cost": 1,
+        "cost_type": "fox",
+        "type": "battle_effect"
+    },
+    {
+        "id": 5,
+        "name": "Armorers",
+        "color": "bird",
+        "cost": 1,
+        "cost_type": "fox",
+        "type": "battle_effect"
+    },
+    {
+        "id": 6,
+        "name": "Woodland Runners",
+        "color": "bird",
+        "cost": 1,
+        "cost_type": "rabbit",
+        "item" : "boot",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 7,
+        "name": "Arms Trader",
+        "color": "bird",
+        "cost": 2,
+        "cost_type": "fox",
+        "item" : "sword",
+        "type": "object",
+        "gain": 2
+    },
+    {
+        "id": 8,
+        "name": "Crossbow",
+        "color": "bird",
+        "cost": 1,
+        "cost_type": "fox",
+        "item" : "crossbow",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 9,
+        "name": "Sappers",
+        "color": "bird",
+        "cost": 1,
+        "cost_type": "mouse",
+        "type": "battle_defender_effect"
+    },
+    {
+        "id": 10,
+        "name": "Sappers",
+        "color": "bird",
+        "cost": 1,
+        "cost_type": "mouse",
+        "type": "battle_defender_effect"
+    },
+    {
+        "id": 11,
+        "name": "Brutal Tactics",
+        "color": "bird",
+        "cost": 2,
+        "cost_type": "fox",
+        "type": "battle_attacker_effect"
+    },
+    {
+        "id": 12,
+        "name": "Brutal Tactics",
+        "color": "bird",
+        "cost": 2,
+        "cost_type": "fox",
+        "type": "battle_attacker_effect"
+    },
+    {
+        "id": 13,
+        "name": "Royal Claim",
+        "color": "bird",
+        "cost": 4,
+        "cost_type": "none",
+        "type": "birdsong_effect"
+    },
+    {
+        "id": 14,
+        "name": "Ambush",
+        "color": "fox",
+        "type": "ambush"
+    },
+    {
+        "id": 15,
+        "name": "Gently Used Knapsack",
+        "color": "fox",
+        "cost": 1,
+        "cost_type": "mouse",
+        "item" : "bag",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 16,
+        "name": "Root Tea",
+        "color": "fox",
+        "cost": 1,
+        "cost_type": "mouse",
+        "item" : "teapot",
+        "type": "object",
+        "gain": 2
+    },
+    {
+        "id": 17,
+        "name": "Travel Gear",
+        "color": "fox",
+        "cost": 1,
+        "cost_type": "rabbit",
+        "item" : "boot",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 18,
+        "name": "Protection Racket",
+        "color": "fox",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "item" : "gold",
+        "type": "object",
+        "gain": 3
+    },
+    {
+        "id": 19,
+        "name": "Foxfolk Steel",
+        "color": "fox",
+        "cost": 2,
+        "cost_type": "fox",
+        "item" : "sword",
+        "type": "object",
+        "gain": 2
+    },
+    {
+        "id": 20,
+        "name": "Anvil",
+        "color": "fox",
+        "cost": 1,
+        "cost_type": "fox",
+        "item" : "hammer",
+        "type": "object",
+        "gain": 2
+    },
+    {
+        "id": 21,
+        "name": "Stand and Deliver",
+        "color": "fox",
+        "cost": 3,
+        "cost_type": "mouse",
+        "type": "birdsong_effect"
+    },
+    {
+        "id": 22,
+        "name": "Stand and Deliver",
+        "color": "fox",
+        "cost": 3,
+        "cost_type": "mouse",
+        "type": "birdsong_effect"
+    },
+    {
+        "id": 23,
+        "name": "Tax Collector",
+        "color": "fox",
+        "cost": 3,
+        "cost_type": "each",
+        "type": "daylight_effect"
+    },
+    {
+        "id": 24,
+        "name": "Tax Collector",
+        "color": "fox",
+        "cost": 3,
+        "cost_type": "each",
+        "type": "daylight_effect"
+    },
+    {
+        "id": 25,
+        "name": "Tax Collector",
+        "color": "fox",
+        "cost": 3,
+        "cost_type": "each",
+        "type": "daylight_effect"
+    },
+    {
+        "id": 26,
+        "name": "Favor of the Foxes",
+        "color": "fox",
+        "cost": 3,
+        "cost_type": "fox",
+        "type": "favor"
+    },
+    {
+        "id": 27,
+        "name": "Ambush",
+        "color": "rabbit",
+        "type": "ambush"
+    },
+    {
+        "id": 28,
+        "name": "Smuggler's Trail",
+        "color": "rabbit",
+        "cost": 1,
+        "cost_type": "mouse",
+        "item" : "bag",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 29,
+        "name": "Root Tea",
+        "color": "rabbit",
+        "cost": 1,
+        "cost_type": "mouse",
+        "item" : "teapot",
+        "type": "object",
+        "gain": 2
+    },
+    {
+        "id": 30,
+        "name": "A Visit to Friends",
+        "color": "rabbit",
+        "cost": 1,
+        "cost_type": "rabbit",
+        "item" : "boot",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 31,
+        "name": "Bake Sale",
+        "color": "rabbit",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "item" : "gold",
+        "type": "object",
+        "gain": 3
+    },
+    {
+        "id": 32,
+        "name": "Command Warren",
+        "color": "rabbit",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "type": "daylight_effect"
+    },
+    {
+        "id": 33,
+        "name": "Command Warren",
+        "color": "rabbit",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "type": "daylight_effect"
+    },
+    {
+        "id": 34,
+        "name": "Better Burrow Bank",
+        "color": "rabbit",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "type": "birdsong_effect"
+    },
+    {
+        "id": 35,
+        "name": "Better Burrow Bank",
+        "color": "rabbit",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "type": "birdsong_effect"
+    },
+    {
+        "id": 36,
+        "name": "Cobbler",
+        "color": "rabbit",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "type": "evening_effect"
+    },
+    {
+        "id": 37,
+        "name": "Cobbler",
+        "color": "rabbit",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "type": "evening_effect"
+    },
+    {
+        "id": 38,
+        "name": "Favor of the Rabbits",
+        "color": "rabbit",
+        "cost": 3,
+        "cost_type": "rabbit",
+        "type": "favor"
+    },
+    {
+        "id": 39,
+        "name": "Ambush",
+        "color": "mouse",
+        "type": "ambush"
+    },
+    {
+        "id": 40,
+        "name": "Mouse-in-a-Sack",
+        "color": "mouse",
+        "cost": 1,
+        "cost_type": "mouse",
+        "item" : "bag",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 41,
+        "name": "Root Tea",
+        "color": "mouse",
+        "cost": 1,
+        "cost_type": "mouse",
+        "item" : "teapot",
+        "type": "object",
+        "gain": 2
+    },
+    {
+        "id": 42,
+        "name": "Travel Gear",
+        "color": "mouse",
+        "cost": 1,
+        "cost_type": "rabbit",
+        "item" : "boot",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 43,
+        "name": "Mouse-in-a-Sack",
+        "color": "mouse",
+        "cost": 2,
+        "cost_type": "rabbit",
+        "item" : "gold",
+        "type": "object",
+        "gain": 3
+    },
+    {
+        "id": 44,
+        "name": "Mouse-in-a-Sack",
+        "color": "mouse",
+        "cost": 2,
+        "cost_type": "fox",
+        "item" : "sword",
+        "type": "object",
+        "gain": 2
+    },
+    {
+        "id": 45,
+        "name": "Crossbow",
+        "color": "mouse",
+        "cost": 1,
+        "cost_type": "fox",
+        "item" : "crossbow",
+        "type": "object",
+        "gain": 1
+    },
+    {
+        "id": 46,
+        "name": "Scouting Party",
+        "color": "mouse",
+        "cost": 2,
+        "cost_type": "mouse",
+        "type": "battle_attacker_effect"
+    },
+    {
+        "id": 47,
+        "name": "Scouting Party",
+        "color": "mouse",
+        "cost": 2,
+        "cost_type": "mouse",
+        "type": "battle_attacker_effect"
+    },
+    {
+        "id": 48,
+        "name": "Codebreakers",
+        "color": "mouse",
+        "cost": 1,
+        "cost_type": "mouse",
+        "type": "daylight_effect"
+    },
+    {
+        "id": 49,
+        "name": "Codebreakers",
+        "color": "mouse",
+        "cost": 1,
+        "cost_type": "mouse",
+        "type": "daylight_effect"
+    },
+    {
+        "id": 50,
+        "name": "Favor of the mices",
+        "color": "mouse",
+        "cost": 3,
+        "cost_type": "mouse",
+        "type": "favor"
+    },
+    {
+        "id": 51,
+        "name": "Dominance",
+        "color": "rabbit",
+        "type": "dominance"
+    },
+    {
+        "id": 52,
+        "name": "Dominance",
+        "color": "mouse",
+        "type": "dominance"
+    },
+    {
+        "id": 53,
+        "name": "Dominance",
+        "color": "bird",
+        "type": "dominance"
+    },
+    {
+        "id": 54,
+        "name": "Dominance",
+        "color": "fox",
+        "type": "dominance"
+    }
+]
