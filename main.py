@@ -2,32 +2,48 @@ from board import RootBoard
 from display import RootDisplay
 from test import RootTest
 from config import *
+from player import Player
+from lobby import Lobby
+from factions.Marquise import Marquise
+from factions.Canopee import Canopee
 
 if __name__ == "__main__":
-    # Configuration initiale
-    players = ["Marquise de Chat", "Dynastie de la Canopée"]
-    current_player_index = 0
-    turn_number = 1
+
+    # Initialisation des joueurs
     
-    board    = RootBoard(MAP_FILE, players)
+    print("Initialisation des joueurs")
+    lobby = Lobby()
+    
+    lobby.add_player("J1", Marquise())
+    lobby.add_player("J2", Canopee())    
+    
+    # Initialisation de la carte
+    print("Initialisation de la carte")
+    board    = RootBoard(MAP_FILE)
+    
+    # Initialisation des tests
+    print("Initialisation des tests")
     test     = RootTest()
     
-    # Ajout des factions
-    board.add_faction("Marquise de Chat", (255, 165, 0))
-    board.add_faction("Alliance", (0, 255, 0))
-
-    # Placement d'unités
-    board.place_unit("Marquise de Chat", 1)
-    board.place_unit("Alliance", 2)
-    board.place_unit("Marquise de Chat", 2)
-    board.place_unit("Marquise de Chat", 2)
-    board.place_unit("Alliance", 3)
+    try:
+        lobby.get_player("J1").faction.place_unit(2, board)
+        lobby.get_player("J1").faction.place_unit(1, board)
+        lobby.get_player("J1").faction.place_unit(1, board)
+        lobby.get_player("J1").faction.place_unit(3, board)
+        lobby.get_player("J2").faction.place_unit(1, board)
+        lobby.get_player("J2").faction.place_unit(2, board)
+        lobby.get_player("J2").faction.place_unit(2, board)
+    except ValueError as e:
+        print(e)
     
     # Tests
+    print("Tests")
     test.test_adjacency(board)
     test.test_control(board)
 
+    # Initialisation de l'affichage
+    print("Initialisation de l'affichage")
     display = RootDisplay(board)
-    display.run(players[current_player_index], board.get_scores())
+    display.run(lobby.players[0].name, lobby.get_scores())
     
     

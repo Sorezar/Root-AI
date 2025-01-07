@@ -1,7 +1,7 @@
 import pygame
 
 # Map
-MAP_FILE = "fall.json"
+MAP_FILE = "maps/fall.json"
 
 # Dimensions de l'écran
 WIDTH = 1000

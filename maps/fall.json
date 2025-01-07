@@ -1,17 +1,17 @@
 {
     "nodes": [
-    { "id": 1, "type": "Renard", "pos": [0.05, 0.1], "slots": 1 },
-    { "id": 2, "type": "Lapin", "pos": [0.5, 0.1], "slots": 2 },
-    { "id": 3, "type": "Souris", "pos": [0.9, 0.15], "slots": 2 },
-    { "id": 4, "type": "Lapin", "pos": [0.4, 0.3], "slots": 2 },
-    { "id": 5, "type": "Souris", "pos": [0.05, 0.35], "slots": 2 },
-    { "id": 6, "type": "Renard", "pos": [0.3, 0.55], "slots": 2 },
-    { "id": 7, "type": "Souris", "pos": [0.6, 0.45], "slots": 3 },
-    { "id": 8, "type": "Renard", "pos": [0.95, 0.5], "slots": 2 },
-    { "id": 9, "type": "Lapin", "pos": [0.1, 0.8], "slots": 1 },
-    { "id": 10, "type": "Renard", "pos": [0.35, 0.85], "slots": 2 },
-    { "id": 11, "type": "Souris", "pos": [0.55, 0.75], "slots": 2 },
-    { "id": 12, "type": "Lapin", "pos": [0.9, 0.85], "slots": 1 }
+    { "id": 1, "type": "fox", "pos": [0.05, 0.1], "slots": 1 },
+    { "id": 2, "type": "rabbit", "pos": [0.5, 0.1], "slots": 2 },
+    { "id": 3, "type": "mouse", "pos": [0.9, 0.15], "slots": 2 },
+    { "id": 4, "type": "rabbit", "pos": [0.4, 0.3], "slots": 2 },
+    { "id": 5, "type": "mouse", "pos": [0.05, 0.35], "slots": 2 },
+    { "id": 6, "type": "fox", "pos": [0.3, 0.55], "slots": 2 },
+    { "id": 7, "type": "mouse", "pos": [0.6, 0.45], "slots": 3 },
+    { "id": 8, "type": "fox", "pos": [0.95, 0.5], "slots": 2 },
+    { "id": 9, "type": "rabbit", "pos": [0.1, 0.8], "slots": 1 },
+    { "id": 10, "type": "fox", "pos": [0.35, 0.85], "slots": 2 },
+    { "id": 11, "type": "mouse", "pos": [0.55, 0.75], "slots": 2 },
+    { "id": 12, "type": "rabbit", "pos": [0.9, 0.85], "slots": 1 }
   ],
   "edges": [
     [1, 2],
@@ -33,6 +33,12 @@
     [10,11],
     [11,12]
   ],
+  "rivers": [
+    [2, 4],
+    [4, 7],
+    [7, 11],
+    [9, 11]
+  ],
   "forests": [
     { "id": "F1",  "adjacent_clearings": [1, 2, 4]},
     { "id": "F2",  "adjacent_clearings": [2, 3, 4]},
@@ -44,11 +50,5 @@
     { "id": "F8",  "adjacent_clearings": [6, 7, 11]},
     { "id": "F9",  "adjacent_clearings": [7, 11, 12]},
     { "id": "F10", "adjacent_clearings": [7, 8, 12]}
-  ],
-  "rivers": [
-    [2, 4],
-    [4, 7],
-    [7, 11],
-    [9, 11]
   ]
 }

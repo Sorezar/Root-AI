@@ -4,12 +4,11 @@ import json
 import config
 
 class RootBoard:
-    def __init__(self, map_file, players):
+    def __init__(self, map_file):
         self.graph = nx.Graph()
         self.factions = {}
         self.rivers = []
         self.forests = {}
-        self.scores = {player: 0 for player in players}
         self._load_map(map_file)
 
     def _load_map(self, map_file):
@@ -58,51 +57,22 @@ class RootBoard:
         except json.JSONDecodeError:
             print(f"Erreur : Le fichier {map_file} contient une erreur de format.")
 
-    def add_faction(self, faction_name, color):
-        self.factions[faction_name] = {"color": color, "units": 0}
-
-    def place_unit(self, faction_name, clearing_id):
-        if faction_name not in self.factions:
-            print(f"Faction {faction_name} non trouvée.")
-            return
-
-        if clearing_id in self.graph.nodes:
-            units = self.graph.nodes[clearing_id]["units"]
-            units[faction_name] = units.get(faction_name, 0) + 1
-            self.factions[faction_name]["units"] += 1
-            self.update_control(clearing_id)
-        else:
-            print(f"Clairière {clearing_id} non trouvée.")
-
-    def place_building(self, faction_name, clearing_id, building_type):
-        if faction_name not in self.factions:
-            print(f"Faction {faction_name} non trouvée.")
-            return
-
-        if clearing_id in self.graph.nodes:
-            clearing = self.graph.nodes[clearing_id]
-            if len(clearing["buildings"]) < clearing["slots"]:
-                clearing["buildings"][building_type] = faction_name
-            else:
-                print(f"Pas assez de slots disponibles dans la clairière {clearing_id}.")
-        else:
-            print(f"Clairière {clearing_id} non trouvée.")
-
-    def _shrink_point(self, point, center, shrink_factor):
-        dx = point[0] - center[0]
-        dy = point[1] - center[1]
-        new_x = center[0] + dx * shrink_factor
-        new_y = center[1] + dy * shrink_factor
-        return (new_x, new_y)
-    
     def get_forest_polygon_points(self, forest_id, shrink_factor=0.8):
+        
+        def _shrink_point(point, center, shrink_factor):
+            dx = point[0] - center[0]
+            dy = point[1] - center[1]
+            new_x = center[0] + dx * shrink_factor
+            new_y = center[1] + dy * shrink_factor
+            return (new_x, new_y)
+        
         forest = self.forests.get(forest_id)
         if not forest:
             return []
         points = [self.graph.nodes[n]["pos"] for n in forest["adjacent_clearings"]]
         center = forest["center"]
         points.sort(key=lambda p: math.atan2(p[1] - center[1], p[0] - center[0]))
-        shrunk_points = [self._shrink_point(p, center, shrink_factor) for p in points]
+        shrunk_points = [_shrink_point(p, center, shrink_factor) for p in points]
         
         return shrunk_points
     
@@ -154,10 +124,3 @@ class RootBoard:
                 adjacent_forests.append(forest_id)
                 
         return adjacent_forests
-    
-    def add_points(self, faction_name, points):
-        if faction_name in self.scores:
-            self.scores[faction_name] += points
-    
-    def get_scores(self):
-        return self.scores

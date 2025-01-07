@@ -9,15 +9,15 @@ COLORS = {
     "text": (0, 0, 0),              # Noir pour le texte
     "control": (0, 0, 0),           # Noir pour le contrôle par défaut
     "background": (245, 245, 220),  # Beige pour le fond
-    "units": {"Marquise de Chat": (255, 165, 0), "Alliance": (0, 255, 0)},
+    "units": {0 : (255, 165, 0), 1: (0,0,255), 2: (0, 255, 0)},
     "buildings": {"default": (128, 128, 128)},
     "panel_bg": (200, 200, 200)    # Gris clair pour les panneaux
 }
 
 SYMBOL_COLORS = {
-    "Renard": (255, 0, 0),    # Rouge pour les renards
-    "Lapin":  (255, 255, 0),  # Jaune pour les lapins
-    "Souris": (255, 165, 0),  # Orange pour les souris
+    "fox": (255, 0, 0),       # Rouge pour les renards
+    "rabbit":  (255, 255, 0), # Jaune pour les lapins
+    "mouse": (255, 165, 0),   # Orange pour les souris
 }
 
 # Dimensions
