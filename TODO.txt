@@ -5,7 +5,3 @@
 - Rajouter le système de tour
 - Rajouter les animations de mouvement
 - Ajouter les items sur le board
-
-
-
-# Débugger contrôle des clairières suite à la refonte

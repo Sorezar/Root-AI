@@ -9,9 +9,13 @@ COLORS = {
     "text": (0, 0, 0),              # Noir pour le texte
     "control": (0, 0, 0),           # Noir pour le contrôle par défaut
     "background": (245, 245, 220),  # Beige pour le fond
-    "units": {0 : (255, 165, 0), 1: (0,0,255), 2: (0, 255, 0)},
     "buildings": {"default": (128, 128, 128)},
-    "panel_bg": (200, 200, 200)    # Gris clair pour les panneaux
+    "panel_bg": (200, 200, 200),   # Gris clair pour les panneaux
+    "units": {
+        0 : (255, 165, 0),
+        1 : (0,0,255),
+        2 : (0, 255, 0)
+        },
 }
 
 SYMBOL_COLORS = {
@@ -80,21 +84,26 @@ class RootDisplay:
 
         # Dessiner les clairières et les unités
         for node, data in nodes:
+            
+            # Clairière
             pos = scale_pos(data["pos"])
             pygame.draw.circle(self.screen, COLORS["nodes"], pos, NODE_RADIUS)
             text = self.font.render(str(node), True, COLORS["text"])
             self.screen.blit(text, (pos[0] - 10, pos[1] - 10))
 
+            # Contrôle
             control_color = COLORS["control"]
-            if data["control"]:
+            if data["control"] != None:
                 control_color = COLORS["units"].get(data["control"], COLORS["control"])
             pygame.draw.circle(self.screen, control_color, pos, CONTROL_RADIUS, 3)
 
+            # Type de clairière
             clearing_type = data["type"]
             if clearing_type in SYMBOL_COLORS:
                 symbol_pos = (pos[0] + NODE_RADIUS - 10, pos[1] + NODE_RADIUS - 10)
                 pygame.draw.circle(self.screen, SYMBOL_COLORS[clearing_type], symbol_pos, SYMBOL_SIZE // 2)
 
+            # Unités
             offset = -20
             for faction, count in data["units"].items():
                 faction_color = COLORS["units"].get(faction, (200, 200, 200))
