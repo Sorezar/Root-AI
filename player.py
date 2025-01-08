@@ -2,7 +2,8 @@ from factions.Marquise import Marquise
 from factions.Canopee   import Canopee
 from factions.Alliance import Alliance
 from factions.Vagabond import Vagabond
-
+import random
+import json
 
 class Player:
     def __init__(self, name, faction):
@@ -13,8 +14,11 @@ class Player:
         self.points  = 0
 
 
-    def draw_card(self, card):
-        self.cards.append(card)
+    def draw_cards(self, deck, count=1):
+        for _ in range(count):
+            card = random.choice(deck)
+            self.cards.append(card)
+            deck.remove(card)
 
     def remove_card(self, card_id):
         self.cards = [card for card in self.cards if card['id'] != card_id]

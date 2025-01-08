@@ -1,5 +1,6 @@
 import pygame
 import config
+import os
 
 COLORS = {
     "forests": (34, 139, 34),       # Vert forêt
@@ -113,17 +114,31 @@ class RootDisplay:
                 self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
                 offset += 15
 
-    def draw_panel(self, player_turn, scores):
+    def draw_panel(self, player_turn, scores, players):
         y_offset = 20
         arrow_offset = 10
-        for player, score in scores.items():
-            color = COLORS["units"].get(player, COLORS["text"])
-            text = self.font.render(f"{player}: {score} points", True, color)
+        card_width = 100
+        card_height = 136
+        
+        for player in players:
+            score = scores[player.name]
+            color = COLORS["units"].get(player.faction.id, COLORS["text"])
+            text = self.font.render(f"{player.name}: {score} points", True, color)
             self.screen.blit(text, (GAME_WIDTH + 30, y_offset))
-            if player == player_turn:
-                arrow = self.font.render("->", True, (255, 0, 0)) 
+            if player.name == player_turn:
+                arrow = self.font.render("->", True, (255, 0, 0))
                 self.screen.blit(arrow, (GAME_WIDTH + 10, y_offset))
             y_offset += 30
+
+            # Afficher les cartes du joueur
+            x_offset = GAME_WIDTH + 30
+            for card in player.cards:
+                card_image_path = os.path.join("sprites", "cards", f"{card['id']}.png")
+                card_image = pygame.image.load(card_image_path)
+                card_image = pygame.transform.scale(card_image, (card_width, card_height))
+                self.screen.blit(card_image, (x_offset, y_offset))
+                x_offset += card_width + 5
+            y_offset += card_height + 10
 
         # Historique des actions
         y_offset += 20
@@ -133,19 +148,31 @@ class RootDisplay:
             y_offset += 20
 
     def draw_cards(self, player):
-        pass
+        card_width = 250
+        card_height = 341
+        x_offset = 10
+        y_offset = HEIGHT - card_height - 10
+
+        for card in player.cards:
+            card_image_path = os.path.join("sprites", "cards", f"{card['id']}.png")
+            card_image = pygame.image.load(card_image_path)
+            card_image = pygame.transform.scale(card_image, (card_width, card_height))
+            self.screen.blit(card_image, (x_offset, y_offset))
+            x_offset += card_width + 10
 
     def add_action(self, action):
         self.action_history.append(action)
 
-    def run(self, player_turn, scores):
+    def run(self, player_turn, scores, players):
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
             self.draw_board()
-            self.draw_panel(player_turn, scores)
+            self.draw_panel(player_turn, scores, players)
+            for player in players:
+                self.draw_cards(player)
             pygame.display.flip()
             self.clock.tick(30)
         pygame.quit()

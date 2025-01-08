@@ -6,6 +6,10 @@ from player import Player
 from lobby import Lobby
 from factions.Marquise import Marquise
 from factions.Canopee import Canopee
+from factions.Alliance import Alliance
+from factions.Vagabond import Vagabond
+
+import json
 
 if __name__ == "__main__":
 
@@ -41,10 +45,18 @@ if __name__ == "__main__":
     test.test_adjacency(board)
     test.test_control(board)
     test.test_units(board)
+    
+    # Deck
+    with open(CARDS_FILE, "r") as f:
+        deck = json.load(f)
+
+    # Piocher des cartes pour chaque joueur
+    for player in lobby.players:
+        player.draw_cards(deck, 5)
 
     # Initialisation de l'affichage
     print("Initialisation de l'affichage")
     display = RootDisplay(board)
-    display.run(lobby.players[0].name, lobby.get_scores())
+    display.run(lobby.players[0].name, lobby.get_scores(), lobby.players)
     
     
