@@ -115,12 +115,14 @@ class RootDisplay:
 
     def draw_panel(self, player_turn, scores):
         y_offset = 20
+        arrow_offset = 10
         for player, score in scores.items():
             color = COLORS["units"].get(player, COLORS["text"])
-            if player == player_turn:
-                color = (255, 0, 0)  # Rouge pour le joueur dont c'est le tour
             text = self.font.render(f"{player}: {score} points", True, color)
-            self.screen.blit(text, (GAME_WIDTH + 10, y_offset))
+            self.screen.blit(text, (GAME_WIDTH + 30, y_offset))
+            if player == player_turn:
+                arrow = self.font.render("->", True, (255, 0, 0)) 
+                self.screen.blit(arrow, (GAME_WIDTH + 10, y_offset))
             y_offset += 30
 
         # Historique des actions
@@ -129,6 +131,9 @@ class RootDisplay:
             text = self.font.render(action, True, COLORS["text"])
             self.screen.blit(text, (GAME_WIDTH + 10, y_offset))
             y_offset += 20
+
+    def draw_cards(self, player):
+        pass
 
     def add_action(self, action):
         self.action_history.append(action)

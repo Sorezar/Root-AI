@@ -40,6 +40,7 @@ if __name__ == "__main__":
     print("Tests")
     test.test_adjacency(board)
     test.test_control(board)
+    test.test_units(board)
 
     # Initialisation de l'affichage
     print("Initialisation de l'affichage")
