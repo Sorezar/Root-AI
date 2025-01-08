@@ -3,9 +3,12 @@ import pygame
 # Map
 MAP_FILE = "maps/fall.json"
 
+# Cartes
+CARDS_FILE = "decks/base_deck.json"
+
 # Dimensions de l'écran
-WIDTH = 1000
-HEIGHT = 600
+WIDTH = 1920
+HEIGHT = 1080
 
 # Vitesse
 ANIMATION_SPEED = 1

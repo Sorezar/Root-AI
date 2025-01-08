@@ -1,7 +1,11 @@
-- Ajouter les emplacements libres
 - Rajouter les différentes factions : Chat, Piafs, Rebelles, Vagabond, Loutre, Lézard
 - Rajouter les règles communes à toutes les factions
 - Rajouter les actions des factions
-- Rajouter le système de tour
 - Rajouter les animations de mouvement
+
+
+- Rajouter interaction avec les cartes pour les jouer
+- Rajouter l'interface de tour
+- Rajouter le système de tour
+- Ajouter les emplacements libres
 - Ajouter les items sur le board
