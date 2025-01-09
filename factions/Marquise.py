@@ -12,6 +12,7 @@ class Marquise(Base):
             "wood": 0
         }
         self.units = 25
+        self.actions = ["Build", "Recruit", "March", "Battle", "Overwork", "Spend Bird"]
 
     def build_structure(self, clearing_id, structure_type, board):
         if structure_type not in self.buildings:

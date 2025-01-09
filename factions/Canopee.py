@@ -7,3 +7,4 @@ class Canopee(Base):
             "roost": 0
         }
         self.units = 20
+        self.actions = []

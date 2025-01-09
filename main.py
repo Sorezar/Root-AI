@@ -18,7 +18,9 @@ if __name__ == "__main__":
     print("Initialisation des joueurs")
     lobby = Lobby()
     lobby.add_player("J1", Marquise())
-    lobby.add_player("J2", Canopee())    
+    lobby.add_player("J2", Canopee()) 
+    
+    print(lobby.get_all_players())  
     
     # Initialisation de la carte
     print("Initialisation de la carte")
@@ -33,13 +35,13 @@ if __name__ == "__main__":
     tests = RootTest()
     
     try:
-        lobby.get_player("J1").faction.place_unit(2, board)
-        lobby.get_player("J1").faction.place_unit(1, board)
-        lobby.get_player("J1").faction.place_unit(1, board)
-        lobby.get_player("J1").faction.place_unit(3, board)
-        lobby.get_player("J2").faction.place_unit(1, board)
-        lobby.get_player("J2").faction.place_unit(2, board)
-        lobby.get_player("J2").faction.place_unit(2, board)
+        lobby.get_player(0).faction.place_unit(2, board)
+        lobby.get_player(0).faction.place_unit(1, board)
+        lobby.get_player(0).faction.place_unit(1, board)
+        lobby.get_player(0).faction.place_unit(3, board)
+        lobby.get_player(1).faction.place_unit(1, board)
+        lobby.get_player(1).faction.place_unit(2, board)
+        lobby.get_player(1).faction.place_unit(2, board)
     except ValueError as e:
         print(e)
     

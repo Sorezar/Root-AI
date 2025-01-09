@@ -58,15 +58,39 @@ class RootDisplay:
         
         # Bouton pour finir le tour
         self.button_rect = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
+        self.action_buttons = []
 
     def draw_button(self):
         pygame.draw.rect(self.screen, (0, 0, 255), self.button_rect)
-        text = self.button_font.render("Passer le tour", True, (255, 255, 255))
+        text = self.button_font.render(">", True, (255, 255, 255))
         text_rect = text.get_rect(center=self.button_rect.center)
         self.screen.blit(text, text_rect)
 
     def is_button_clicked(self, pos):
         return self.button_rect.collidepoint(pos)
+    
+    def draw_actions(self):
+        x_offset = WIDTH - 400
+        y_offset = HEIGHT - 80
+        button_width = 180
+        button_height = 40
+        self.action_buttons = []
+        actions = self.lobby.get_player(self.lobby.current_player).faction.actions
+
+        for action in actions:
+            button_rect = pygame.Rect(x_offset, y_offset, button_width, button_height)
+            pygame.draw.rect(self.screen, (0, 128, 0), button_rect)
+            text = self.font.render(action, True, (255, 255, 255))
+            text_rect = text.get_rect(center=button_rect.center)
+            self.screen.blit(text, text_rect)
+            self.action_buttons.append((button_rect, action))
+            y_offset -= button_height + 10
+
+    def is_action_button_clicked(self, pos):
+        for button_rect, action in self.action_buttons:
+            if button_rect.collidepoint(pos):
+                return action
+        return None
 
     def draw_board(self):
         
@@ -220,9 +244,14 @@ class RootDisplay:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.is_button_clicked(event.pos):
                         self.lobby.current_player = (self.lobby.current_player + 1) % len(self.lobby.players)
+                    action = self.is_action_button_clicked(event.pos)
+                    if action:
+                        print(f"Action {action} clicked")
+                        # Gérer l'action ici
             self.draw_board()
             self.draw_panel()
             self.draw_button()
+            self.draw_actions()
             for player in self.lobby.players:
                 self.draw_cards(player)
             pygame.display.flip()

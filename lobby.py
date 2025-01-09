@@ -31,14 +31,14 @@ class Lobby:
                 return
         raise ValueError(f"Joueur {name} non trouvé.")
 
-    def get_player(self, name):
+    def get_player(self, id):
         for player in self.players:
-            if player.name == name:
+            if player.id == id:
                 return player
-        raise ValueError(f"Joueur {name} non trouvé.")
+        raise ValueError(f"Joueur {player.id} non trouvé.")
 
     def get_all_players(self):
-        return [player.get_state() for player in self.players]
+        return self.players
     
     def get_scores(self):
         return {player.name: player.points for player in self.players}
