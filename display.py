@@ -53,7 +53,20 @@ class RootDisplay:
         self.clock  = pygame.time.Clock()
         self.font   = pygame.font.SysFont(None, 24)
         self.unit_font = pygame.font.SysFont(None, 18)
+        self.button_font = pygame.font.SysFont(None, 36)
         self.action_history = []
+        
+        # Bouton pour finir le tour
+        self.button_rect = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
+
+    def draw_button(self):
+        pygame.draw.rect(self.screen, (0, 0, 255), self.button_rect)
+        text = self.button_font.render("Passer le tour", True, (255, 255, 255))
+        text_rect = text.get_rect(center=self.button_rect.center)
+        self.screen.blit(text, text_rect)
+
+    def is_button_clicked(self, pos):
+        return self.button_rect.collidepoint(pos)
 
     def draw_board(self):
         
@@ -204,8 +217,12 @@ class RootDisplay:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.is_button_clicked(event.pos):
+                        self.lobby.current_player = (self.lobby.current_player + 1) % len(self.lobby.players)
             self.draw_board()
             self.draw_panel()
+            self.draw_button()
             for player in self.lobby.players:
                 self.draw_cards(player)
             pygame.display.flip()

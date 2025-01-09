@@ -7,4 +7,3 @@
 - Rajouter interaction avec les cartes pour les jouer
 - Rajouter l'interface de tour
 - Rajouter le système de tour
-- Ajouter les items sur le board
