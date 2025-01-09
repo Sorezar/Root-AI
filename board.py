@@ -18,7 +18,7 @@ class RootBoard:
 
             # Ajout des clairières et forêts (noeuds)
             for node in data["nodes"]:
-                pos = (node["pos"][0] * config.WIDTH, node["pos"][1] * config.HEIGHT)
+                pos = (node["pos"][0] * config.BOARD_WIDTH, node["pos"][1] * config.BOARD_HEIGHT)
                 self.graph.add_node(node["id"], 
                                     type=node["type"], 
                                     pos=pos, 

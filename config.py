@@ -10,6 +10,10 @@ CARDS_FILE = "decks/base_deck.json"
 WIDTH = 1920
 HEIGHT = 1080
 
+# Dimensions de la zone de plateau
+BOARD_WIDTH = 800
+BOARD_HEIGHT = 600
+
 # Vitesse
 ANIMATION_SPEED = 1
 

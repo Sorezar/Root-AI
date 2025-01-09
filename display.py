@@ -30,18 +30,19 @@ SYMBOL_COLORS = {
 }
 
 # Dimensions
-SCALE = 0.7
+SCALE = 1
 WIDTH, HEIGHT = config.WIDTH, config.HEIGHT
 GAME_WIDTH   = int(WIDTH * SCALE)
 GAME_HEIGHT  = int(HEIGHT * SCALE)
-PANEL_WIDTH  = WIDTH - GAME_WIDTH
+PANEL_WIDTH  = WIDTH - config.BOARD_WIDTH
 PANEL_HEIGHT = HEIGHT
 NODE_RADIUS  = 30
 UNIT_RADIUS  = 10
 SYMBOL_SIZE  = 12
 CONTROL_RADIUS = NODE_RADIUS
 BUILDING_RADIUS = 15
-BOARD_OFFSET_Y = 70 # Offset pour descendre le plateau
+BOARD_OFFSET_X = 10  # Offset pour décaler le plateau
+BOARD_OFFSET_Y = 120 # Offset pour descendre le plateau
 
 class RootDisplay:
     def __init__(self, board, lobby, items):
@@ -148,13 +149,16 @@ class RootDisplay:
         
         # Dessiner la zone de jeu
         pygame.draw.rect(self.screen, COLORS["panel_bg"], (GAME_WIDTH, 0, PANEL_WIDTH, PANEL_HEIGHT))
+        
+        # Dessiner le cadre noir autour de la zone de plateau
+        pygame.draw.rect(self.screen, (0, 0, 0), (BOARD_OFFSET_X, BOARD_OFFSET_Y, config.BOARD_WIDTH, config.BOARD_HEIGHT), 5)
 
         # Récupérer les noeuds, arêtes, rivières et forêts
         nodes, edges, rivers, forests = self.board.get_nodes_and_edges()
 
         # Scaling
         def scale_pos(pos):
-            return (int(pos[0] * SCALE), int(pos[1] * SCALE + BOARD_OFFSET_Y))
+            return (int(pos[0] * SCALE + BOARD_OFFSET_X), int(pos[1] * SCALE + BOARD_OFFSET_Y))
 
         # Dessiner les forêts en premier (pour qu'elles soient en arrière-plan)
         for forest_id, forest_data in forests.items():
@@ -163,9 +167,6 @@ class RootDisplay:
                 pygame.draw.polygon(self.screen, COLORS["forests"], points)
                 pygame.draw.polygon(self.screen, COLORS["edges"], points, 2)
                 forest_center = scale_pos(forest_data["center"])
-                #text = self.font.render(forest_id, True, COLORS["text"])
-                #text_rect = text.get_rect(center=forest_center)
-                #self.screen.blit(text, text_rect)
 
         # Dessiner les chemins
         for edge in edges:
@@ -177,7 +178,6 @@ class RootDisplay:
         for river in rivers:
             pos1 = scale_pos(nodes[river[0] - 1][1]["pos"])
             pos2 = scale_pos(nodes[river[1] - 1][1]["pos"])
-            #pygame.draw.line(self.screen, COLORS["rivers"], pos1, pos2, 3)
             self.draw_wavy_line(pos1, pos2)
 
         # Dessiner les clairières et les unités
@@ -186,8 +186,6 @@ class RootDisplay:
             # Clairière
             pos = scale_pos(data["pos"])
             pygame.draw.circle(self.screen, COLORS["nodes"], pos, NODE_RADIUS)
-            #text = self.font.render(str(node), True, COLORS["text"])
-            #self.screen.blit(text, (pos[0] - 10, pos[1] - 10))
 
             # Contrôle
             control_color = COLORS["control"]
@@ -258,14 +256,14 @@ class RootDisplay:
         for player in self.lobby.players:
             color = COLORS["units"].get(player.faction.id, COLORS["text"])
             text = self.font.render(f"{player.name}: {player.points} points", True, color)
-            self.screen.blit(text, (GAME_WIDTH + 30, y_offset))
+            self.screen.blit(text, (config.BOARD_WIDTH + 30, y_offset))
             if player.id == self.lobby.current_player :
                 arrow = self.font.render("->", True, (255, 0, 0))
-                self.screen.blit(arrow, (GAME_WIDTH + 10, y_offset))
+                self.screen.blit(arrow, (config.BOARD_WIDTH + 10, y_offset))
             y_offset += 30
 
             # Afficher les cartes du joueur
-            x_offset = GAME_WIDTH + 30
+            x_offset = config.BOARD_WIDTH + 30
             for card in player.cards:
                 card_image = self.card_images.get(card['id'])
                 if card_image:
@@ -278,7 +276,7 @@ class RootDisplay:
         y_offset += 20
         for action in self.action_history[-10:]:
             text = self.font.render(action, True, COLORS["text"])
-            self.screen.blit(text, (GAME_WIDTH + 10, y_offset))
+            self.screen.blit(text, (config.BOARD_WIDTH + 10, y_offset))
             y_offset += 20
 
     def draw_cards(self, player):
@@ -312,7 +310,7 @@ class RootDisplay:
                     pos = event.pos
                     for clearing in valid_clearings:
                         clearing_pos = self.board.graph.nodes[clearing]["pos"]
-                        scaled_pos = (int(clearing_pos[0] * SCALE), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
+                        scaled_pos = (int(clearing_pos[0] * SCALE + BOARD_OFFSET_X), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
                         if pygame.Rect(scaled_pos[0] - NODE_RADIUS, scaled_pos[1] - NODE_RADIUS, NODE_RADIUS * 2, NODE_RADIUS * 2).collidepoint(pos):
                             selected_clearing = clearing
                             break
@@ -333,7 +331,7 @@ class RootDisplay:
             # Dessiner les cercles animés
             for clearing in valid_clearings:
                 clearing_pos = self.board.graph.nodes[clearing]["pos"]
-                scaled_pos = (int(clearing_pos[0] * SCALE), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
+                scaled_pos = (int(clearing_pos[0] * SCALE + BOARD_OFFSET_X), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
                 pygame.draw.circle(self.screen, (255, 0, 0), scaled_pos, int(circle_radius), 2)
 
             # Rafraîchir l'écran
