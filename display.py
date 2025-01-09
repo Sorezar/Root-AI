@@ -300,12 +300,10 @@ class RootDisplay:
 
         return selected_clearing
 
-
-
     def draw(self):
         self.draw_board()
         self.draw_panel()
         self.draw_button()
         self.draw_actions()
-        for player in self.lobby.players:
-            self.draw_cards(player)
+        current_player = self.lobby.get_player(self.lobby.current_player)
+        self.draw_cards(current_player)

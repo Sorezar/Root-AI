@@ -20,6 +20,10 @@ def initial_setup(lobby, board, display):
         elif player.faction.id == 1:
             canopee = player
 
+    # Piocher des cartes pour chaque joueur
+    for player in lobby.players:
+        player.draw_cards(deck, 3)
+
     # Récupérer la clairière
     selected_clearing = display.ask_for_clearing([1, 3, 9, 12])
 
@@ -29,9 +33,9 @@ def initial_setup(lobby, board, display):
     opposite_clearing = {1: 12, 3: 9, 9: 3, 12: 1}[selected_clearing]
     for clearing in board.graph.nodes:
         if clearing != opposite_clearing:
-            marquise.faction.place_unit(clearing, board)
+            board.graph.nodes[clearing]["units"][marquise.faction.id] = 1
             marquise.faction.units -= 1
-    board.update_control(selected_clearing)
+        board.update_control(clearing)
 
     # Canopée
     canopee.faction.buildings["roost"] = 1
@@ -81,10 +85,6 @@ if __name__ == "__main__":
     # Deck
     with open(CARDS_FILE, "r") as f:
         deck = json.load(f)
-
-    # Piocher des cartes pour chaque joueur
-    for player in lobby.players:
-        player.draw_cards(deck, 5)
     
     # Initialisation de l'affichage
     print("Initialisation de l'affichage")
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     print("Tests")
     tests.test_adjacency(board)
     tests.test_control(board)
-    tests.test_units(board)
+    tests.test_units(board, lobby)
 
-    # The boucle    
+    # The boucle
     run(display, lobby)

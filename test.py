@@ -20,9 +20,12 @@ class RootTest:
         for node_id, node_data in board.graph.nodes(data=True):
             print(f"Clairière {node_id} contrôlée par : {node_data['control']}")
 
-    def test_units(self, board):
+    def test_units(self, board, lobby):
         print("\n=== Test du placement des unités ===\n")
         
         # Test du placement des unités
         for node_id, node_data in board.graph.nodes(data=True):
             print(f"Clairière {node_id} : {node_data['units']}")
+            
+        for player in lobby.players:
+            print(f"Joueur {player.id} : {player.faction.units}")
