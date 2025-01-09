@@ -6,17 +6,20 @@ COLORS = {
     "forests": (34, 139, 34),       # Vert forêt
     "nodes": (255, 255, 255),       # Blanc pour les clairières
     "edges": (0, 0, 0),             # Noir pour les connexions
-    "rivers": (119,181,254),       # Bleu pour les rivières
+    "rivers": (119,181,254),        # Bleu pour les rivières
     "text": (0, 0, 0),              # Noir pour le texte
     "control": (0, 0, 0),           # Noir pour le contrôle par défaut
     "background": (245, 245, 220),  # Beige pour le fond
-    "buildings": {"default": (128, 128, 128)},
-    "panel_bg": (200, 200, 200),   # Gris clair pour les panneaux
+    "panel_bg": (200, 200, 200),    # Gris clair pour les panneaux
     "units": {
         0 : (255, 165, 0),
         1 : (0,0,255),
         2 : (0, 255, 0)
         },
+    "slots" : (169, 169, 169),
+    "slots_borders" :(139, 69, 19),
+    "ruins" : (245, 245, 220),
+    "buildings": {"default": (128, 128, 128)}
 }
 
 SYMBOL_COLORS = {
@@ -89,8 +92,8 @@ class RootDisplay:
             # Clairière
             pos = scale_pos(data["pos"])
             pygame.draw.circle(self.screen, COLORS["nodes"], pos, NODE_RADIUS)
-            text = self.font.render(str(node), True, COLORS["text"])
-            self.screen.blit(text, (pos[0] - 10, pos[1] - 10))
+            #text = self.font.render(str(node), True, COLORS["text"])
+            #self.screen.blit(text, (pos[0] - 10, pos[1] - 10))
 
             # Contrôle
             control_color = COLORS["control"]
@@ -103,6 +106,16 @@ class RootDisplay:
             if clearing_type in SYMBOL_COLORS:
                 symbol_pos = (pos[0] + NODE_RADIUS - 10, pos[1] + NODE_RADIUS - 10)
                 pygame.draw.circle(self.screen, SYMBOL_COLORS[clearing_type], symbol_pos, SYMBOL_SIZE // 2)
+
+            # Emplacements libres et ruines
+            slot_size = 12
+            slot_offset = 15
+            for i in range(data["slots"]):
+                slot_color = COLORS["slots"] if i < data["ruins"] else COLORS["ruins"]
+                slot_pos = (pos[0] - (data["slots"] * (slot_size + 5)) // 2 + i * (slot_size + 5), pos[1] - NODE_RADIUS - slot_size + 10)
+                pygame.draw.rect(self.screen, slot_color, (*slot_pos, slot_size, slot_size))
+                pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, slot_size, slot_size), 1)
+
 
             # Unités
             offset = -20

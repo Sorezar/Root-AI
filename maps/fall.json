@@ -1,17 +1,17 @@
 {
     "nodes": [
-    { "id": 1, "type": "fox", "pos": [0.05, 0.1], "slots": 1 },
-    { "id": 2, "type": "rabbit", "pos": [0.5, 0.1], "slots": 2 },
-    { "id": 3, "type": "mouse", "pos": [0.9, 0.15], "slots": 2 },
-    { "id": 4, "type": "rabbit", "pos": [0.4, 0.3], "slots": 2 },
-    { "id": 5, "type": "mouse", "pos": [0.05, 0.35], "slots": 2 },
-    { "id": 6, "type": "fox", "pos": [0.3, 0.55], "slots": 2 },
-    { "id": 7, "type": "mouse", "pos": [0.6, 0.45], "slots": 3 },
-    { "id": 8, "type": "fox", "pos": [0.95, 0.5], "slots": 2 },
-    { "id": 9, "type": "rabbit", "pos": [0.1, 0.8], "slots": 1 },
-    { "id": 10, "type": "fox", "pos": [0.35, 0.85], "slots": 2 },
-    { "id": 11, "type": "mouse", "pos": [0.55, 0.75], "slots": 2 },
-    { "id": 12, "type": "rabbit", "pos": [0.9, 0.85], "slots": 1 }
+    { "id": 1, "type": "fox", "pos": [0.05, 0.1], "slots": 1, "ruins": 0},
+    { "id": 2, "type": "rabbit", "pos": [0.5, 0.1], "slots": 2, "ruins": 0},
+    { "id": 3, "type": "mouse", "pos": [0.9, 0.15], "slots": 2, "ruins": 0},
+    { "id": 4, "type": "rabbit", "pos": [0.4, 0.3], "slots": 2, "ruins": 1},
+    { "id": 5, "type": "mouse", "pos": [0.05, 0.35], "slots": 2, "ruins": 0},
+    { "id": 6, "type": "fox", "pos": [0.3, 0.55], "slots": 2, "ruins": 1},
+    { "id": 7, "type": "mouse", "pos": [0.6, 0.45], "slots": 3, "ruins": 1},
+    { "id": 8, "type": "fox", "pos": [0.95, 0.5], "slots": 2, "ruins": 1},
+    { "id": 9, "type": "rabbit", "pos": [0.1, 0.8], "slots": 1, "ruins": 0},
+    { "id": 10, "type": "fox", "pos": [0.35, 0.85], "slots": 2, "ruins": 0},
+    { "id": 11, "type": "mouse", "pos": [0.55, 0.75], "slots": 2, "ruins": 0},
+    { "id": 12, "type": "rabbit", "pos": [0.9, 0.85], "slots": 1, "ruins": 0}
   ],
   "edges": [
     [1, 2],
