@@ -12,6 +12,52 @@ from factions.Vagabond import Vagabond
 
 import json
 
+def initial_setup(lobby, board, display):
+
+    for player in lobby.players:
+        if player.faction.id == 0:
+            marquise = player
+        elif player.faction.id == 1:
+            canopee = player
+
+    # Récupérer la clairière
+    selected_clearing = display.ask_for_clearing([1, 3, 9, 12])
+
+    # Marquise
+    marquise.faction.buildings["dungeon"] = 1
+    board.graph.nodes[selected_clearing]["buildings"]["dungeon"] = marquise.faction.name
+    opposite_clearing = {1: 12, 3: 9, 9: 3, 12: 1}[selected_clearing]
+    for clearing in board.graph.nodes:
+        if clearing != opposite_clearing:
+            marquise.faction.place_unit(clearing, board)
+            marquise.faction.units -= 1
+    board.update_control(selected_clearing)
+
+    # Canopée
+    canopee.faction.buildings["roost"] = 1
+    board.graph.nodes[opposite_clearing]["buildings"]["roost"] = canopee.faction.name
+    canopee.faction.units -= 6
+    board.graph.nodes[opposite_clearing]["units"][canopee.faction.id] = 6
+    board.update_control(opposite_clearing)
+
+def run(display, lobby):
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if display.is_button_clicked(event.pos):
+                    lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
+                action = display.is_action_button_clicked(event.pos)
+                if action:
+                    print(f"Action {action} clicked")
+                    # Gérer ici
+        display.draw()
+        pygame.display.flip()
+        display.clock.tick(60)
+    pygame.quit()
+
 if __name__ == "__main__":
 
     # Initialisation des joueurs
@@ -19,8 +65,6 @@ if __name__ == "__main__":
     lobby = Lobby()
     lobby.add_player("J1", Marquise())
     lobby.add_player("J2", Canopee()) 
-    
-    print(lobby.get_all_players())  
     
     # Initialisation de la carte
     print("Initialisation de la carte")
@@ -34,17 +78,6 @@ if __name__ == "__main__":
     print("Initialisation des tests")
     tests = RootTest()
     
-    try:
-        lobby.get_player(0).faction.place_unit(2, board)
-        lobby.get_player(0).faction.place_unit(1, board)
-        lobby.get_player(0).faction.place_unit(1, board)
-        lobby.get_player(0).faction.place_unit(3, board)
-        lobby.get_player(1).faction.place_unit(1, board)
-        lobby.get_player(1).faction.place_unit(2, board)
-        lobby.get_player(1).faction.place_unit(2, board)
-    except ValueError as e:
-        print(e)
-    
     # Deck
     with open(CARDS_FILE, "r") as f:
         deck = json.load(f)
@@ -52,14 +85,19 @@ if __name__ == "__main__":
     # Piocher des cartes pour chaque joueur
     for player in lobby.players:
         player.draw_cards(deck, 5)
-        
+    
+    # Initialisation de l'affichage
+    print("Initialisation de l'affichage")
+    display = RootDisplay(board, lobby, items)
+    
+    # Mise en place initiale
+    initial_setup(lobby, board, display)
+    
     # Tests
     print("Tests")
     tests.test_adjacency(board)
     tests.test_control(board)
     tests.test_units(board)
 
-    # Initialisation de l'affichage
-    print("Initialisation de l'affichage")
-    display = RootDisplay(board, lobby, items)
-    display.run()
+    # The boucle    
+    run(display, lobby)

@@ -9,7 +9,8 @@ class Marquise(Base):
             "recruiter": 0
         }
         self.tokens = {
-            "wood": 0
+            "wood": 8,
+            "dungeon": 1
         }
         self.units = 25
         self.actions = ["Build", "Recruit", "March", "Battle", "Overwork", "Spend Bird"]

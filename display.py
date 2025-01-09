@@ -56,18 +56,38 @@ class RootDisplay:
         self.button_font = pygame.font.SysFont(None, 36)
         self.action_history = []
         
+        # Charger les images
+        self.item_images = {
+            item: pygame.image.load(os.path.join("sprites", "items", f"{item}.png"))
+            for item in items.get_items()
+        }
+        self.card_images = {}
+        self._load_card_images()
+        
         # Bouton pour finir le tour
-        self.button_rect = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
+        self.button_pass = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
         self.action_buttons = []
 
+    def _load_card_images(self):
+        card_dir = os.path.join("sprites", "cards", "base_deck")
+        if not os.path.exists(card_dir):
+            print(f"Le répertoire {card_dir} est introuvable.")
+            return
+
+        for card_file in os.listdir(card_dir):
+            if card_file.endswith(".png"):
+                card_id = int(os.path.splitext(card_file)[0])
+                image_path = os.path.join(card_dir, card_file)
+                self.card_images[card_id] = pygame.image.load(image_path)
+
     def draw_button(self):
-        pygame.draw.rect(self.screen, (0, 0, 255), self.button_rect)
+        pygame.draw.rect(self.screen, (0, 0, 255), self.button_pass)
         text = self.button_font.render(">", True, (255, 255, 255))
-        text_rect = text.get_rect(center=self.button_rect.center)
+        text_rect = text.get_rect(center=self.button_pass.center)
         self.screen.blit(text, text_rect)
 
     def is_button_clicked(self, pos):
-        return self.button_rect.collidepoint(pos)
+        return self.button_pass.collidepoint(pos)
     
     def draw_actions(self):
         x_offset = WIDTH - 400
@@ -78,17 +98,17 @@ class RootDisplay:
         actions = self.lobby.get_player(self.lobby.current_player).faction.actions
 
         for action in actions:
-            button_rect = pygame.Rect(x_offset, y_offset, button_width, button_height)
-            pygame.draw.rect(self.screen, (0, 128, 0), button_rect)
+            button_pass = pygame.Rect(x_offset, y_offset, button_width, button_height)
+            pygame.draw.rect(self.screen, (0, 128, 0), button_pass)
             text = self.font.render(action, True, (255, 255, 255))
-            text_rect = text.get_rect(center=button_rect.center)
+            text_rect = text.get_rect(center=button_pass.center)
             self.screen.blit(text, text_rect)
-            self.action_buttons.append((button_rect, action))
+            self.action_buttons.append((button_pass, action))
             y_offset -= button_height + 10
 
     def is_action_button_clicked(self, pos):
-        for button_rect, action in self.action_buttons:
-            if button_rect.collidepoint(pos):
+        for button_pass, action in self.action_buttons:
+            if button_pass.collidepoint(pos):
                 return action
         return None
 
@@ -175,7 +195,7 @@ class RootDisplay:
         x_offset = 10
         y_offset = 10
         items_list = self.items.get_items()
-        item_images = {item: pygame.image.load(os.path.join("sprites", "items", f"{item}.png")) for item in items_list}
+
 
         item_count = 0
         for item, count in items_list.items():
@@ -183,7 +203,7 @@ class RootDisplay:
                 slot_pos = (x_offset + (item_count // 2) * (slot_size + 10), y_offset + (item_count % 2) * (slot_size + 10))
                 pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, slot_size, slot_size))
                 pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, slot_size, slot_size), 1)
-                item_image = pygame.transform.scale(item_images[item], (slot_size, slot_size))
+                item_image = pygame.transform.scale(self.item_images[item], (slot_size, slot_size))
                 self.screen.blit(item_image, slot_pos)
                 item_count += 1
 
@@ -205,11 +225,11 @@ class RootDisplay:
             # Afficher les cartes du joueur
             x_offset = GAME_WIDTH + 30
             for card in player.cards:
-                card_image_path = os.path.join("sprites", "cards", f"{card['id']}.png")
-                card_image = pygame.image.load(card_image_path)
-                card_image = pygame.transform.scale(card_image, (card_width, card_height))
-                self.screen.blit(card_image, (x_offset, y_offset))
-                x_offset += card_width + 5
+                card_image = self.card_images.get(card['id'])
+                if card_image:
+                    card_image = pygame.transform.scale(card_image, (card_width, card_height))
+                    self.screen.blit(card_image, (x_offset, y_offset))
+                    x_offset += card_width + 5
             y_offset += card_height + 10
 
         # Historique des actions
@@ -220,40 +240,72 @@ class RootDisplay:
             y_offset += 20
 
     def draw_cards(self, player):
-        card_width = 250
-        card_height = 341
+        card_width = 220
+        card_height = 300
         x_offset = 10
         y_offset = HEIGHT - card_height - 10
 
         for card in player.cards:
-            card_image_path = os.path.join("sprites", "cards", f"{card['id']}.png")
-            card_image = pygame.image.load(card_image_path)
-            card_image = pygame.transform.scale(card_image, (card_width, card_height))
-            self.screen.blit(card_image, (x_offset, y_offset))
+            card_image = self.card_images.get(card['id'])
+            if card_image:
+                card_image = pygame.transform.scale(card_image, (card_width, card_height))
+                self.screen.blit(card_image, (x_offset, y_offset))
             x_offset += card_width + 10
 
     def add_action(self, action):
         self.action_history.append(action)
+        
+    def ask_for_clearing(self, valid_clearings):
+        selected_clearing = None
+        circle_radius = 20
+        growing = True
+        animation_speed = 0.5  # Vitesse de changement du rayon du cercle
 
-    def run(self):
-        running = True
-        while running:
+        while selected_clearing not in valid_clearings:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    pygame.quit()
+                    exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.is_button_clicked(event.pos):
-                        self.lobby.current_player = (self.lobby.current_player + 1) % len(self.lobby.players)
-                    action = self.is_action_button_clicked(event.pos)
-                    if action:
-                        print(f"Action {action} clicked")
-                        # Gérer l'action ici
-            self.draw_board()
-            self.draw_panel()
-            self.draw_button()
-            self.draw_actions()
-            for player in self.lobby.players:
-                self.draw_cards(player)
+                    pos = event.pos
+                    for clearing in valid_clearings:
+                        clearing_pos = self.board.graph.nodes[clearing]["pos"]
+                        scaled_pos = (int(clearing_pos[0] * SCALE), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
+                        if pygame.Rect(scaled_pos[0] - NODE_RADIUS, scaled_pos[1] - NODE_RADIUS, NODE_RADIUS * 2, NODE_RADIUS * 2).collidepoint(pos):
+                            selected_clearing = clearing
+                            break
+
+            # Animation du cercle
+            if growing:
+                circle_radius += animation_speed
+                if circle_radius >= 30:
+                    growing = False
+            else:
+                circle_radius -= animation_speed
+                if circle_radius <= 20:
+                    growing = True
+
+            # Dessiner uniquement ce qui est nécessaire
+            self.draw()
+
+            # Dessiner les cercles animés
+            for clearing in valid_clearings:
+                clearing_pos = self.board.graph.nodes[clearing]["pos"]
+                scaled_pos = (int(clearing_pos[0] * SCALE), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
+                pygame.draw.circle(self.screen, (255, 0, 0), scaled_pos, int(circle_radius), 2)
+
+            # Rafraîchir l'écran
             pygame.display.flip()
             self.clock.tick(60)
-        pygame.quit()
+
+        return selected_clearing
+
+
+
+    def draw(self):
+        self.draw_board()
+        self.draw_panel()
+        self.draw_button()
+        self.draw_actions()
+        for player in self.lobby.players:
+            self.draw_cards(player)

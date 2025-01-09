@@ -5,5 +5,4 @@
 
 
 - Rajouter interaction avec les cartes pour les jouer
-- Rajouter l'interface de tour
-- Rajouter le système de tour
+- Rajouter les grisements de boutons quand non cliquables
