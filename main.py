@@ -28,8 +28,8 @@ def initial_setup(lobby, board, display):
     selected_clearing = display.ask_for_clearing([1, 3, 9, 12])
 
     # Marquise
-    marquise.faction.buildings["dungeon"] = 1
-    board.graph.nodes[selected_clearing]["buildings"]["dungeon"] = marquise.faction.name
+    marquise.faction.tokens["dungeon"] = 0
+    board.graph.nodes[selected_clearing]["tokens"].append({"type": "dungeon", "owner": marquise.faction.id})
     opposite_clearing = {1: 12, 3: 9, 9: 3, 12: 1}[selected_clearing]
     for clearing in board.graph.nodes:
         if clearing != opposite_clearing:
@@ -38,8 +38,8 @@ def initial_setup(lobby, board, display):
         board.update_control(clearing)
 
     # Canopée
-    canopee.faction.buildings["roost"] = 1
-    board.graph.nodes[opposite_clearing]["buildings"]["roost"] = canopee.faction.name
+    #canopee.faction.buildings["roost"] = 1
+    #board.graph.nodes[opposite_clearing]["buildings"]["roost"] = canopee.faction.name
     canopee.faction.units -= 6
     board.graph.nodes[opposite_clearing]["units"][canopee.faction.id] = 6
     board.update_control(opposite_clearing)

@@ -26,7 +26,7 @@ class RootBoard:
                                     units={},
                                     slots=node.get("slots", 0),
                                     ruins=node.get("ruins", 0),
-                                    buildings={})
+                                    tokens=node.get("tokens", []))
                 
             # Ajout des forêts
             for forest in data.get("forests", []):

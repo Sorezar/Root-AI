@@ -1,6 +1,7 @@
 import pygame
 import config
 import os
+import math
 
 COLORS = {
     "forests": (34, 139, 34),       # Vert forêt
@@ -61,6 +62,15 @@ class RootDisplay:
             item: pygame.image.load(os.path.join("sprites", "items", f"{item}.png"))
             for item in items.get_items()
         }
+        
+        # Charger les images des jetons
+        self.token_images = {}
+        token_path = os.path.join("sprites", "tokens")
+        for filename in os.listdir(token_path):
+            if filename.endswith(".png"):
+                token_name = os.path.splitext(filename)[0]
+                self.token_images[token_name] = pygame.image.load(os.path.join(token_path, filename))
+        
         self.card_images = {}
         self._load_card_images()
         
@@ -111,6 +121,25 @@ class RootDisplay:
             if button_pass.collidepoint(pos):
                 return action
         return None
+    
+    def draw_wavy_line(self, start_pos, end_pos, amplitude=6, frequency=2, color=COLORS["rivers"], width=10):
+        x1, y1 = start_pos
+        x2, y2 = end_pos
+        length = math.hypot(x2 - x1, y2 - y1)
+        angle = math.atan2(y2 - y1, x2 - x1)
+        segments = int(length / frequency)
+        
+        points = []
+        for i in range(segments + 1):
+            t = i / segments
+            x = x1 + t * (x2 - x1)
+            y = y1 + t * (y2 - y1)
+            offset = amplitude * math.sin(2 * math.pi * frequency * t)
+            offset_x = offset * math.cos(angle + math.pi / 2)
+            offset_y = offset * math.sin(angle + math.pi / 2)
+            points.append((x + offset_x, y + offset_y))
+        
+        pygame.draw.lines(self.screen, color, False, points, width)
 
     def draw_board(self):
         
@@ -148,7 +177,8 @@ class RootDisplay:
         for river in rivers:
             pos1 = scale_pos(nodes[river[0] - 1][1]["pos"])
             pos2 = scale_pos(nodes[river[1] - 1][1]["pos"])
-            pygame.draw.line(self.screen, COLORS["rivers"], pos1, pos2, 3)
+            #pygame.draw.line(self.screen, COLORS["rivers"], pos1, pos2, 3)
+            self.draw_wavy_line(pos1, pos2)
 
         # Dessiner les clairières et les unités
         for node, data in nodes:
@@ -189,7 +219,19 @@ class RootDisplay:
                 unit_text = self.unit_font.render(str(count), True, COLORS["text"])
                 self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
                 offset += 15
-                
+            
+            # Jetons
+            token_size = 20
+            token_offset_x = -24
+            token_offset_y = -NODE_RADIUS - slot_size - 14  # Positionner les jetons au-dessus des slots
+            for token in data["tokens"]:
+                token_type = token["type"]
+                if token_type in self.token_images:
+                    token_image = pygame.transform.scale(self.token_images[token_type], (token_size, token_size))
+                    self.screen.blit(token_image, (pos[0] + token_offset_x, pos[1] + token_offset_y))
+                    token_offset_x += token_size + 5  # Déplacer horizontalement pour le prochain jeton
+
+                    
         # Dessiner les slots pour les items en haut de la carte
         slot_size = 40
         x_offset = 10
