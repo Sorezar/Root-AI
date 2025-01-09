@@ -3,6 +3,7 @@ from player import Player
 class Lobby:
     def __init__(self):
         self.players = []
+        self.current_player = 0
         self.available_factions = {
             0: 1,
             1: 1,
@@ -17,7 +18,7 @@ class Lobby:
         if self.available_factions[faction.id] <= 0:
             raise ValueError(f"La faction {faction.name} est déjà prise.")
         
-        player = Player(name, faction)
+        player = Player(name, faction, id=len(self.players))
         self.players.append(player)
         self.available_factions[faction.id] -= 1
         return player
@@ -41,3 +42,6 @@ class Lobby:
     
     def get_scores(self):
         return {player.name: player.points for player in self.players}
+
+    def get_current_player(self):
+        return self.current_player

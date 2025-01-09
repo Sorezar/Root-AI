@@ -40,10 +40,13 @@ UNIT_RADIUS  = 10
 SYMBOL_SIZE  = 12
 CONTROL_RADIUS = NODE_RADIUS
 BUILDING_RADIUS = 15
+BOARD_OFFSET_Y = 70 # Offset pour descendre le plateau
 
 class RootDisplay:
-    def __init__(self, board):
+    def __init__(self, board, lobby, items):
         self.board = board
+        self.lobby = lobby
+        self.items = items
         pygame.init()
         pygame.display.set_caption("Root")
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), config.get_screen_mode())
@@ -53,15 +56,19 @@ class RootDisplay:
         self.action_history = []
 
     def draw_board(self):
+        
+        # Background
         self.screen.fill(COLORS["background"])
+        
         # Dessiner la zone de jeu
         pygame.draw.rect(self.screen, COLORS["panel_bg"], (GAME_WIDTH, 0, PANEL_WIDTH, PANEL_HEIGHT))
 
+        # Récupérer les noeuds, arêtes, rivières et forêts
         nodes, edges, rivers, forests = self.board.get_nodes_and_edges()
 
         # Scaling
         def scale_pos(pos):
-            return (int(pos[0] * SCALE), int(pos[1] * SCALE))
+            return (int(pos[0] * SCALE), int(pos[1] * SCALE + BOARD_OFFSET_Y))
 
         # Dessiner les forêts en premier (pour qu'elles soient en arrière-plan)
         for forest_id, forest_data in forests.items():
@@ -70,9 +77,9 @@ class RootDisplay:
                 pygame.draw.polygon(self.screen, COLORS["forests"], points)
                 pygame.draw.polygon(self.screen, COLORS["edges"], points, 2)
                 forest_center = scale_pos(forest_data["center"])
-                text = self.font.render(forest_id, True, COLORS["text"])
-                text_rect = text.get_rect(center=forest_center)
-                self.screen.blit(text, text_rect)
+                #text = self.font.render(forest_id, True, COLORS["text"])
+                #text_rect = text.get_rect(center=forest_center)
+                #self.screen.blit(text, text_rect)
 
         # Dessiner les chemins
         for edge in edges:
@@ -116,7 +123,6 @@ class RootDisplay:
                 pygame.draw.rect(self.screen, slot_color, (*slot_pos, slot_size, slot_size))
                 pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, slot_size, slot_size), 1)
 
-
             # Unités
             offset = -20
             for faction, count in data["units"].items():
@@ -126,19 +132,35 @@ class RootDisplay:
                 unit_text = self.unit_font.render(str(count), True, COLORS["text"])
                 self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
                 offset += 15
+                
+        # Dessiner les slots pour les items en haut de la carte
+        slot_size = 40
+        x_offset = 10
+        y_offset = 10
+        items_list = self.items.get_items()
+        item_images = {item: pygame.image.load(os.path.join("sprites", "items", f"{item}.png")) for item in items_list}
 
-    def draw_panel(self, player_turn, scores, players):
+        item_count = 0
+        for item, count in items_list.items():
+            for _ in range(count):
+                slot_pos = (x_offset + (item_count // 2) * (slot_size + 10), y_offset + (item_count % 2) * (slot_size + 10))
+                pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, slot_size, slot_size))
+                pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, slot_size, slot_size), 1)
+                item_image = pygame.transform.scale(item_images[item], (slot_size, slot_size))
+                self.screen.blit(item_image, slot_pos)
+                item_count += 1
+
+    def draw_panel(self):
         y_offset = 20
         arrow_offset = 10
         card_width = 100
         card_height = 136
         
-        for player in players:
-            score = scores[player.name]
+        for player in self.lobby.players:
             color = COLORS["units"].get(player.faction.id, COLORS["text"])
-            text = self.font.render(f"{player.name}: {score} points", True, color)
+            text = self.font.render(f"{player.name}: {player.points} points", True, color)
             self.screen.blit(text, (GAME_WIDTH + 30, y_offset))
-            if player.name == player_turn:
+            if player.id == self.lobby.current_player :
                 arrow = self.font.render("->", True, (255, 0, 0))
                 self.screen.blit(arrow, (GAME_WIDTH + 10, y_offset))
             y_offset += 30
@@ -176,16 +198,16 @@ class RootDisplay:
     def add_action(self, action):
         self.action_history.append(action)
 
-    def run(self, player_turn, scores, players):
+    def run(self):
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
             self.draw_board()
-            self.draw_panel(player_turn, scores, players)
-            for player in players:
+            self.draw_panel()
+            for player in self.lobby.players:
                 self.draw_cards(player)
             pygame.display.flip()
-            self.clock.tick(30)
+            self.clock.tick(60)
         pygame.quit()

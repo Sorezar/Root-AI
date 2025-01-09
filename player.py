@@ -6,12 +6,13 @@ import random
 import json
 
 class Player:
-    def __init__(self, name, faction):
+    def __init__(self, name, faction, id):
         self.name    = name
         self.faction = faction
         self.cards   = []
         self.items   = {}
         self.points  = 0
+        self.id      = id
 
 
     def draw_cards(self, deck, count=1):
