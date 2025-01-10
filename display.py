@@ -32,15 +32,16 @@ SYMBOL_COLORS = {
 # Dimensions
 SCALE = 1
 WIDTH, HEIGHT = config.WIDTH, config.HEIGHT
-GAME_WIDTH   = int(WIDTH * SCALE)
-GAME_HEIGHT  = int(HEIGHT * SCALE)
-PANEL_WIDTH  = WIDTH - config.BOARD_WIDTH
-PANEL_HEIGHT = HEIGHT
+GAME_WIDTH   = config.BOARD_WIDTH
+GAME_HEIGHT  = config.BOARD_HEIGHT
+PANEL_WIDTH  = config.PANEL_WIDTH
+PANEL_HEIGHT = config.PANEL_HEIGHT
+ACTIONS_WIDTH = config.ACTIONS_WIDTH
+ACTIONS_HEIGHT = config.ACTIONS_HEIGHT
 NODE_RADIUS  = 30
 UNIT_RADIUS  = 10
 SYMBOL_SIZE  = 12
 CONTROL_RADIUS = NODE_RADIUS
-BUILDING_RADIUS = 15
 BOARD_OFFSET_X = 10  # Offset pour décaler le plateau
 BOARD_OFFSET_Y = 120 # Offset pour descendre le plateau
 
@@ -101,21 +102,28 @@ class RootDisplay:
         return self.button_pass.collidepoint(pos)
     
     def draw_actions(self):
-        x_offset = WIDTH - 400
-        y_offset = HEIGHT - 80
-        button_width = 180
-        button_height = 40
+        x_offset = WIDTH - ACTIONS_WIDTH + 10
+        y_offset = HEIGHT - ACTIONS_HEIGHT + 10
+        button_width = 60
+        button_height = 60
         self.action_buttons = []
         actions = self.lobby.get_player(self.lobby.current_player).faction.actions
+        faction_id = self.lobby.get_player(self.lobby.current_player).faction.id
 
         for action in actions:
             button_pass = pygame.Rect(x_offset, y_offset, button_width, button_height)
-            pygame.draw.rect(self.screen, (0, 128, 0), button_pass)
-            text = self.font.render(action, True, (255, 255, 255))
-            text_rect = text.get_rect(center=button_pass.center)
-            self.screen.blit(text, text_rect)
+            action_image_path = os.path.join("sprites", "actions", str(faction_id), f"{action}.png")
+            if os.path.exists(action_image_path):
+                action_image = pygame.image.load(action_image_path)
+                action_image = pygame.transform.scale(action_image, (button_width, button_height))
+                self.screen.blit(action_image, (x_offset, y_offset))
+            else:
+                pygame.draw.rect(self.screen, (0, 128, 0), button_pass)
+                text = self.font.render(action, True, (255, 255, 255))
+                text_rect = text.get_rect(center=button_pass.center)
+                self.screen.blit(text, text_rect)
             self.action_buttons.append((button_pass, action))
-            y_offset -= button_height + 10
+            y_offset += button_height + 10
 
     def is_action_button_clicked(self, pos):
         for button_pass, action in self.action_buttons:
@@ -148,7 +156,7 @@ class RootDisplay:
         self.screen.fill(COLORS["background"])
         
         # Dessiner la zone de jeu
-        pygame.draw.rect(self.screen, COLORS["panel_bg"], (GAME_WIDTH, 0, PANEL_WIDTH, PANEL_HEIGHT))
+        pygame.draw.rect(self.screen, COLORS["panel_bg"], (config.BOARD_WIDTH + BOARD_OFFSET_X, 0, GAME_WIDTH, PANEL_HEIGHT))
         
         # Dessiner le cadre noir autour de la zone de plateau
         pygame.draw.rect(self.screen, (0, 0, 0), (BOARD_OFFSET_X, BOARD_OFFSET_Y, config.BOARD_WIDTH, config.BOARD_HEIGHT), 5)
@@ -200,7 +208,7 @@ class RootDisplay:
                 pygame.draw.circle(self.screen, SYMBOL_COLORS[clearing_type], symbol_pos, SYMBOL_SIZE // 2)
 
             # Emplacements libres et ruines
-            slot_size = 12
+            slot_size = 15
             slot_offset = 15
             for i in range(data["slots"]):
                 slot_color = COLORS["slots"] if i < data["ruins"] else COLORS["ruins"]
@@ -235,7 +243,6 @@ class RootDisplay:
         x_offset = 10
         y_offset = 10
         items_list = self.items.get_items()
-
 
         item_count = 0
         for item, count in items_list.items():

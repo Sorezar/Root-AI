@@ -11,8 +11,14 @@ WIDTH = 1920
 HEIGHT = 1080
 
 # Dimensions de la zone de plateau
-BOARD_WIDTH = 800
-BOARD_HEIGHT = 600
+BOARD_WIDTH = 1200  # 80% de la largeur
+BOARD_HEIGHT = 600  # 80% de la hauteur
+
+# Dimensions du panneau et de la zone des boutons d'actions
+PANEL_WIDTH = WIDTH - BOARD_WIDTH  # 20% de la largeur
+PANEL_HEIGHT = HEIGHT // 2  # 50% de la hauteur
+ACTIONS_WIDTH = PANEL_WIDTH
+ACTIONS_HEIGHT = HEIGHT // 2  # 50% de la hauteur
 
 # Vitesse
 ANIMATION_SPEED = 1
