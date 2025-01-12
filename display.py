@@ -12,12 +12,19 @@ COLORS = {
     "control": (0, 0, 0),           # Noir pour le contrôle par défaut
     "background": (245, 245, 220),  # Beige pour le fond
     "panel_bg": (200, 200, 200),    # Gris clair pour les panneaux
-    "units": {
+    "units": 
+    {
         0 : (255, 165, 0),
         1 : (0,0,255),
         2 : (0, 255, 0)
-        },
-    "slots" : (169, 169, 169),
+    },
+    "text_units": 
+    {
+        0 : (0, 0, 0),
+        1 : (255, 255, 255),
+        2 : (0, 0, 0)
+    },
+    "slots" : (230, 230, 230),
     "slots_borders" :(139, 69, 19)
 }
 
@@ -36,12 +43,15 @@ PANEL_WIDTH  = config.PANEL_WIDTH
 PANEL_HEIGHT = config.PANEL_HEIGHT
 ACTIONS_WIDTH = config.ACTIONS_WIDTH
 ACTIONS_HEIGHT = config.ACTIONS_HEIGHT
-NODE_RADIUS  = 30
-UNIT_RADIUS  = 10
-SYMBOL_SIZE  = 12
+NODE_RADIUS  = 50
+UNIT_RADIUS  = 12
+SYMBOL_SIZE  = 25
 CONTROL_RADIUS = NODE_RADIUS
 BOARD_OFFSET_X = 10  # Offset pour décaler le plateau
 BOARD_OFFSET_Y = 120 # Offset pour descendre le plateau
+BUILDING_SIZE = 22
+TOKEN_SIZE = 22
+ITEM_SIZE = 40
 
 class RootDisplay:
     def __init__(self, board, lobby, items):
@@ -57,13 +67,13 @@ class RootDisplay:
         self.button_font = pygame.font.SysFont(None, 36)
         self.action_history = []
         
-        # Charger les images
+        # Charger les sprites des items
         self.item_images = {
             item: pygame.image.load(os.path.join("sprites", "items", f"{item}.png"))
             for item in items.get_items()
         }
         
-        # Charger les images des jetons
+        # Charger les sprites des jetons
         self.token_images = {}
         token_path = os.path.join("sprites", "tokens")
         for filename in os.listdir(token_path):
@@ -71,7 +81,7 @@ class RootDisplay:
                 token_name = os.path.splitext(filename)[0]
                 self.token_images[token_name] = pygame.image.load(os.path.join(token_path, filename))
                 
-        # Charger les images des bâtiments
+        # Charger les sprites des bâtiments
         self.building_images = {}
         building_path = os.path.join("sprites", "buildings")
         for filename in os.listdir(building_path):
@@ -79,6 +89,7 @@ class RootDisplay:
                 building_name = os.path.splitext(filename)[0]
                 self.building_images[building_name] = pygame.image.load(os.path.join(building_path, filename))
         
+        # Charger les sprites des cartes
         self.card_images = {}
         card_dir = os.path.join("sprites", "cards", "base_deck")
         for card_file in os.listdir(card_dir):
@@ -86,6 +97,23 @@ class RootDisplay:
                 card_id = int(os.path.splitext(card_file)[0])
                 image_path = os.path.join(card_dir, card_file)
                 self.card_images[card_id] = pygame.image.load(image_path)
+        
+        # Charger les sprites des cartes format réduit
+        self.card_images_panel = {}
+        card_dir = os.path.join("sprites", "cards", "base_deck", "panels")
+        for card_file in os.listdir(card_dir):
+            if card_file.endswith(".png"):
+                card_id = int(os.path.splitext(card_file)[0])
+                image_path = os.path.join(card_dir, card_file)
+                self.card_images_panel[card_id] = pygame.image.load(image_path)
+                
+        # Charger les sprites des types de clairières
+        self.clearing_types = {}
+        type_path = os.path.join("sprites", "type")
+        for filename in os.listdir(type_path):
+            if filename.endswith(".png"):
+                type_name = os.path.splitext(filename)[0]
+                self.clearing_types[type_name] = pygame.image.load(os.path.join(type_path, filename))
         
         # Bouton pour finir le tour
         self.button_pass = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
@@ -149,6 +177,21 @@ class RootDisplay:
         
         pygame.draw.lines(self.screen, color, False, points, width)
 
+    def draw_items(self):
+        x_offset = 10
+        y_offset = 10
+        items_list = self.items.get_items()
+
+        item_count = 0
+        for item, count in items_list.items():
+            for _ in range(count):
+                slot_pos = (x_offset + (item_count // 2) * (ITEM_SIZE + 10), y_offset + (item_count % 2) * (ITEM_SIZE + 10))
+                pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, ITEM_SIZE, ITEM_SIZE))
+                pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, ITEM_SIZE, ITEM_SIZE), 1)
+                item_image = pygame.transform.scale(self.item_images[item], (ITEM_SIZE, ITEM_SIZE))
+                self.screen.blit(item_image, slot_pos)
+                item_count += 1
+
     def draw_board(self):
         
         # Background
@@ -202,67 +245,59 @@ class RootDisplay:
 
             # Type de clairière
             clearing_type = data["type"]
-            if clearing_type in SYMBOL_COLORS:
-                symbol_pos = (pos[0] + NODE_RADIUS - 10, pos[1] + NODE_RADIUS - 10)
-                pygame.draw.circle(self.screen, SYMBOL_COLORS[clearing_type], symbol_pos, SYMBOL_SIZE // 2)
-
-            # Emplacements libres
-            slot_size = 15
-            for i in range(data["slots"]):
-                slot_pos = (pos[0] - (data["slots"] * (slot_size + 5)) // 2 + i * (slot_size + 5), pos[1] - NODE_RADIUS - slot_size + 10)
-                pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, slot_size, slot_size))
-                pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, slot_size, slot_size), 1)
+            clearing_type_image = pygame.transform.scale(self.clearing_types[clearing_type], (SYMBOL_SIZE, SYMBOL_SIZE))
+            clearing_type_pos = (pos[0] + NODE_RADIUS - 20, pos[1] + NODE_RADIUS - 20)
+            self.screen.blit(clearing_type_image, clearing_type_pos)
 
             # Dessiner les bâtiments
+            
             for i, building in enumerate(data["buildings"]):
                 building_type = building["type"]
                 owner = building["owner"]
                 if building_type in self.building_images:
-                    building_image = pygame.transform.scale(self.building_images[building_type], (slot_size, slot_size))
-                    building_pos = (pos[0] - (data["slots"] * (slot_size + 5)) // 2 + i * (slot_size + 5), pos[1] - NODE_RADIUS - slot_size + 10)
+                    building_image = pygame.transform.scale(self.building_images[building_type], (BUILDING_SIZE, BUILDING_SIZE))
+                    building_pos = (pos[0] - (data["slots"] * (BUILDING_SIZE + 5)) // 2 + i * (BUILDING_SIZE + 5), pos[1] - (NODE_RADIUS // 2) - BUILDING_SIZE + 10)
                     self.screen.blit(building_image, building_pos)
+
+            # Emplacements libres
+            for i in range(len(data["buildings"]), data["slots"]):
+                slot_pos = (pos[0] - (data["slots"] * (BUILDING_SIZE + 5)) // 2 + i * (BUILDING_SIZE + 5), pos[1] - (NODE_RADIUS // 2) - BUILDING_SIZE + 10)
+                pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, BUILDING_SIZE, BUILDING_SIZE))
+                pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, BUILDING_SIZE, BUILDING_SIZE), 1)
 
             # Unités
             offset = -20
             for faction, count in data["units"].items():
-                faction_color = COLORS["units"].get(faction, (200, 200, 200))
-                unit_pos = (pos[0] + offset, pos[1])
+                faction_color = COLORS["units"].get(faction)
+                unit_pos  = (pos[0] + offset, pos[1] + (NODE_RADIUS // 3) )
+                unit_text = self.unit_font.render(str(count), True, COLORS["text_units"].get(faction))
                 pygame.draw.circle(self.screen, faction_color, unit_pos, UNIT_RADIUS)
-                unit_text = self.unit_font.render(str(count), True, COLORS["text"])
                 self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
                 offset += 15
             
             # Jetons
-            token_size = 20
-            token_offset_x = -24
-            token_offset_y = -NODE_RADIUS - slot_size - 14  # Positionner les jetons au-dessus des slots
-            for token in data["tokens"]:
-                token_type = token["type"]
-                if token_type in self.token_images:
-                    token_image = pygame.transform.scale(self.token_images[token_type], (token_size, token_size))
-                    self.screen.blit(token_image, (pos[0] + token_offset_x, pos[1] + token_offset_y))
-                    token_offset_x += token_size + 5  # Déplacer horizontalement pour le prochain jeton
+            token_offset_y = (-NODE_RADIUS // 2) - BUILDING_SIZE - 10
+            tokens_per_row = 5
+            num_tokens = len(data["tokens"])
+            rows = (num_tokens + tokens_per_row - 1) // tokens_per_row
 
-                    
-        # Dessiner les slots pour les items en haut de la carte
-        slot_size = 40
-        x_offset = 10
-        y_offset = 10
-        items_list = self.items.get_items()
+            for row in range(rows):
+                start_index = row * tokens_per_row
+                end_index = min(start_index + tokens_per_row, num_tokens)
+                row_tokens = data["tokens"][start_index:end_index]
+                total_width = len(row_tokens) * TOKEN_SIZE + (len(row_tokens) - 1) * 5
+                start_x = pos[0] - total_width // 2
+                token_pos_y = pos[1] + token_offset_y - row * (TOKEN_SIZE + 5)
 
-        item_count = 0
-        for item, count in items_list.items():
-            for _ in range(count):
-                slot_pos = (x_offset + (item_count // 2) * (slot_size + 10), y_offset + (item_count % 2) * (slot_size + 10))
-                pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, slot_size, slot_size))
-                pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, slot_size, slot_size), 1)
-                item_image = pygame.transform.scale(self.item_images[item], (slot_size, slot_size))
-                self.screen.blit(item_image, slot_pos)
-                item_count += 1
+                for i, token in enumerate(row_tokens):
+                    token_type = token["type"]
+                    if token_type in self.token_images:
+                        token_image = pygame.transform.scale(self.token_images[token_type], (TOKEN_SIZE, TOKEN_SIZE))
+                        token_pos_x = start_x + i * (TOKEN_SIZE + 5)
+                        self.screen.blit(token_image, (token_pos_x, token_pos_y))
 
     def draw_panel(self):
         y_offset = 20
-        arrow_offset = 10
         card_width = 100
         card_height = 136
         
@@ -278,10 +313,10 @@ class RootDisplay:
             # Afficher les cartes du joueur
             x_offset = config.BOARD_WIDTH + 30
             for card in player.cards:
-                card_image = self.card_images.get(card['id'])
-                if card_image:
-                    card_image = pygame.transform.scale(card_image, (card_width, card_height))
-                    self.screen.blit(card_image, (x_offset, y_offset))
+                card_image_panel = self.card_images_panel.get(card['id'])
+                if card_image_panel:
+                    card_image_panel = pygame.transform.scale(card_image_panel, (card_width, card_height))
+                    self.screen.blit(card_image_panel, (x_offset, y_offset))
                     x_offset += card_width + 5
             y_offset += card_height + 10
 
@@ -310,9 +345,9 @@ class RootDisplay:
         
     def ask_for_clearing(self, valid_clearings):
         selected_clearing = None
-        circle_radius = 20
+        circle_radius = NODE_RADIUS - 10
         growing = True
-        animation_speed = 0.5  # Vitesse de changement du rayon du cercle
+        animation_speed = 0.4 # Vitesse de changement du rayon du cercle
 
         while selected_clearing not in valid_clearings:
             for event in pygame.event.get():
@@ -331,11 +366,11 @@ class RootDisplay:
             # Animation du cercle
             if growing:
                 circle_radius += animation_speed
-                if circle_radius >= 30:
+                if circle_radius >= NODE_RADIUS:
                     growing = False
             else:
                 circle_radius -= animation_speed
-                if circle_radius <= 20:
+                if circle_radius <= NODE_RADIUS - 10:
                     growing = True
 
             # Dessiner uniquement ce qui est nécessaire
@@ -356,6 +391,7 @@ class RootDisplay:
     def draw(self):
         self.draw_board()
         self.draw_panel()
+        self.draw_items()
         self.draw_button_pass()
         self.draw_actions()
         current_player = self.lobby.get_player(self.lobby.current_player)

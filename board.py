@@ -66,7 +66,7 @@ class RootBoard:
         except json.JSONDecodeError:
             print(f"Erreur : Le fichier {map_file} contient une erreur de format.")
 
-    def get_forest_polygon_points(self, forest_id, shrink_factor=0.8):
+    def get_forest_polygon_points(self, forest_id, shrink_factor=0.85):
         
         def _shrink_point(point, center, shrink_factor):
             dx = point[0] - center[0]
