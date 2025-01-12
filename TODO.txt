@@ -1,9 +1,16 @@
-- Rajouter les différentes factions : Chat, Piafs, Rebelles, Vagabond, Loutre, Lézard
+# Moteur de jeu
 - Rajouter les règles communes à toutes les factions
 - Rajouter les actions des factions
-- Rajouter les animations de mouvement
 
-
+# Interface
 - Rajouter interaction avec les cartes pour les jouer
 - Rajouter les grisements de boutons quand non cliquables
-- Rajouter l'affichage des bâtiments
+- Rajouter les animations de mouvement
+
+# Contenu
+- Ajouter les différentes factions : Chat, Piafs, Rebelles, Vagabond, Loutre, Lézard, Corvidés, Taupes, Gardiens, Seigneur des Cents
+- Rajouter les différentes map
+- Rajouter les différents decks
+
+# Plus tard
+- Rajouter le système de nomades
