@@ -8,6 +8,14 @@ class RootTest:
             print(f"Clairières adjacentes: {board.get_adjacent_clearings(clearing)}")
             print(f"Forêts adjacentes: {board.get_adjacent_forests(clearing)}")
         
+        print("Si loutres")
+        
+        # Test depuis une clairière
+        for clearing in board.graph.nodes :
+            print(f"Depuis la clairière {clearing}:")
+            print(f"Clairières adjacentes: {board.get_adjacent_clearings_through_river(clearing)}")
+            print(f"Forêts adjacentes: {board.get_adjacent_forests(clearing)}")
+        
         # Test depuis une forêt
         forest_id = "F1"
         print(f"\nDepuis la forêt {forest_id}:")

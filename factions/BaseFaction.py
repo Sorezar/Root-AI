@@ -4,6 +4,7 @@ class Base:
         self.name  = name
         self.units = 0
         self.buildings = {}
+        self.number_card_draw_bonus = 0
         
     def place_unit(self, clearing_id, board):
                 
@@ -22,12 +23,8 @@ class Base:
         raise NotImplementedError()
     
     def move_unit(self, from_clearing, to_clearing, board):
-        if to_clearing not in board.get_adjacent_clearings(from_clearing):
-            raise ValueError("Déplacement invalide. Les clairières ne sont pas adjacentes.")
 
         units = board.graph.nodes[from_clearing]["units"]
-        if units.get(self.name, 0) == 0:
-            raise ValueError(f"Aucune unité de {self.name} dans la clairière {from_clearing}.")
 
         # Mise à jour des unités
         board.graph.nodes[from_clearing]["units"][self.id] -= 1
@@ -36,3 +33,5 @@ class Base:
         # Mise à jour du contrôle
         board.update_control(from_clearing)
         board.update_control(to_clearing)
+        
+    

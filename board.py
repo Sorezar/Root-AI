@@ -6,7 +6,6 @@ import config
 class RootBoard:
     def __init__(self, map_file):
         self.graph = nx.Graph()
-        self.factions = {}
         self.rivers = []
         self.forests = {}
         self._load_map(map_file)
@@ -103,13 +102,20 @@ class RootBoard:
         else:
             self.graph.nodes[clearing_id]["control"] = None
             
-    def get_adjacent_clearings(self, location):
+    def get_adjacent_clearings_through_river(self, location):
+        return self.get_adjacent_clearings(location, is_river=True)
+    
+    def get_adjacent_clearings(self, location, is_river=False):
         
         # Si on part d'une clairière
         if isinstance(location, int):
             if location not in self.graph:
                 raise ValueError(f"Clairière {location} non trouvée")
-            return list(self.graph.neighbors(location))
+            neighbors = list(self.graph.neighbors(location))
+            if is_river:
+                return neighbors
+            else:
+                return [n for n in neighbors if not self.graph[location][n].get('is_river', False)]
             
         # Si on part d'une forêt
         elif isinstance(location, str):

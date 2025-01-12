@@ -53,3 +53,4 @@ class Marquise(Base):
             raise ValueError(f"Aucun recruteur dans la clairière {clearing_id}.")
         
         self.place_unit(clearing_id, board)
+

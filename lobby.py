@@ -45,3 +45,4 @@ class Lobby:
 
     def get_current_player(self):
         return self.current_player
+    

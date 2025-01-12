@@ -44,7 +44,7 @@ def initial_setup(lobby, board, display):
     board.graph.nodes[opposite_clearing]["units"][canopee.faction.id] = 6
     board.update_control(opposite_clearing)
 
-def run(display, lobby):
+def run(display, lobby, board):
     running = True
     while running:
         for event in pygame.event.get():
@@ -57,6 +57,26 @@ def run(display, lobby):
                 action = display.is_action_button_clicked(event.pos)
                 if action:
                     print(f"Action {action} clicked")
+                    if action == "March" or action == "Move":
+                        
+                        # Partir d'une clairière contrôlée si la clairière d'arrivée n'est pas contrôlée
+                        
+                        clearing_with_units = lobby.players[lobby.current_player].get_clearings_with_units(board)
+                        controled_clearings = lobby.players[lobby.current_player].get_controlled_clearings(board) 
+                        from_clearing = display.ask_for_clearing(clearing_with_units)
+                        
+                        adjacent_clearings = board.get_adjacent_clearings(from_clearing)
+                        adjacent_and_controlled_clearings = [clearing for clearing in adjacent_clearings if clearing in controled_clearings]
+                        if from_clearing not in controled_clearings:
+                            to_clearing = display.ask_for_clearing(adjacent_and_controlled_clearings)
+                        else :
+                            to_clearing = display.ask_for_clearing(adjacent_clearings)
+                        
+                        # Demander combien d'unité à déplacer
+                        lobby.players[lobby.current_player].faction.move_unit(from_clearing, to_clearing, board)
+                        
+                        # Aller dans une clairière contrôlée depuis une clairière non controlée
+                        
                     # Gérer ici
         display.draw()
         pygame.display.flip()
@@ -101,4 +121,4 @@ if __name__ == "__main__":
     tests.test_units(board, lobby)
 
     # The boucle
-    run(display, lobby)
+    run(display, lobby, board)

@@ -1,6 +1,6 @@
 # Moteur de jeu
-- Rajouter les règles communes à toutes les factions
-- Rajouter les actions des factions
+- Rajouter les actions communes à toutes les factions
+- Rajouter les actions propres à chaque faction
 
 # Interface
 - Rajouter interaction avec les cartes pour les jouer
@@ -14,3 +14,11 @@
 
 # Plus tard
 - Rajouter le système de nomades
+
+
+
+
+Ordre 
+- Rajouter le nombre de cartes que tire un joueur
+- Rajouter les actions communes à toutes les factions
+- Rajouter les actions propres à chaque faction
