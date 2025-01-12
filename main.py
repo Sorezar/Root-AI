@@ -38,8 +38,8 @@ def initial_setup(lobby, board, display):
         board.update_control(clearing)
 
     # Canopée
-    #canopee.faction.buildings["roost"] = 1
-    #board.graph.nodes[opposite_clearing]["buildings"]["roost"] = canopee.faction.name
+    canopee.faction.buildings["roost"] -= 1
+    board.graph.nodes[opposite_clearing]["buildings"].append({"type": "roost", "owner": canopee.faction.id})
     canopee.faction.units -= 6
     board.graph.nodes[opposite_clearing]["units"][canopee.faction.id] = 6
     board.update_control(opposite_clearing)
@@ -51,8 +51,9 @@ def run(display, lobby):
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if display.is_button_clicked(event.pos):
+                if display.is_button_pass_clicked(event.pos):
                     lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
+                    print(f"Pass clicked")
                 action = display.is_action_button_clicked(event.pos)
                 if action:
                     print(f"Action {action} clicked")

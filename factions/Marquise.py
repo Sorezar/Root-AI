@@ -3,10 +3,16 @@ from factions.BaseFaction import Base
 class Marquise(Base):
     def __init__(self):
         super().__init__("Marquise de Chat", 0)
+        self.wood_cost = [0, 1, 2, 3, 3, 4]
+        self.scoring = {
+            "sawmill":   [0, 1, 2, 3, 4, 5],
+            "workshop":  [0, 2, 2, 3, 4, 5],
+            "recruiter": [0, 1, 2, 3, 3, 5]
+        }
         self.buildings = {
-            "sawmill": 0,
-            "workshop": 0,
-            "recruiter": 0
+            "sawmill":   6,
+            "workshop":  6,
+            "recruiter": 6
         }
         self.tokens = {
             "wood": 8,

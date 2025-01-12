@@ -18,9 +18,7 @@ COLORS = {
         2 : (0, 255, 0)
         },
     "slots" : (169, 169, 169),
-    "slots_borders" :(139, 69, 19),
-    "ruins" : (245, 245, 220),
-    "buildings": {"default": (128, 128, 128)}
+    "slots_borders" :(139, 69, 19)
 }
 
 SYMBOL_COLORS = {
@@ -72,33 +70,34 @@ class RootDisplay:
             if filename.endswith(".png"):
                 token_name = os.path.splitext(filename)[0]
                 self.token_images[token_name] = pygame.image.load(os.path.join(token_path, filename))
+                
+        # Charger les images des bâtiments
+        self.building_images = {}
+        building_path = os.path.join("sprites", "buildings")
+        for filename in os.listdir(building_path):
+            if filename.endswith(".png"):
+                building_name = os.path.splitext(filename)[0]
+                self.building_images[building_name] = pygame.image.load(os.path.join(building_path, filename))
         
         self.card_images = {}
-        self._load_card_images()
-        
-        # Bouton pour finir le tour
-        self.button_pass = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
-        self.action_buttons = []
-
-    def _load_card_images(self):
         card_dir = os.path.join("sprites", "cards", "base_deck")
-        if not os.path.exists(card_dir):
-            print(f"Le répertoire {card_dir} est introuvable.")
-            return
-
         for card_file in os.listdir(card_dir):
             if card_file.endswith(".png"):
                 card_id = int(os.path.splitext(card_file)[0])
                 image_path = os.path.join(card_dir, card_file)
                 self.card_images[card_id] = pygame.image.load(image_path)
+        
+        # Bouton pour finir le tour
+        self.button_pass = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
+        self.action_buttons = []        
 
-    def draw_button(self):
+    def draw_button_pass(self):
         pygame.draw.rect(self.screen, (0, 0, 255), self.button_pass)
         text = self.button_font.render(">", True, (255, 255, 255))
         text_rect = text.get_rect(center=self.button_pass.center)
         self.screen.blit(text, text_rect)
 
-    def is_button_clicked(self, pos):
+    def is_button_pass_clicked(self, pos):
         return self.button_pass.collidepoint(pos)
     
     def draw_actions(self):
@@ -207,14 +206,21 @@ class RootDisplay:
                 symbol_pos = (pos[0] + NODE_RADIUS - 10, pos[1] + NODE_RADIUS - 10)
                 pygame.draw.circle(self.screen, SYMBOL_COLORS[clearing_type], symbol_pos, SYMBOL_SIZE // 2)
 
-            # Emplacements libres et ruines
+            # Emplacements libres
             slot_size = 15
-            slot_offset = 15
             for i in range(data["slots"]):
-                slot_color = COLORS["slots"] if i < data["ruins"] else COLORS["ruins"]
                 slot_pos = (pos[0] - (data["slots"] * (slot_size + 5)) // 2 + i * (slot_size + 5), pos[1] - NODE_RADIUS - slot_size + 10)
-                pygame.draw.rect(self.screen, slot_color, (*slot_pos, slot_size, slot_size))
+                pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, slot_size, slot_size))
                 pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, slot_size, slot_size), 1)
+
+            # Dessiner les bâtiments
+            for i, building in enumerate(data["buildings"]):
+                building_type = building["type"]
+                owner = building["owner"]
+                if building_type in self.building_images:
+                    building_image = pygame.transform.scale(self.building_images[building_type], (slot_size, slot_size))
+                    building_pos = (pos[0] - (data["slots"] * (slot_size + 5)) // 2 + i * (slot_size + 5), pos[1] - NODE_RADIUS - slot_size + 10)
+                    self.screen.blit(building_image, building_pos)
 
             # Unités
             offset = -20
@@ -350,7 +356,7 @@ class RootDisplay:
     def draw(self):
         self.draw_board()
         self.draw_panel()
-        self.draw_button()
+        self.draw_button_pass()
         self.draw_actions()
         current_player = self.lobby.get_player(self.lobby.current_player)
         self.draw_cards(current_player)

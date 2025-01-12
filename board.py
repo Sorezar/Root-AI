@@ -26,7 +26,15 @@ class RootBoard:
                                     units={},
                                     slots=node.get("slots", 0),
                                     ruins=node.get("ruins", 0),
-                                    tokens=node.get("tokens", []))
+                                    tokens=node.get("tokens", []),
+                                    buildings=[])
+                
+            # Ajout des ruines
+            for node in data["nodes"]:
+                if node.get("ruins", 0) > 0:
+                    for _ in range(node["ruins"]):
+                        self.graph.nodes[node["id"]]["buildings"].append({"type": "ruins", "owner": None})
+
                 
             # Ajout des forêts
             for forest in data.get("forests", []):
