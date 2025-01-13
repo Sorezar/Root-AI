@@ -92,7 +92,7 @@ class RootBoard:
     
     def update_control(self, clearing_id):
         units = self.graph.nodes[clearing_id]["units"]
-        if units:
+        if units and sum(units.values()) > 0:
             max_units = max(units.values())
             controlling_factions = [faction for faction, count in units.items() if count == max_units]
             if len(controlling_factions) == 1:

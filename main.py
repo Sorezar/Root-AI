@@ -59,8 +59,8 @@ def run(display, lobby, board):
                     print(f"Action {action} clicked")
                     if action == "March" or action == "Move":
                         
-                        # Partir d'une clairière contrôlée si la clairière d'arrivée n'est pas contrôlée
-                        
+                        # Rajouter gestion de l'achat du bateau
+                    
                         clearing_with_units = lobby.players[lobby.current_player].get_clearings_with_units(board)
                         controled_clearings = lobby.players[lobby.current_player].get_controlled_clearings(board) 
                         from_clearing = display.ask_for_clearing(clearing_with_units)
@@ -73,11 +73,13 @@ def run(display, lobby, board):
                             to_clearing = display.ask_for_clearing(adjacent_clearings)
                         
                         # Demander combien d'unité à déplacer
-                        lobby.players[lobby.current_player].faction.move_unit(from_clearing, to_clearing, board)
+                        max_units = board.graph.nodes[from_clearing]["units"][lobby.players[lobby.current_player].faction.id]
+                        if max_units > 1:
+                            units_to_move = display.ask_for_units_to_move(max_units, board.graph.nodes[to_clearing]["pos"])
+                        else:
+                            units_to_move = 1
+                        lobby.players[lobby.current_player].faction.move_unit(from_clearing, to_clearing, board, units_to_move)
                         
-                        # Aller dans une clairière contrôlée depuis une clairière non controlée
-                        
-                    # Gérer ici
         display.draw()
         pygame.display.flip()
         display.clock.tick(60)

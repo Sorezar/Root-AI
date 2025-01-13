@@ -65,6 +65,7 @@ class RootDisplay:
         self.font   = pygame.font.SysFont(None, 24)
         self.unit_font = pygame.font.SysFont(None, 18)
         self.button_font = pygame.font.SysFont(None, 36)
+        self.unit_selection_font = pygame.font.SysFont(None, 24)
         self.action_history = []
         
         # Charger les sprites des items
@@ -268,12 +269,13 @@ class RootDisplay:
             # Unités
             offset = -20
             for faction, count in data["units"].items():
-                faction_color = COLORS["units"].get(faction)
-                unit_pos  = (pos[0] + offset, pos[1] + (NODE_RADIUS // 3) )
-                unit_text = self.unit_font.render(str(count), True, COLORS["text_units"].get(faction))
-                pygame.draw.circle(self.screen, faction_color, unit_pos, UNIT_RADIUS)
-                self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
-                offset += 15
+                if count > 0:
+                    faction_color = COLORS["units"].get(faction)
+                    unit_pos  = (pos[0] + offset, pos[1] + (NODE_RADIUS // 3) )
+                    unit_text = self.unit_font.render(str(count), True, COLORS["text_units"].get(faction))
+                    pygame.draw.circle(self.screen, faction_color, unit_pos, UNIT_RADIUS)
+                    self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
+                    offset += 15
             
             # Jetons
             token_offset_y = (-NODE_RADIUS // 2) - BUILDING_SIZE - 10
@@ -388,6 +390,69 @@ class RootDisplay:
 
         return selected_clearing
 
+    def draw_units_selection(self, units_to_move, max_units, pos):
+
+        x, y = pos
+        button_width, button_height = 30, 30
+
+        # Bouton -
+        self.button_minus = pygame.Rect(x - button_width *1.5, y, button_width, button_height)
+        pygame.draw.rect(self.screen, (220, 220, 220), self.button_minus)
+        minus_text = self.unit_selection_font.render("-", True, COLORS["text"])
+        minus_text_rect = minus_text.get_rect(center=self.button_minus.center)
+        self.screen.blit(minus_text, minus_text_rect)
+
+        # Nombre d'unités
+        units_text_rect = pygame.Rect(x - button_width *0.75 , y, button_width * 1.5, button_height)
+        pygame.draw.rect(self.screen, (220, 220, 220), units_text_rect)
+        units_text = self.unit_selection_font.render(f"{units_to_move}/{max_units}", True, COLORS["text"])
+        units_text_center = units_text.get_rect(center=units_text_rect.center)
+        self.screen.blit(units_text, units_text_center)
+
+        # Bouton +
+        self.button_plus = pygame.Rect(x + button_width * 0.5, y, button_width, button_height)
+        pygame.draw.rect(self.screen, (220, 220, 220), self.button_plus)
+        plus_text = self.unit_selection_font.render("+", True, COLORS["text"])
+        plus_text_rect = plus_text.get_rect(center=self.button_plus.center)
+        self.screen.blit(plus_text, plus_text_rect)
+
+        # Bouton OK
+        self.button_confirm = pygame.Rect(x - button_width // 2, y + button_height, button_width, button_height)
+        pygame.draw.rect(self.screen, (220, 220, 220), self.button_confirm)
+        confirm_text = self.unit_selection_font.render("OK", True, COLORS["text"])
+        confirm_text_rect = confirm_text.get_rect(center=self.button_confirm.center)
+        self.screen.blit(confirm_text, confirm_text_rect)
+
+    def is_button_minus_clicked(self, pos):
+        return self.button_minus.collidepoint(pos)
+
+    def is_button_plus_clicked(self, pos):
+        return self.button_plus.collidepoint(pos)
+
+    def is_button_confirm_clicked(self, pos):
+        return self.button_confirm.collidepoint(pos)    
+
+    def ask_for_units_to_move(self, max_units, pos):
+        units_to_move = 1
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.is_button_minus_clicked(event.pos):
+                        units_to_move = max(1, units_to_move - 1)
+                    elif self.is_button_plus_clicked(event.pos):
+                        units_to_move = min(max_units, units_to_move + 1)
+                    elif self.is_button_confirm_clicked(event.pos):
+                        return units_to_move
+
+            self.draw()
+            self.draw_units_selection(units_to_move, max_units, pos)
+            
+            pygame.display.flip()
+            self.clock.tick(60)
+            
     def draw(self):
         self.draw_board()
         self.draw_panel()

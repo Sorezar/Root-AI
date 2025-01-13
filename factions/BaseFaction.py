@@ -22,13 +22,13 @@ class Base:
     def place_building(self, clearing_id, building_type):
         raise NotImplementedError()
     
-    def move_unit(self, from_clearing, to_clearing, board):
+    def move_unit(self, from_clearing, to_clearing, board, number_of_units):
 
         units = board.graph.nodes[from_clearing]["units"]
 
         # Mise à jour des unités
-        board.graph.nodes[from_clearing]["units"][self.id] -= 1
-        board.graph.nodes[to_clearing]["units"][self.id] = board.graph.nodes[to_clearing]["units"].get(self.id, 0) + 1
+        board.graph.nodes[from_clearing]["units"][self.id] -= number_of_units
+        board.graph.nodes[to_clearing]["units"][self.id] = board.graph.nodes[to_clearing]["units"].get(self.id, 0) + number_of_units
 
         # Mise à jour du contrôle
         board.update_control(from_clearing)
