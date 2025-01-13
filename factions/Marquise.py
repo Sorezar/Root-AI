@@ -53,4 +53,60 @@ class Marquise(Base):
             raise ValueError(f"Aucun recruteur dans la clairière {clearing_id}.")
         
         self.place_unit(clearing_id, board)
+        
+    # Vérifie si le recrutement d'unités est possible
+    def is_recruitments_possible(self):
+        if self.buildings["recruiter"] < len(self.scoring['recruiter']) and self.units > 0:
+            return True        
+        else :
+            return False
+    
+    # Vérifie si la construction d'un bâtiment est possible
+    def is_building_possible(self, board):
+        for clearing_id, clearing in board.graph.nodes.items():
+            if len(clearing["buildings"]) < clearing["slots"]:
+                least_constructed_building = max(self.buildings.values())
+                min_wood_cost = self.wood_cost[::-1][least_constructed_building-1]
+                max_wood = self.how_much_wood_to_gather(clearing_id, board)
+                if max_wood >= min_wood_cost:
+                    return True
 
+        return False
+
+    # Récupère le nombre de bois récoltable dans une clairière
+    def how_much_wood_to_gather(self, clearing_id, board):
+        max_wood = 0
+        counted_clearings = set()
+        for clearing_id, clearing in board.graph.nodes.items():
+            wood = 0
+            if clearing["control"] == self.id and clearing_id not in counted_clearings:
+                for token in clearing["tokens"]:
+                    if token["type"] == "wood":
+                        wood += 1
+                counted_clearings.add(clearing_id)
+                for target_id, target in board.graph.nodes.items():
+                    if target["control"] == self.id and self.is_path_controlled(clearing_id, target_id, board) and target_id not in counted_clearings:
+                        for token in target["tokens"]:
+                            if token["type"] == "wood":
+                                wood += 1
+                        counted_clearings.add(target_id)
+            if wood > max_wood:
+                max_wood = wood
+        return max_wood
+
+    # Vérifie la présence d'un chemin contrôlé entre deux clairières
+    def is_path_controlled(self, start, end, board):
+        visited = set()
+        stack = [start]
+    
+        while stack:
+            current = stack.pop()
+            if current == end:
+                return True
+            if current not in visited:
+                visited.add(current)
+                neighbors = board.graph.neighbors(current)
+                for neighbor in neighbors:
+                    if board.graph.nodes[neighbor]["control"] == self.id:
+                        stack.append(neighbor)
+        return False

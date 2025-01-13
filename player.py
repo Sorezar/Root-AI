@@ -37,3 +37,49 @@ class Player:
     
     def get_clearings_with_units(self, board):
         return [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["units"].get(self.faction.id, 0) > 0]
+    
+    def get_available_actions(self, board):
+        available_actions = []
+        for action in self.faction.actions:
+            if self.is_action_available(action, board):
+                available_actions.append(action)
+        return available_actions
+
+    def is_action_available(self, action, board):
+        
+        if action == 'Overwork':
+            has_bird_card = any(card['color'] == "bird" for card in self.cards)
+            for clearing in self.get_clearings_with_units(board):
+                if board.graph.nodes[clearing]["type"] in [card['color'] for card in self.cards if card['color'] != "bird"]:
+                    if any(building["type"] == "sawmill" and building["owner"] == self.faction.id for building in board.graph.nodes[clearing]["buildings"]):
+                        return True
+            return has_bird_card and self.faction.buildings["sawmill"] < 6
+        
+        if action == 'Battle':
+            for clearing in self.get_clearings_with_units(board):
+                for token in board.graph.nodes[clearing]["tokens"]:
+                    if token["owner"] != self.faction.id:
+                        return True
+                for building in board.graph.nodes[clearing]["buildings"]:
+                    if building["owner"] != self.faction.id and building["type"] != "ruin":
+                        return True
+                for unit_owner in board.graph.nodes[clearing]["units"]:
+                    if unit_owner != self.faction.id:
+                        return True
+            return False
+        
+        if action == 'Build':
+            return self.faction.is_building_possible(board)
+        
+        if action == 'Recruit':
+            return self.faction.is_recruitments_possible()
+        
+        if action == 'Spend Bird':
+            for card in self.cards:
+                if card['color'] == "bird":
+                    return True
+            return False
+        
+        if action == "March" or action == "Move":
+            return bool(self.get_clearings_with_units(board))
+        # Ajoutez d'autres vérifications pour d'autres actions

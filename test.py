@@ -37,3 +37,17 @@ class RootTest:
             
         for player in lobby.players:
             print(f"Joueur {player.id} : {player.faction.units}")
+            
+    def test_tokens(self, board):
+        print("\n=== Test du placement des tokens ===\n")
+        
+        # Test du placement des tokens
+        for node_id, node_data in board.graph.nodes(data=True):
+            print(f"Clairière {node_id} : {node_data['tokens']}")
+    
+    def test_buildings(self, board):
+        print("\n=== Test du placement des bâtiments ===\n")
+        
+        # Test du placement des bâtiments
+        for node_id, node_data in board.graph.nodes(data=True):
+            print(f"Clairière {node_id} : {node_data['buildings']}")

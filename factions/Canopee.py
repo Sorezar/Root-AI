@@ -11,3 +11,9 @@ class Canopee(Base):
         }
         self.units = 20
         self.actions = []
+
+    def is_recruitments_possible(self):
+        if self.buildings["roost"] < len(self.scoring['roost']) and self.units > 0:
+            return True 
+        else :
+            return False

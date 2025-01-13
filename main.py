@@ -30,9 +30,22 @@ def initial_setup(lobby, board, display):
     # Marquise
     marquise.faction.tokens["dungeon"] = 0
     board.graph.nodes[selected_clearing]["tokens"].append({"type": "dungeon", "owner": marquise.faction.id})
+    #marquise.faction.tokens["wood"] -= 1 
+    #board.graph.nodes[selected_clearing]["tokens"].append({"type": "wood", "owner": marquise.faction.id})
+    marquise.faction.tokens["wood"] -= 1 
+    board.graph.nodes[selected_clearing-1]["tokens"].append({"type": "wood", "owner": marquise.faction.id})
+    marquise.faction.tokens["wood"] -= 1 
+    board.graph.nodes[selected_clearing-1]["tokens"].append({"type": "wood", "owner": marquise.faction.id})
+    marquise.faction.buildings["workshop"] -= 1
+    board.graph.nodes[selected_clearing+1]["buildings"].append({"type": "workshop", "owner": marquise.faction.id})
+    marquise.faction.buildings["sawmill"] -= 1
+    board.graph.nodes[selected_clearing]["buildings"].append({"type": "sawmill", "owner": marquise.faction.id})
+    marquise.faction.buildings["recruiter"] -= 1
+    board.graph.nodes[selected_clearing-1]["buildings"].append({"type": "recruiter", "owner": marquise.faction.id})
+    
     opposite_clearing = {1: 12, 3: 9, 9: 3, 12: 1}[selected_clearing]
     for clearing in board.graph.nodes:
-        if clearing != opposite_clearing:
+        if clearing != opposite_clearing and clearing not in [7, 12]:
             board.graph.nodes[clearing]["units"][marquise.faction.id] = 1
             marquise.faction.units -= 1
         board.update_control(clearing)
@@ -56,30 +69,30 @@ def run(display, lobby, board):
                     print(f"Pass clicked")
                 action = display.is_action_button_clicked(event.pos)
                 if action:
-                    print(f"Action {action} clicked")
-                    if action == "March" or action == "Move":
-                        
-                        # Rajouter gestion de l'achat du bateau
-                    
-                        clearing_with_units = lobby.players[lobby.current_player].get_clearings_with_units(board)
-                        controled_clearings = lobby.players[lobby.current_player].get_controlled_clearings(board) 
-                        from_clearing = display.ask_for_clearing(clearing_with_units)
-                        
-                        adjacent_clearings = board.get_adjacent_clearings(from_clearing)
-                        adjacent_and_controlled_clearings = [clearing for clearing in adjacent_clearings if clearing in controled_clearings]
-                        if from_clearing not in controled_clearings:
-                            to_clearing = display.ask_for_clearing(adjacent_and_controlled_clearings)
-                        else :
-                            to_clearing = display.ask_for_clearing(adjacent_clearings)
-                        
-                        # Demander combien d'unité à déplacer
-                        max_units = board.graph.nodes[from_clearing]["units"][lobby.players[lobby.current_player].faction.id]
-                        if max_units > 1:
-                            units_to_move = display.ask_for_units_to_move(max_units, board.graph.nodes[to_clearing]["pos"])
-                        else:
-                            units_to_move = 1
-                        lobby.players[lobby.current_player].faction.move_unit(from_clearing, to_clearing, board, units_to_move)
-                        
+                    current_player = lobby.get_player(lobby.current_player)
+                    print(current_player.get_available_actions(board))
+                    if action in current_player.get_available_actions(board):
+                        print(f"Action {action} clicked")
+                        if action == "March" or action == "Move":
+                            # Rajouter gestion de l'achat du bateau
+                            clearing_with_units = current_player.get_clearings_with_units(board)
+                            controled_clearings = current_player.get_controlled_clearings(board) 
+                            from_clearing = display.ask_for_clearing(clearing_with_units)
+                            
+                            adjacent_clearings = board.get_adjacent_clearings(from_clearing)
+                            adjacent_and_controlled_clearings = [clearing for clearing in adjacent_clearings if clearing in controled_clearings]
+                            if from_clearing not in controled_clearings:
+                                to_clearing = display.ask_for_clearing(adjacent_and_controlled_clearings)
+                            else :
+                                to_clearing = display.ask_for_clearing(adjacent_clearings)
+                            
+                            # Demander combien d'unité à déplacer
+                            max_units = board.graph.nodes[from_clearing]["units"][current_player.faction.id]
+                            if max_units > 1:
+                                units_to_move = display.ask_for_units_to_move(max_units, board.graph.nodes[to_clearing]["pos"])
+                            else:
+                                units_to_move = 1
+                            current_player.faction.move_unit(from_clearing, to_clearing, board, units_to_move)
         display.draw()
         pygame.display.flip()
         display.clock.tick(60)
@@ -121,6 +134,8 @@ if __name__ == "__main__":
     tests.test_adjacency(board)
     tests.test_control(board)
     tests.test_units(board, lobby)
+    tests.test_tokens(board)
+    tests.test_buildings(board)
 
     # The boucle
     run(display, lobby, board)

@@ -28,12 +28,6 @@ COLORS = {
     "slots_borders" :(139, 69, 19)
 }
 
-SYMBOL_COLORS = {
-    "fox": (255, 0, 0),       # Rouge pour les renards
-    "rabbit":  (255, 255, 0), # Jaune pour les lapins
-    "mouse": (255, 165, 0),   # Orange pour les souris
-}
-
 # Dimensions
 SCALE = 1
 WIDTH, HEIGHT = config.WIDTH, config.HEIGHT
@@ -135,8 +129,10 @@ class RootDisplay:
         button_width = 60
         button_height = 60
         self.action_buttons = []
-        actions = self.lobby.get_player(self.lobby.current_player).faction.actions
-        faction_id = self.lobby.get_player(self.lobby.current_player).faction.id
+        current_player = self.lobby.get_player(self.lobby.current_player)
+        actions = current_player.faction.actions
+        available_actions = current_player.get_available_actions(self.board)
+        faction_id = current_player.faction.id
 
         for action in actions:
             button_pass = pygame.Rect(x_offset, y_offset, button_width, button_height)
@@ -150,6 +146,13 @@ class RootDisplay:
                 text = self.font.render(action, True, (255, 255, 255))
                 text_rect = text.get_rect(center=button_pass.center)
                 self.screen.blit(text, text_rect)
+            
+            if action not in available_actions:
+                overlay = pygame.Surface((button_width, button_height))
+                overlay.set_alpha(128)  
+                overlay.fill((0, 0, 0))
+                self.screen.blit(overlay, (x_offset, y_offset))
+
             self.action_buttons.append((button_pass, action))
             y_offset += button_height + 10
 

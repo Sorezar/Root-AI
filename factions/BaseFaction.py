@@ -33,5 +33,6 @@ class Base:
         # Mise à jour du contrôle
         board.update_control(from_clearing)
         board.update_control(to_clearing)
-        
     
+    def is_recruitments_possible(self):
+        raise NotImplementedError()
