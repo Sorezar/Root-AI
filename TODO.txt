@@ -19,6 +19,7 @@
 
 
 Ordre 
+- CORRIGER BUG BOIS
 - Rajouter le nombre de cartes que tire un joueur
 - Rajouter les actions communes à toutes les factions
 - Rajouter les actions propres à chaque faction

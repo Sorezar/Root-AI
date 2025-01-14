@@ -30,12 +30,6 @@ def initial_setup(lobby, board, display):
     # Marquise
     marquise.faction.tokens["dungeon"] = 0
     board.graph.nodes[selected_clearing]["tokens"].append({"type": "dungeon", "owner": marquise.faction.id})
-    #marquise.faction.tokens["wood"] -= 1 
-    #board.graph.nodes[selected_clearing]["tokens"].append({"type": "wood", "owner": marquise.faction.id})
-    marquise.faction.tokens["wood"] -= 1 
-    board.graph.nodes[selected_clearing-1]["tokens"].append({"type": "wood", "owner": marquise.faction.id})
-    marquise.faction.tokens["wood"] -= 1 
-    board.graph.nodes[selected_clearing-1]["tokens"].append({"type": "wood", "owner": marquise.faction.id})
     marquise.faction.buildings["workshop"] -= 1
     board.graph.nodes[selected_clearing+1]["buildings"].append({"type": "workshop", "owner": marquise.faction.id})
     marquise.faction.buildings["sawmill"] -= 1
@@ -45,7 +39,7 @@ def initial_setup(lobby, board, display):
     
     opposite_clearing = {1: 12, 3: 9, 9: 3, 12: 1}[selected_clearing]
     for clearing in board.graph.nodes:
-        if clearing != opposite_clearing and clearing not in [7, 12]:
+        if clearing != opposite_clearing:
             board.graph.nodes[clearing]["units"][marquise.faction.id] = 1
             marquise.faction.units -= 1
         board.update_control(clearing)

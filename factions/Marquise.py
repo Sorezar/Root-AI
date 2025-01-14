@@ -60,53 +60,47 @@ class Marquise(Base):
             return True        
         else :
             return False
-    
-    # Vérifie si la construction d'un bâtiment est possible
+        
     def is_building_possible(self, board):
-        for clearing_id, clearing in board.graph.nodes.items():
-            if len(clearing["buildings"]) < clearing["slots"]:
-                least_constructed_building = max(self.buildings.values())
-                min_wood_cost = self.wood_cost[::-1][least_constructed_building-1]
-                max_wood = self.how_much_wood_to_gather(clearing_id, board)
-                if max_wood >= min_wood_cost:
-                    return True
+        groups = self.get_controlled_groups(board)
+        wood_per_group = self.get_wood_per_group(board, groups)
+        least_constructed_building = max(self.buildings.values())
+        min_wood_cost = self.wood_cost[::-1][least_constructed_building-1]
 
+        for group, wood_count in zip(groups, wood_per_group):
+            if wood_count >= min_wood_cost:
+                for clearing in group:
+                    if len(board.graph.nodes[clearing]["buildings"]) < board.graph.nodes[clearing]["slots"]:
+                        return True
         return False
-
-    # Récupère le nombre de bois récoltable dans une clairière
-    def how_much_wood_to_gather(self, clearing_id, board):
-        max_wood = 0
-        counted_clearings = set()
-        for clearing_id, clearing in board.graph.nodes.items():
-            wood = 0
-            if clearing["control"] == self.id and clearing_id not in counted_clearings:
-                for token in clearing["tokens"]:
-                    if token["type"] == "wood":
-                        wood += 1
-                counted_clearings.add(clearing_id)
-                for target_id, target in board.graph.nodes.items():
-                    if target["control"] == self.id and self.is_path_controlled(clearing_id, target_id, board) and target_id not in counted_clearings:
-                        for token in target["tokens"]:
-                            if token["type"] == "wood":
-                                wood += 1
-                        counted_clearings.add(target_id)
-            if wood > max_wood:
-                max_wood = wood
-        return max_wood
-
-    # Vérifie la présence d'un chemin contrôlé entre deux clairières
-    def is_path_controlled(self, start, end, board):
-        visited = set()
-        stack = [start]
     
-        while stack:
-            current = stack.pop()
-            if current == end:
-                return True
-            if current not in visited:
-                visited.add(current)
-                neighbors = board.graph.neighbors(current)
-                for neighbor in neighbors:
-                    if board.graph.nodes[neighbor]["control"] == self.id:
-                        stack.append(neighbor)
-        return False
+    def get_controlled_groups(self, board):
+        controlled_clearings = [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["control"] == self.id]
+        visited = set()
+        groups = []
+
+        def dfs(clearing, group):
+            visited.add(clearing)
+            group.append(clearing)
+            for neighbor in board.graph.neighbors(clearing):
+                if neighbor in controlled_clearings and neighbor not in visited:
+                    dfs(neighbor, group)
+
+        for clearing in controlled_clearings:
+            if clearing not in visited:
+                group = []
+                dfs(clearing, group)
+                groups.append(group)
+
+        return groups
+
+    def get_wood_per_group(self, board, groups):
+        wood_per_group = []
+        for group in groups:
+            wood_count = 0
+            for clearing in group:
+                for token in board.graph.nodes[clearing]["tokens"]:
+                    if token["type"] == "wood":
+                        wood_count += 1
+            wood_per_group.append(wood_count)
+        return wood_per_group
