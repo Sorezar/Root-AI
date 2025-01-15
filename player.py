@@ -21,8 +21,11 @@ class Player:
             self.cards.append(card)
             deck.remove(card)
 
-    def remove_card(self, card_id):
-        self.cards = [card for card in self.cards if card['id'] != card_id]
+    def remove_card(self, card):
+        print(f"Removing card {card}")
+        print("Before removal:", self.cards)
+        self.cards = [c for c in self.cards if c['id'] != card['id']]
+        print("After removal:", self.cards)
 
     def add_points(self, points):
         self.points += points
@@ -44,7 +47,7 @@ class Player:
             if self.is_action_available(action, board):
                 available_actions.append(action)
         return available_actions
-
+    
     def is_action_available(self, action, board):
         
         if action == 'Overwork':

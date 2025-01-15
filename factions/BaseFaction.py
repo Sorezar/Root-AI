@@ -6,19 +6,9 @@ class Base:
         self.buildings = {}
         self.number_card_draw_bonus = 0
         
-    def place_unit(self, clearing_id, board):
-                
-        if self.units <= 0 :
-            raise ValueError(f"Plus d'unités à placer.")
+    def recruit_units(self, clearing_id, board):
+        raise NotImplementedError()
         
-        if clearing_id not in board.graph.nodes:
-            raise ValueError(f"Clairière {clearing_id} inexistante.")
-
-        clearing = board.graph.nodes[clearing_id]
-        clearing["units"][self.id] = clearing["units"].get(self.id, 0) + 1
-        self.units -= 1
-        board.update_control(clearing_id)
-    
     def place_building(self, clearing_id, building_type):
         raise NotImplementedError()
     

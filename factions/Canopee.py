@@ -11,9 +11,21 @@ class Canopee(Base):
         }
         self.units = 20
         self.actions = []
+        self.decrees = {
+            "recruit": [],
+            "move": [],
+            "battle": [],
+            "build": []
+        }
 
+    # Changer pour prendre en compte la couleur des actions avec la couleur des clairièrs roosts
     def is_recruitments_possible(self):
         if self.buildings["roost"] < len(self.scoring['roost']) and self.units > 0:
             return True 
         else :
             return False
+        
+        
+    def recruit_units(self, clearing_id, board):
+        self.units -= 1
+        board.graph.nodes[clearing_id]["units"][self.id] += 1

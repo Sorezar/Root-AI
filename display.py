@@ -393,6 +393,46 @@ class RootDisplay:
 
         return selected_clearing
 
+    def ask_for_cards(self, player, criteria=None, value=None):
+        selected_card = None
+        card_width = 220
+        card_height = 300
+        x_offset = 10
+        y_offset = HEIGHT - card_height - 10
+
+        while selected_card is None:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = event.pos
+                    x_offset = 10  # Reset x_offset for each click check
+                    for card in player.cards:
+                        if criteria is None or card.get(criteria) == value:
+                            card_pos = (x_offset, y_offset)
+                            if pygame.Rect(card_pos[0], card_pos[1], card_width, card_height).collidepoint(pos):
+                                selected_card = card
+                                break
+                        x_offset += card_width + 10
+
+            # Dessiner uniquement ce qui est nécessaire
+            self.draw()
+
+            # Dessiner les cartes en surbrillance
+            x_offset = 10
+            for card in player.cards:
+                card_pos = (x_offset, y_offset)
+                if criteria is None or card.get(criteria) == value:
+                    pygame.draw.rect(self.screen, (255, 0, 0), (card_pos[0], card_pos[1], card_width, card_height), 3)
+                x_offset += card_width + 10
+
+            # Rafraîchir l'écran
+            pygame.display.flip()
+            self.clock.tick(60)
+
+        return selected_card
+
     def draw_units_selection(self, units_to_move, max_units, pos):
 
         x, y = pos
