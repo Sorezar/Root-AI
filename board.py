@@ -105,6 +105,15 @@ class RootBoard:
     def get_adjacent_clearings_through_river(self, location):
         return self.get_adjacent_clearings(location, is_river=True)
     
+    def get_clearing_with_empty_slots(self, clearings_id=None):
+        if clearings_id is None:
+            clearings = self.graph.nodes
+        else :
+            clearings = [n for n in self.graph.nodes if n in clearings_id]
+        
+        return [clearing for clearing in clearings if self.graph.nodes[clearing]["slots"] > len(self.graph.nodes[clearing]["buildings"])]
+            
+    
     def get_adjacent_clearings(self, location, is_river=False):
         
         # Si on part d'une clairière

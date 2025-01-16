@@ -4,48 +4,50 @@ import os
 import math
 
 COLORS = {
-    "forests": (34, 139, 34),       # Vert forêt
-    "nodes": (255, 255, 255),       # Blanc pour les clairières
-    "edges": (0, 0, 0),             # Noir pour les connexions
-    "rivers": (119,181,254),        # Bleu pour les rivières
-    "text": (0, 0, 0),              # Noir pour le texte
-    "control": (0, 0, 0),           # Noir pour le contrôle par défaut
+    "forests":    (34, 139, 34),    # Vert forêt
+    "nodes":      (255, 255, 255),  # Blanc pour les clairières
+    "edges":      (0, 0, 0),        # Noir pour les connexions
+    "rivers":     (119,181,254),    # Bleu pour les rivières
+    "text":       (0, 0, 0),        # Noir pour le texte
+    "control":    (0, 0, 0),        # Noir pour le contrôle par défaut
     "background": (245, 245, 220),  # Beige pour le fond
-    "panel_bg": (200, 200, 200),    # Gris clair pour les panneaux
+    "panel_bg":   (200, 200, 200),  # Gris clair pour les panneaux
+    "slots":      (230, 230, 230),  # Gris clair pour les emplacements vides
+    "borders":    (139, 69, 19),    # Brun pour les bordures
     "units": 
     {
-        0 : (255, 165, 0),
-        1 : (0,0,255),
-        2 : (0, 255, 0)
+        0 : (255, 165, 0),          # Orange pour la Marquise
+        1 : (0,0,255),              # Bleu pour la Canopée
+        2 : (0, 255, 0),            # Vert pour l'Alliance
+        3 : (190, 190, 190),        # Gris pour le Vagabond
     },
     "text_units": 
     {
-        0 : (0, 0, 0),
-        1 : (255, 255, 255),
-        2 : (0, 0, 0)
-    },
-    "slots" : (230, 230, 230),
-    "slots_borders" :(139, 69, 19)
+        0 : (0, 0, 0),              # Noir pour la Marquise
+        1 : (255, 255, 255),        # Blanc pour la Canopée
+        2 : (0, 0, 0),              # Noir pour l'Alliance
+        3 : (0, 0, 0),              # Noir pour le Vagabond
+    }
 }
 
-# Dimensions
-SCALE = 1
-WIDTH, HEIGHT = config.WIDTH, config.HEIGHT
-GAME_WIDTH   = config.BOARD_WIDTH
-GAME_HEIGHT  = config.BOARD_HEIGHT
-PANEL_WIDTH  = config.PANEL_WIDTH
-PANEL_HEIGHT = config.PANEL_HEIGHT
-ACTIONS_WIDTH = config.ACTIONS_WIDTH
+# DIMENSIONS
+SCALE          = 1
+WIDTH, HEIGHT  = config.WIDTH, config.HEIGHT
+GAME_WIDTH     = config.BOARD_WIDTH
+GAME_HEIGHT    = config.BOARD_HEIGHT
+PANEL_WIDTH    = config.PANEL_WIDTH
+PANEL_HEIGHT   = config.PANEL_HEIGHT
+ACTIONS_WIDTH  = config.ACTIONS_WIDTH
 ACTIONS_HEIGHT = config.ACTIONS_HEIGHT
-NODE_RADIUS  = 50
-UNIT_RADIUS  = 12
-SYMBOL_SIZE  = 25
+NODE_RADIUS    = 50
+UNIT_RADIUS    = 12
+SYMBOL_SIZE    = 25
 CONTROL_RADIUS = NODE_RADIUS
 BOARD_OFFSET_X = 10  # Offset pour décaler le plateau
 BOARD_OFFSET_Y = 120 # Offset pour descendre le plateau
-BUILDING_SIZE = 22
-TOKEN_SIZE = 22
-ITEM_SIZE = 40
+BUILDING_SIZE  = 22
+TOKEN_SIZE     = 22
+ITEM_SIZE      = 40
 
 class RootDisplay:
     def __init__(self, board, lobby, items):
@@ -114,14 +116,15 @@ class RootDisplay:
         self.button_pass = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
         self.action_buttons = []        
 
+###############################################################################################
+##################################### FONCTIONS DE DESSIN #####################################
+###############################################################################################
+
     def draw_button_pass(self):
         pygame.draw.rect(self.screen, (0, 0, 255), self.button_pass)
         text = self.button_font.render(">", True, (255, 255, 255))
         text_rect = text.get_rect(center=self.button_pass.center)
         self.screen.blit(text, text_rect)
-
-    def is_button_pass_clicked(self, pos):
-        return self.button_pass.collidepoint(pos)
     
     def draw_actions(self):
         x_offset = WIDTH - ACTIONS_WIDTH + 10
@@ -155,12 +158,6 @@ class RootDisplay:
 
             self.action_buttons.append((button_pass, action))
             y_offset += button_height + 10
-
-    def is_action_button_clicked(self, pos):
-        for button_pass, action in self.action_buttons:
-            if button_pass.collidepoint(pos):
-                return action
-        return None
     
     def draw_wavy_line(self, start_pos, end_pos, amplitude=6, frequency=2, color=COLORS["rivers"], width=10):
         x1, y1 = start_pos
@@ -191,7 +188,7 @@ class RootDisplay:
             for _ in range(count):
                 slot_pos = (x_offset + (item_count // 2) * (ITEM_SIZE + 10), y_offset + (item_count % 2) * (ITEM_SIZE + 10))
                 pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, ITEM_SIZE, ITEM_SIZE))
-                pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, ITEM_SIZE, ITEM_SIZE), 1)
+                pygame.draw.rect(self.screen, COLORS["borders"], (*slot_pos, ITEM_SIZE, ITEM_SIZE), 1)
                 item_image = pygame.transform.scale(self.item_images[item], (ITEM_SIZE, ITEM_SIZE))
                 self.screen.blit(item_image, slot_pos)
                 item_count += 1
@@ -220,7 +217,6 @@ class RootDisplay:
             if points:
                 pygame.draw.polygon(self.screen, COLORS["forests"], points)
                 pygame.draw.polygon(self.screen, COLORS["edges"], points, 2)
-                forest_center = scale_pos(forest_data["center"])
 
         # Dessiner les chemins
         for edge in edges:
@@ -267,7 +263,7 @@ class RootDisplay:
             for i in range(len(data["buildings"]), data["slots"]):
                 slot_pos = (pos[0] - (data["slots"] * (BUILDING_SIZE + 5)) // 2 + i * (BUILDING_SIZE + 5), pos[1] - (NODE_RADIUS // 2) - BUILDING_SIZE + 10)
                 pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, BUILDING_SIZE, BUILDING_SIZE))
-                pygame.draw.rect(self.screen, COLORS["slots_borders"], (*slot_pos, BUILDING_SIZE, BUILDING_SIZE), 1)
+                pygame.draw.rect(self.screen, COLORS["borders"], (*slot_pos, BUILDING_SIZE, BUILDING_SIZE), 1)
 
             # Unités
             offset = -20
@@ -345,9 +341,52 @@ class RootDisplay:
                 self.screen.blit(card_image, (x_offset, y_offset))
             x_offset += card_width + 10
 
-    def add_action(self, action):
-        self.action_history.append(action)
-        
+    def draw_units_selection(self, units_to_move, max_units, pos):
+
+        x, y = pos
+        button_width, button_height = 30, 30
+
+        # Bouton -
+        self.button_minus = pygame.Rect(x - button_width *1.5, y, button_width, button_height)
+        pygame.draw.rect(self.screen, (220, 220, 220), self.button_minus)
+        minus_text = self.unit_selection_font.render("-", True, COLORS["text"])
+        minus_text_rect = minus_text.get_rect(center=self.button_minus.center)
+        self.screen.blit(minus_text, minus_text_rect)
+
+        # Nombre d'unités
+        units_text_rect = pygame.Rect(x - button_width *0.75 , y, button_width * 1.5, button_height)
+        pygame.draw.rect(self.screen, (220, 220, 220), units_text_rect)
+        units_text = self.unit_selection_font.render(f"{units_to_move}/{max_units}", True, COLORS["text"])
+        units_text_center = units_text.get_rect(center=units_text_rect.center)
+        self.screen.blit(units_text, units_text_center)
+
+        # Bouton +
+        self.button_plus = pygame.Rect(x + button_width * 0.5, y, button_width, button_height)
+        pygame.draw.rect(self.screen, (220, 220, 220), self.button_plus)
+        plus_text = self.unit_selection_font.render("+", True, COLORS["text"])
+        plus_text_rect = plus_text.get_rect(center=self.button_plus.center)
+        self.screen.blit(plus_text, plus_text_rect)
+
+        # Bouton OK
+        self.button_confirm = pygame.Rect(x - button_width // 2, y + button_height, button_width, button_height)
+        pygame.draw.rect(self.screen, (220, 220, 220), self.button_confirm)
+        confirm_text = self.unit_selection_font.render("OK", True, COLORS["text"])
+        confirm_text_rect = confirm_text.get_rect(center=self.button_confirm.center)
+        self.screen.blit(confirm_text, confirm_text_rect)
+
+    def draw(self):
+        self.draw_board()
+        self.draw_panel()
+        self.draw_items()
+        self.draw_button_pass()
+        self.draw_actions()
+        current_player = self.lobby.get_player(self.lobby.current_player)
+        self.draw_cards(current_player)
+
+###############################################################################################
+################################### FONCTIONS D'INTERACTION ###################################
+###############################################################################################
+
     def ask_for_clearing(self, valid_clearings):
         selected_clearing = None
         circle_radius = NODE_RADIUS - 10
@@ -433,48 +472,6 @@ class RootDisplay:
 
         return selected_card
 
-    def draw_units_selection(self, units_to_move, max_units, pos):
-
-        x, y = pos
-        button_width, button_height = 30, 30
-
-        # Bouton -
-        self.button_minus = pygame.Rect(x - button_width *1.5, y, button_width, button_height)
-        pygame.draw.rect(self.screen, (220, 220, 220), self.button_minus)
-        minus_text = self.unit_selection_font.render("-", True, COLORS["text"])
-        minus_text_rect = minus_text.get_rect(center=self.button_minus.center)
-        self.screen.blit(minus_text, minus_text_rect)
-
-        # Nombre d'unités
-        units_text_rect = pygame.Rect(x - button_width *0.75 , y, button_width * 1.5, button_height)
-        pygame.draw.rect(self.screen, (220, 220, 220), units_text_rect)
-        units_text = self.unit_selection_font.render(f"{units_to_move}/{max_units}", True, COLORS["text"])
-        units_text_center = units_text.get_rect(center=units_text_rect.center)
-        self.screen.blit(units_text, units_text_center)
-
-        # Bouton +
-        self.button_plus = pygame.Rect(x + button_width * 0.5, y, button_width, button_height)
-        pygame.draw.rect(self.screen, (220, 220, 220), self.button_plus)
-        plus_text = self.unit_selection_font.render("+", True, COLORS["text"])
-        plus_text_rect = plus_text.get_rect(center=self.button_plus.center)
-        self.screen.blit(plus_text, plus_text_rect)
-
-        # Bouton OK
-        self.button_confirm = pygame.Rect(x - button_width // 2, y + button_height, button_width, button_height)
-        pygame.draw.rect(self.screen, (220, 220, 220), self.button_confirm)
-        confirm_text = self.unit_selection_font.render("OK", True, COLORS["text"])
-        confirm_text_rect = confirm_text.get_rect(center=self.button_confirm.center)
-        self.screen.blit(confirm_text, confirm_text_rect)
-
-    def is_button_minus_clicked(self, pos):
-        return self.button_minus.collidepoint(pos)
-
-    def is_button_plus_clicked(self, pos):
-        return self.button_plus.collidepoint(pos)
-
-    def is_button_confirm_clicked(self, pos):
-        return self.button_confirm.collidepoint(pos)    
-
     def ask_for_units_to_move(self, max_units, pos):
         units_to_move = 1
         while True:
@@ -496,11 +493,24 @@ class RootDisplay:
             pygame.display.flip()
             self.clock.tick(60)
             
-    def draw(self):
-        self.draw_board()
-        self.draw_panel()
-        self.draw_items()
-        self.draw_button_pass()
-        self.draw_actions()
-        current_player = self.lobby.get_player(self.lobby.current_player)
-        self.draw_cards(current_player)
+###############################################################################################
+#################################### FONCTIONS D'EVENEMENT ####################################
+###############################################################################################
+
+    def is_button_pass_clicked(self, pos):
+        return self.button_pass.collidepoint(pos)
+    
+    def is_button_minus_clicked(self, pos):
+        return self.button_minus.collidepoint(pos)
+
+    def is_button_plus_clicked(self, pos):
+        return self.button_plus.collidepoint(pos)
+
+    def is_button_confirm_clicked(self, pos):
+        return self.button_confirm.collidepoint(pos) 
+    
+    def is_action_button_clicked(self, pos):
+        for button_pass, action in self.action_buttons:
+            if button_pass.collidepoint(pos):
+                return action
+        return None
