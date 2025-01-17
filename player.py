@@ -14,7 +14,6 @@ class Player:
         self.points  = 0
         self.id      = id
 
-
     def draw_cards(self, deck, count=1):
         for _ in range(count):
             card = random.choice(deck)
@@ -22,10 +21,7 @@ class Player:
             deck.remove(card)
 
     def remove_card(self, card):
-        print(f"Removing card {card}")
-        print("Before removal:", self.cards)
         self.cards = [c for c in self.cards if c['id'] != card['id']]
-        print("After removal:", self.cards)
 
     def add_points(self, points):
         self.points += points
@@ -41,6 +37,16 @@ class Player:
     def get_clearings_with_units(self, board):
         return [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["units"].get(self.faction.id, 0) > 0]
     
+    def get_clearings_with_recruiters(self, board):
+        if self.faction.id == 0:
+            return [clearing for clearing in board.graph.nodes if any(building["type"] == "recruiter" for building in board.graph.nodes[clearing]["buildings"])]
+        if self.faction.id == 1:
+            return [clearing for clearing in board.graph.nodes if any(building["type"] == "roost" for building in board.graph.nodes[clearing]["buildings"])]
+        if self.faction.id == 2:
+            return [clearing for clearing in board.graph.nodes if any(token["type"] == "sympathy" for token in board.graph.nodes[clearing]["tokens"])]
+        if self.faction.id == 3:
+            return None
+    
     def get_available_actions(self, board):
         available_actions = []
         for action in self.faction.actions:
@@ -51,6 +57,9 @@ class Player:
     def is_action_available(self, action, board):
         
         if action == 'Overwork':
+            if self.faction.tokens["wood"] < 1:
+                return False
+            
             has_bird_card = any(card['color'] == "bird" for card in self.cards)
             for clearing in self.get_clearings_with_units(board):
                 if board.graph.nodes[clearing]["type"] in [card['color'] for card in self.cards if card['color'] != "bird"]:
@@ -64,7 +73,7 @@ class Player:
                     if token["owner"] != self.faction.id:
                         return True
                 for building in board.graph.nodes[clearing]["buildings"]:
-                    if building["owner"] != self.faction.id and building["type"] != "ruin":
+                    if building["owner"] != self.faction.id and building["type"] != "ruins":
                         return True
                 for unit_owner in board.graph.nodes[clearing]["units"]:
                     if unit_owner != self.faction.id:
@@ -72,7 +81,8 @@ class Player:
             return False
         
         if action == 'Build':
-            return self.faction.is_building_possible(board)
+            possible , _ = self.faction.is_building_possible(board)
+            return possible
         
         if action == 'Recruit':
             return self.faction.is_recruitments_possible()

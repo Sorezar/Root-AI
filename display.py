@@ -432,7 +432,7 @@ class RootDisplay:
 
         return selected_clearing
 
-    def ask_for_cards(self, player, criteria=None, value=None):
+    def ask_for_cards(self, player, criteria=None, values=None):
         selected_card = None
         card_width = 220
         card_height = 300
@@ -448,7 +448,7 @@ class RootDisplay:
                     pos = event.pos
                     x_offset = 10  # Reset x_offset for each click check
                     for card in player.cards:
-                        if criteria is None or card.get(criteria) == value:
+                        if criteria is None or card.get(criteria) in values:
                             card_pos = (x_offset, y_offset)
                             if pygame.Rect(card_pos[0], card_pos[1], card_width, card_height).collidepoint(pos):
                                 selected_card = card
@@ -462,7 +462,7 @@ class RootDisplay:
             x_offset = 10
             for card in player.cards:
                 card_pos = (x_offset, y_offset)
-                if criteria is None or card.get(criteria) == value:
+                if criteria is None or card.get(criteria) in values:
                     pygame.draw.rect(self.screen, (255, 0, 0), (card_pos[0], card_pos[1], card_width, card_height), 3)
                 x_offset += card_width + 10
 
@@ -493,6 +493,51 @@ class RootDisplay:
             pygame.display.flip()
             self.clock.tick(60)
             
+    def ask_for_building_cats(self, pos, wood_costs, max_wood, player):
+        selected_building = None
+        building_types = ["sawmill", "workshop", "recruiter"]
+        building_width = 40
+        building_height = 40
+        padding = 10
+
+        while selected_building is None:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    click_pos = event.pos
+                    for i, building in enumerate(building_types):
+                        building_rect = pygame.Rect(pos[0] + i * (building_width + padding), pos[1] - building_height // 2, building_width, building_height)
+                        if building_rect.collidepoint(click_pos) and wood_costs[i] <= max_wood and player.faction.buildings[building] > 0:
+                            selected_building = building
+                            break
+
+            self.draw()
+
+            # Dessiner les bâtiments et leurs coûts
+            for i, (building, cost) in enumerate(zip(building_types, wood_costs)):
+                building_rect = pygame.Rect(pos[0] + i * (building_width + padding), pos[1] - building_height // 2, building_width, building_height)
+                building_image = pygame.transform.scale(self.building_images[building], (building_width, building_height))
+                self.screen.blit(building_image, building_rect.topleft)
+
+                # Afficher le coût en bois
+                cost_text = self.font.render(str(cost), True, COLORS["text"])
+                self.screen.blit(cost_text, (building_rect.x + building_width // 2 - cost_text.get_width() // 2, building_rect.y + building_height + 5))
+
+                # Appliquer un filtre noirci si le coût en bois est supérieur à max_wood ou si le nombre de bâtiments est épuisé
+                if cost > max_wood or player.faction.buildings[building] <= 0:
+                    overlay = pygame.Surface((building_width, building_height))
+                    overlay.set_alpha(128)
+                    overlay.fill((0, 0, 0))
+                    self.screen.blit(overlay, building_rect.topleft)
+
+            # Rafraîchir l'écran
+            pygame.display.flip()
+            self.clock.tick(60)
+            
+        return selected_building, wood_costs[building_types.index(selected_building)]
+    
 ###############################################################################################
 #################################### FONCTIONS D'EVENEMENT ####################################
 ###############################################################################################

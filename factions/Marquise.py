@@ -21,39 +21,13 @@ class Marquise(Base):
         self.units = 25
         self.actions = ["Build", "Recruit", "March", "Battle", "Overwork", "Spend Bird"]
 
-    def build_structure(self, clearing_id, structure_type, board):
-        if structure_type not in self.buildings:
-            raise ValueError(f"Bâtiment {structure_type} inconnu.")
-
-        clearing = board.graph.nodes[clearing_id]
-
-        # Vérifie s'il y a de la place pour un bâtiment
-        if len(clearing["buildings"]) >= clearing["slots"]:
-            raise ValueError(f"Pas assez de slots dans la clairière {clearing_id}.")
-
-        # Vérifie que la Marquise contrôle la clairière
-        if clearing["control"] != self.name:
-            raise ValueError(f"La Marquise doit contrôler la clairière {clearing_id} pour construire.")
-
-        # Ajoute le bâtiment
-        clearing["buildings"][structure_type] = self.name
-        self.buildings[structure_type] += 1
-        board.add_points(self.name, 1) 
-
     def produce_wood(self, board):
-        pass
+        for clearing in board.graph.nodes:
+            for building in board.graph.nodes[clearing]["buildings"]:
+                if building["type"] == "sawmill":
+                    board.graph.nodes[clearing]["tokens"].append({"type": "wood", "owner": self.id})
+                    self.tokens["wood"] -= 1
 
-    def spend_wood(self, amount):
-        pass
-
-    def recruit_units(self, clearing_id, board):
-        clearing = board.graph.nodes[clearing_id]
-
-        if clearing["buildings"].get("recruiter") != self.name:
-            raise ValueError(f"Aucun recruteur dans la clairière {clearing_id}.")
-        
-        self.place_unit(clearing_id, board)
-        
     # Vérifie si le recrutement d'unités est possible
     def is_recruitments_possible(self):
         if self.buildings["recruiter"] < len(self.scoring['recruiter']) and self.units > 0:
@@ -61,20 +35,58 @@ class Marquise(Base):
         else :
             return False
         
+
+    def use_wood_for_building(self, board, group, clearing, cost):
+        wood_needed = cost
+        wood_used = 0
+        visited = set()
+        queue = [(clearing, 0)]
+
+        while queue and wood_needed > 0:
+            current_clearing, distance = queue.pop(0)
+            if current_clearing in visited:
+                continue
+            visited.add(current_clearing)
+
+            tokens = board.graph.nodes[current_clearing]["tokens"]
+            for token in tokens:
+                if token["type"] == "wood" and wood_needed > 0:
+                    tokens.remove(token)
+                    wood_needed -= 1
+                    wood_used += 1
+
+            for neighbor in board.graph.neighbors(current_clearing):
+                if neighbor not in visited:
+                    queue.append((neighbor, distance + 1))
+        self.tokens["wood"] += cost
+        
+        
+    def overwork(self, board, cards):
+        has_bird_card = any(card['color'] == "bird" for card in cards)
+        for clearing in self.get_clearings_with_units(board):
+            if board.graph.nodes[clearing]["type"] in [card['color'] for card in self.cards if card['color'] != "bird"]:
+                if any(building["type"] == "sawmill" and building["owner"] == self.faction.id for building in board.graph.nodes[clearing]["buildings"]):
+                    return True
+        return has_bird_card and self.faction.buildings["sawmill"] < 6
+
     def is_building_possible(self, board):
-        groups = self.get_controlled_groups(board)
-        wood_per_group = self.get_wood_per_group(board, groups)
+        groups = self._get_controlled_groups(board)
+        wood_per_group = self._get_wood_per_group(board, groups)
         least_constructed_building = max(self.buildings.values())
         min_wood_cost = self.wood_cost[::-1][least_constructed_building-1]
+        
+        buildable_clearings = []
 
         for group, wood_count in zip(groups, wood_per_group):
             if wood_count >= min_wood_cost:
                 for clearing in group:
                     if len(board.graph.nodes[clearing]["buildings"]) < board.graph.nodes[clearing]["slots"]:
-                        return True
-        return False
+                        buildable_clearings.append(clearing)
+        if buildable_clearings:
+            return True, buildable_clearings
+        return False, buildable_clearings
     
-    def get_controlled_groups(self, board):
+    def _get_controlled_groups(self, board):
         controlled_clearings = [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["control"] == self.id]
         visited = set()
         groups = []
@@ -94,7 +106,7 @@ class Marquise(Base):
 
         return groups
 
-    def get_wood_per_group(self, board, groups):
+    def _get_wood_per_group(self, board, groups):
         wood_per_group = []
         for group in groups:
             wood_count = 0

@@ -26,3 +26,4 @@ class Base:
     
     def is_recruitments_possible(self):
         raise NotImplementedError()
+    
