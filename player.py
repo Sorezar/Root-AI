@@ -75,9 +75,8 @@ class Player:
                 for building in board.graph.nodes[clearing]["buildings"]:
                     if building["owner"] != self.faction.id and building["type"] != "ruins":
                         return True
-                for unit_owner in board.graph.nodes[clearing]["units"]:
-                    if unit_owner != self.faction.id:
-                        return True
+                if sum(units for owner, units in board.graph.nodes[clearing]["units"].items() if owner != self.faction.id) > 0:
+                    return True
             return False
         
         if action == 'Build':

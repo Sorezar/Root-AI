@@ -20,6 +20,8 @@ def initial_setup(lobby, board, display):
             marquise = player
         elif player.faction.id == 1:
             canopee = player
+        elif player.faction.id == 2:
+            alliance = player
 
     # Piocher des cartes pour chaque joueur
     for player in lobby.players:
@@ -58,6 +60,14 @@ def initial_setup(lobby, board, display):
     canopee.faction.units -= 6
     board.graph.nodes[roost_clearing]["units"][canopee.faction.id] = 6
     board.update_control(roost_clearing)
+    
+    # Alliance (Debug)
+    alliance.faction.units -= 3
+    board.graph.nodes[roost_clearing]["units"][alliance.faction.id] = 3
+    alliance.faction.buildings["base_fox"] -= 1
+    board.graph.nodes[7]["buildings"].append({"type": "base_fox", "owner": alliance.faction.id})
+    alliance.faction.tokens["sympathy"] -= 1
+    board.graph.nodes[7]["tokens"].append({"type": "sympathy", "owner": alliance.faction.id})
     
     
 def movement_phase(display, board, current_player):
@@ -202,49 +212,109 @@ def run(display, lobby, board):
                                     if board.graph.nodes[clearing]["type"] not in type_of_clearing:
                                         type_of_clearing.append(board.graph.nodes[clearing]["type"])
                         
-                        selected_card = display.ask_for_cards(current_player, criteria="color", values=type_of_clearing)
-                        selected_clearing = display.ask_for_clearing(clearings_with_sawmills)
+                        selected_card = display.ask_for_cards(current_player, criteria="color", values=type_of_clearing + ["bird"])
+                        
+                        if selected_card["color"] == "bird":
+                            valid_clearings = clearings_with_sawmills
+                        else:
+                            valid_clearings = [clearing for clearing in clearings_with_sawmills if board.graph.nodes[clearing]["type"] == selected_card["color"]]
+                        
+                        selected_clearing = display.ask_for_clearing(valid_clearings)
                         
                         current_player.remove_card(selected_card)
                         board.graph.nodes[selected_clearing]["tokens"].append({"type": "wood", "owner": current_player.faction.id})
                         
-                        cat_actions_remaining -= 1
+                        if current_player.faction.id == 0:
+                            cat_actions_remaining -= 1
                         
                     if action == "Battle":
                         
                         # Get the clearing to attack
-                        attackable_clearings = current_player.get_attackable_clearings(board)
+                        def _have_ennemy_things(clearing, thing, board, current_player):
+                            if thing == "units":
+                                return any(unit > 0 and faction_id != current_player.faction.id for faction_id, unit in board.graph.nodes[clearing][thing].items())
+                            if thing == "buildings":
+                                return any(b["owner"] != current_player.faction.id and b["owner"] != None for b in board.graph.nodes[clearing][thing])
+                            return any(t["owner"] != current_player.faction.id for t in board.graph.nodes[clearing][thing])
+ 
+                        attackable_clearings = [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["units"].get(current_player.faction.id, 0) > 0 and any(_have_ennemy_things(clearing, thing, board, current_player) for thing in ["units", "buildings", "tokens"])]
                         attack_clearing = display.ask_for_clearing(attackable_clearings)
                         
-                        # Get the enemy faction to attack
-                        enemy_factions = board.get_enemy_factions_in_clearing(attack_clearing, current_player.faction.id)
-                        enemy_faction = display.ask_for_enemy(attack_clearing, enemy_factions)
+                        ennemy_factions = []
+                        for thing in ["units", "buildings", "tokens"]:
+                            for item in board.graph.nodes[attack_clearing][thing]:
+                                owner = item if thing == "units" else item['owner']
+                                if owner != current_player.faction.id and owner not in ennemy_factions:
+                                    ennemy_factions.append(owner)
                         
+                        
+                        if len(ennemy_factions) > 1:
+                            defender_faction_id = display.ask_for_enemy(attack_clearing, ennemy_factions)
+                        else:
+                            defender_faction_id = ennemy_factions[0]
+                                               
                         # Roll the dice
                         dices =  [random.randint(0, 3), random.randint(0, 3)]
-                        
-                        if enemy_faction != 2 :
-                            attacker_roll = max(dices)
-                            defender_roll = min(dices)
-                        else :
-                            attacker_roll = min(dices)
-                            defender_roll = max(dices)
+                        attacker_roll, defender_roll = sorted(dices, reverse=defender_faction_id != 2)
                         
                         # Calculate damage
-                        attacker_damage = min(attacker_roll, board.graph.nodes[attack_clearing]["units"][current_player.faction.id])
-                        defender_damage = min(defender_roll, board.graph.nodes[attack_clearing]["units"][enemy_faction])
+                        attacker_damage = min(attacker_roll, board.graph.nodes[attack_clearing]["units"].get(current_player.faction.id, 0))
+                        defender_damage = min(defender_roll, board.graph.nodes[attack_clearing]["units"].get(defender_faction_id, 0))
                         
-                        # Apply damage
-                        for i in range(attacker_damage):
+                        print(f"Attacker roll: {attacker_roll} - Defender roll: {defender_roll}")
+                        print(f"Attacker dmg: {attacker_damage} - Defender dmg: {defender_damage}")
+                        
+                        # Si défenseur sans défense
+                        if board.graph.nodes[attack_clearing]["units"].get(defender_faction_id, 0) == 0:
+                            attacker_damage += 1
+                        
+                        # Gérer si dégâts supplémentaires ici
+                        
+                        def _inflict_damage(lobby, board, clearing, faction_id, base_damage):
+                            # units
                             
-                            # Remove units
+                            damage = base_damage
+                            while damage > 0 :
+                                if faction_id in board.graph.nodes[clearing]["units"] and board.graph.nodes[clearing]["units"][faction_id] > 0:
+                                    board.graph.nodes[clearing]["units"][faction_id] -= 1
+                                    lobby.get_player(faction_id).faction.units += 1
+                                    damage -= 1
+                                else:
+                                    break
                             
-                            # Remove tokens and/or buildings
                             
-                            board.graph.nodes[attack_clearing]["units"][current_player.faction.id] -= 1
+                            nb_ennemy_buildings = sum(1 for building in board.graph.nodes[clearing]["buildings"] if building["owner"] == faction_id)
+                            nb_ennemy_tokens    = sum(1 for tokens in board.graph.nodes[clearing]["tokens"] if tokens["owner"] == faction_id)
+                            nb_ennemy_pieces    = nb_ennemy_tokens + nb_ennemy_buildings
+
+                            # buildings or tokens
+                            if damage >= nb_ennemy_pieces :
+                                destroyed_buildings = [b for b in board.graph.nodes[clearing]["buildings"] if b["owner"] == faction_id]
+                                destroyed_tokens = [t for t in board.graph.nodes[clearing]["tokens"] if t["owner"] == faction_id]
+                                
+                                for building in destroyed_buildings:
+                                    lobby.get_player(faction_id).faction.buildings[building["type"]] += 1
+                                for token in destroyed_tokens:
+                                    lobby.get_player(faction_id).faction.tokens[token["type"]] += 1
+                                
+                                board.graph.nodes[clearing]["buildings"] = [b for b in board.graph.nodes[clearing]["buildings"] if b["owner"] != faction_id]
+                                board.graph.nodes[clearing]["tokens"] = [t for t in board.graph.nodes[clearing]["tokens"] if t["owner"] != faction_id]
+                            else:
+                                while damage > 0:
+                                    # A implementer
+                                    removed = display.ask_what_to_remove(clearing, faction_id)
+                                    board.graph.nodes[clearing][removed['type']].remove(removed)
+                                    lobby.get_player(faction_id).faction[removed['type']] += 1
+                                    damage -= 1
+                                    
+                        _inflict_damage(lobby, board, attack_clearing, defender_faction_id, attacker_damage)
+                        _inflict_damage(lobby, board, attack_clearing, current_player.faction.id, defender_damage)
                         
                         # Update control
                         board.update_control(attack_clearing)
+                        
+                        if current_player.faction.id == 0:
+                            cat_actions_remaining -= 1
                         
                     
         display.draw()
@@ -260,6 +330,7 @@ if __name__ == "__main__":
     lobby = Lobby()
     lobby.add_player("J1", Marquise())
     lobby.add_player("J2", Canopee()) 
+    lobby.add_player("J3", Alliance())
     
     # Initialisation de la carte
     print("Initialisation de la carte")

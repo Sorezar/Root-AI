@@ -30,11 +30,10 @@ class Marquise(Base):
 
     # Vérifie si le recrutement d'unités est possible
     def is_recruitments_possible(self):
-        if self.buildings["recruiter"] < len(self.scoring['recruiter']) and self.units > 0:
+        if self.buildings["recruiter"] < 6 and self.units > 0:
             return True        
         else :
             return False
-        
 
     def use_wood_for_building(self, board, group, clearing, cost):
         wood_needed = cost
@@ -59,7 +58,6 @@ class Marquise(Base):
                 if neighbor not in visited:
                     queue.append((neighbor, distance + 1))
         self.tokens["wood"] += cost
-        
         
     def overwork(self, board, cards):
         has_bird_card = any(card['color'] == "bird" for card in cards)

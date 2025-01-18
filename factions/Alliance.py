@@ -5,8 +5,19 @@ from factions.BaseFaction import Base
 class Alliance(Base):
     def __init__ (self):
         super().__init__("Alliance de la forêt", 2)
-        self.buildings = {}
+        self.buildings = {
+            "base_fox" : 1,
+            "base_rabbit" : 1,
+            "base_mouse" : 1
+        }
         self.tokens = {
-            "sympathy" : 0
+            "sympathy" : 10
         }
         self.units = 10
+        self.actions = ["Recruit", "Move", "Battle", "Spread Sympathy", "Spend Sympathy"]
+        
+    def is_recruitments_possible(self):
+        if self.tokens["sympathy"] < 10 and self.units > 0:
+            return True 
+        else :
+            return False

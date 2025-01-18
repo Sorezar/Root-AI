@@ -26,7 +26,8 @@ class RootBoard:
                                     slots=node.get("slots", 0),
                                     ruins=node.get("ruins", 0),
                                     tokens=node.get("tokens", []),
-                                    buildings=[])
+                                    buildings=node.get("buildings", [])
+                )
                 
             # Ajout des ruines
             for node in data["nodes"]:
@@ -92,9 +93,18 @@ class RootBoard:
     
     def update_control(self, clearing_id):
         units = self.graph.nodes[clearing_id]["units"]
-        if units and sum(units.values()) > 0:
-            max_units = max(units.values())
-            controlling_factions = [faction for faction, count in units.items() if count == max_units]
+        buildings = self.graph.nodes[clearing_id]["buildings"]
+        
+        faction_units = units.copy()
+        
+        for building in buildings:
+            owner = building.get("owner")
+            if owner:
+                faction_units[owner] = faction_units.get(owner, 0) + 1
+        
+        if faction_units and sum(faction_units.values()) > 0:
+            max_units = max(faction_units.values())
+            controlling_factions = [faction for faction, count in faction_units.items() if count == max_units]
             if len(controlling_factions) == 1:
                 self.graph.nodes[clearing_id]["control"] = controlling_factions[0]
             else:
@@ -113,7 +123,6 @@ class RootBoard:
         
         return [clearing for clearing in clearings if self.graph.nodes[clearing]["slots"] > len(self.graph.nodes[clearing]["buildings"])]
             
-    
     def get_adjacent_clearings(self, location, is_river=False):
         
         # Si on part d'une clairière

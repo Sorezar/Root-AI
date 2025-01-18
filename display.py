@@ -17,8 +17,8 @@ COLORS = {
     "units": 
     {
         0 : (255, 165, 0),          # Orange pour la Marquise
-        1 : (0,0,255),              # Bleu pour la Canopée
-        2 : (0, 255, 0),            # Vert pour l'Alliance
+        1 : (0, 0, 255),            # Bleu pour la Canopée
+        2 : (0, 128, 0),            # Vert sapin pour l'Alliance
         3 : (190, 190, 190),        # Gris pour le Vagabond
     },
     "text_units": 
@@ -537,6 +537,51 @@ class RootDisplay:
             self.clock.tick(60)
             
         return selected_building, wood_costs[building_types.index(selected_building)]
+ 
+
+    def ask_for_enemy(self, clearing, enemy_factions):
+        selected_faction = None
+        icon_size = 40
+        padding = 10
+
+        # Charger les icônes des factions ennemies
+        enemy_icons = {}
+        for faction_id in enemy_factions:
+            icon_path = os.path.join("sprites", "icons", f"{faction_id}.png")
+            if os.path.exists(icon_path):
+                enemy_icons[faction_id] = pygame.image.load(icon_path)
+
+        clearing_pos = self.board.graph.nodes[clearing]["pos"]
+        scaled_pos = (int(clearing_pos[0] * SCALE + BOARD_OFFSET_X), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
+
+        while selected_faction is None:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    click_pos = event.pos
+                    for i, faction_id in enumerate(enemy_factions):
+                        icon_rect = pygame.Rect(scaled_pos[0] - icon_size // 2, scaled_pos[1] - (i + 1) * (icon_size + padding), icon_size, icon_size)
+                        if icon_rect.collidepoint(click_pos):
+                            selected_faction = faction_id
+                            break
+
+            # Dessiner uniquement ce qui est nécessaire
+            self.draw()
+
+            # Dessiner les icônes des factions ennemies
+            for i, faction_id in enumerate(enemy_factions):
+                icon_rect = pygame.Rect(scaled_pos[0] - icon_size // 2, scaled_pos[1] - (i + 1) * (icon_size + padding), icon_size, icon_size)
+                if faction_id in enemy_icons:
+                    icon_image = pygame.transform.scale(enemy_icons[faction_id], (icon_size, icon_size))
+                    self.screen.blit(icon_image, icon_rect.topleft)
+
+            # Rafraîchir l'écran
+            pygame.display.flip()
+            self.clock.tick(60)
+
+        return selected_faction
     
 ###############################################################################################
 #################################### FONCTIONS D'EVENEMENT ####################################

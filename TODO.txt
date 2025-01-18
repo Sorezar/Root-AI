@@ -17,6 +17,7 @@
 
 
 Ordre 
+URGENT : CODER ask_what_to_remove dans display pour Battle dans main.
 - Rajouter interaction avec les cartes pour les jouer
 - Rajouter actions Canopée
 - Rajouter le nombre de cartes que tire un joueur

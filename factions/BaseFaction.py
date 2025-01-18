@@ -6,8 +6,6 @@ class Base:
         self.buildings = {}
         self.number_card_draw_bonus = 0
         
-    def recruit_units(self, clearing_id, board):
-        raise NotImplementedError()
         
     def place_building(self, clearing_id, building_type):
         raise NotImplementedError()

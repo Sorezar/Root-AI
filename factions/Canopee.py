@@ -24,8 +24,3 @@ class Canopee(Base):
             return True 
         else :
             return False
-        
-        
-    def recruit_units(self, clearing_id, board):
-        self.units -= 1
-        board.graph.nodes[clearing_id]["units"][self.id] += 1
