@@ -244,7 +244,7 @@ def run(display, lobby, board):
                         for thing in ["units", "buildings", "tokens"]:
                             for item in board.graph.nodes[attack_clearing][thing]:
                                 owner = item if thing == "units" else item['owner']
-                                if owner != current_player.faction.id and owner not in ennemy_factions:
+                                if owner != current_player.faction.id and owner not in ennemy_factions and owner != None:
                                     ennemy_factions.append(owner)
                         
                         
@@ -254,7 +254,7 @@ def run(display, lobby, board):
                             defender_faction_id = ennemy_factions[0]
                                                
                         # Roll the dice
-                        dices =  [random.randint(0, 3), random.randint(0, 3)]
+                        dices =  [random.randint(0, 0), random.randint(0, 0)]
                         attacker_roll, defender_roll = sorted(dices, reverse=defender_faction_id != 2)
                         
                         # Calculate damage
@@ -266,6 +266,7 @@ def run(display, lobby, board):
                         
                         # Si défenseur sans défense
                         if board.graph.nodes[attack_clearing]["units"].get(defender_faction_id, 0) == 0:
+                            print("+1")
                             attacker_damage += 1
                         
                         # Gérer si dégâts supplémentaires ici
@@ -281,7 +282,6 @@ def run(display, lobby, board):
                                     damage -= 1
                                 else:
                                     break
-                            
                             
                             nb_ennemy_buildings = sum(1 for building in board.graph.nodes[clearing]["buildings"] if building["owner"] == faction_id)
                             nb_ennemy_tokens    = sum(1 for tokens in board.graph.nodes[clearing]["tokens"] if tokens["owner"] == faction_id)
@@ -300,11 +300,20 @@ def run(display, lobby, board):
                                 board.graph.nodes[clearing]["buildings"] = [b for b in board.graph.nodes[clearing]["buildings"] if b["owner"] != faction_id]
                                 board.graph.nodes[clearing]["tokens"] = [t for t in board.graph.nodes[clearing]["tokens"] if t["owner"] != faction_id]
                             else:
+                                original_player = lobby.current_player
+                                lobby.current_player = faction_id
                                 while damage > 0:
-                                    # A implementer
-                                    removed = display.ask_what_to_remove(clearing, faction_id)
-                                    board.graph.nodes[clearing][removed['type']].remove(removed)
-                                    lobby.get_player(faction_id).faction[removed['type']] += 1
+                                    removed, type = display.ask_what_to_remove(clearing, faction_id)
+                                    print(removed)
+                                    lobby.current_player = original_player
+                                    
+                                    if type == 'building':
+                                        board.graph.nodes[clearing]['buildings'].remove(removed)
+                                        lobby.get_player(faction_id).faction.buildings[removed['type']] += 1
+                                    elif type == 'token':
+                                        board.graph.nodes[clearing]['tokens'].remove(removed)
+                                        lobby.get_player(faction_id).faction.tokens[removed['type']] += 1
+                                
                                     damage -= 1
                                     
                         _inflict_damage(lobby, board, attack_clearing, defender_faction_id, attacker_damage)

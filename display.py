@@ -583,6 +583,59 @@ class RootDisplay:
 
         return selected_faction
     
+    def ask_what_to_remove(self, clearing, faction_id):
+        selected_item = None
+        selected_type = None
+        item_width = 40
+        item_height = 40
+        padding = 10
+
+        clearing_pos = self.board.graph.nodes[clearing]["pos"]
+        scaled_pos = (int(clearing_pos[0] * SCALE + BOARD_OFFSET_X), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
+
+        # Récupérer les bâtiments et jetons du défenseur
+        buildings = [b for b in self.board.graph.nodes[clearing]["buildings"] if b["owner"] == faction_id]
+        tokens = [t for t in self.board.graph.nodes[clearing]["tokens"] if t["owner"] == faction_id]
+
+        while selected_item is None:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    click_pos = event.pos
+                    x_offset = scaled_pos[0] - (len(buildings) + len(tokens)) * (item_width + padding) // 2
+                    for i, item in enumerate(buildings + tokens):
+                        item_rect = pygame.Rect(x_offset + i * (item_width + padding), scaled_pos[1] - item_height - 10, item_width, item_height)
+                        if item_rect.collidepoint(click_pos):
+                            selected_item = item
+                            selected_type = "building" if item in buildings else "token"
+                            break
+
+            # Dessiner uniquement ce qui est nécessaire
+            self.draw()
+
+            # Dessiner les bâtiments et jetons
+            x_offset = scaled_pos[0] - (len(buildings) + len(tokens)) * (item_width + padding) // 2
+            for i, item in enumerate(buildings + tokens):
+                item_rect = pygame.Rect(x_offset + i * (item_width + padding), scaled_pos[1] - item_height - 10, item_width, item_height)
+                if "type" in item:
+                    if item["type"] in self.building_images:
+                        item_image = pygame.transform.scale(self.building_images[item["type"]], (item_width, item_height))
+                    elif item["type"] in self.token_images:
+                        item_image = pygame.transform.scale(self.token_images[item["type"]], (item_width, item_height))
+                    else:
+                        continue
+                else:
+                    continue
+                self.screen.blit(item_image, item_rect.topleft)
+
+            # Rafraîchir l'écran
+            pygame.display.flip()
+            self.clock.tick(60)
+
+        return selected_item, selected_type
+
 ###############################################################################################
 #################################### FONCTIONS D'EVENEMENT ####################################
 ###############################################################################################
