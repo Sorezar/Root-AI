@@ -374,6 +374,16 @@ class RootDisplay:
         confirm_text_rect = confirm_text.get_rect(center=self.button_confirm.center)
         self.screen.blit(confirm_text, confirm_text_rect)
 
+    def draw_button_end_march(self):
+        self.button_end_march = pygame.Rect(WIDTH - 300, HEIGHT - 160, 100, 60)
+        pygame.draw.rect(self.screen, (0, 0, 255), self.button_end_march)
+        text = self.button_font.render("End March", True, (255, 255, 255))
+        text_rect = text.get_rect(center=self.button_end_march.center)
+        self.screen.blit(text, text_rect)
+
+    def is_button_end_march_clicked(self, pos):
+        return self.button_end_march.collidepoint(pos)
+
     def draw(self):
         self.draw_board()
         self.draw_panel()
