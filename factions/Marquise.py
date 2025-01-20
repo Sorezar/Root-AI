@@ -29,7 +29,7 @@ class Marquise(Base):
                     self.tokens["wood"] -= 1
 
     # Vérifie si le recrutement d'unités est possible
-    def is_recruitments_possible(self):
+    def is_recruitments_possible(self, board):
         if self.buildings["recruiter"] < 6 and self.units > 0:
             return True        
         else :

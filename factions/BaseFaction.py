@@ -22,6 +22,6 @@ class Base:
         board.update_control(from_clearing)
         board.update_control(to_clearing)
     
-    def is_recruitments_possible(self):
+    def is_recruitments_possible(self, board):
         raise NotImplementedError()
     

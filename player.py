@@ -84,7 +84,7 @@ class Player:
             return possible
         
         if action == 'Recruit':
-            return self.faction.is_recruitments_possible()
+            return self.faction.is_recruitments_possible(board)
         
         if action == 'Spend Bird':
             for card in self.cards:

@@ -16,7 +16,7 @@ class Alliance(Base):
         self.units = 10
         self.actions = ["Recruit", "Move", "Battle", "Spread Sympathy", "Spend Sympathy"]
         
-    def is_recruitments_possible(self):
+    def is_recruitments_possible(self, board):
         if self.tokens["sympathy"] < 10 and self.units > 0:
             return True 
         else :

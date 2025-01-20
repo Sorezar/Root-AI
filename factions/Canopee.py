@@ -18,9 +18,18 @@ class Canopee(Base):
             "build": []
         }
 
-    # Changer pour prendre en compte la couleur des actions avec la couleur des clairièrs roosts
-    def is_recruitments_possible(self):
-        if self.buildings["roost"] < len(self.scoring['roost']) and self.units > 0:
-            return True 
-        else :
+    def is_recruitments_possible(self, board):
+        if len(self.decrees["recruit"]) == 0:
             return False
+        
+        for decree_type in self.decrees:
+            for action in self.decrees[decree_type]:
+                print(f"{decree_type}: {action}")
+        
+        for clearing in board.graph.nodes:
+            
+            if ("bird" in self.decrees["recruit"] or board.graph.nodes[clearing]['type'] in self.decrees["recruit"]) and any(building['type'] == "roost" for building in board.graph.nodes[clearing]["buildings"]):
+                print("Recruitment possible")
+                return True
+            
+        return False

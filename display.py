@@ -374,15 +374,50 @@ class RootDisplay:
         confirm_text_rect = confirm_text.get_rect(center=self.button_confirm.center)
         self.screen.blit(confirm_text, confirm_text_rect)
 
-    def draw_button_end_march(self):
-        self.button_end_march = pygame.Rect(WIDTH - 300, HEIGHT - 160, 100, 60)
-        pygame.draw.rect(self.screen, (0, 0, 255), self.button_end_march)
-        text = self.button_font.render("End March", True, (255, 255, 255))
-        text_rect = text.get_rect(center=self.button_end_march.center)
-        self.screen.blit(text, text_rect)
+    def ask_for_second_march(self):
+        # Dimensions de la boîte de dialogue
+        box_width = 300
+        box_height = 150
+        box_x = (config.WIDTH - box_width) // 2
+        box_y = (config.HEIGHT - box_height) // 2
 
-    def is_button_end_march_clicked(self, pos):
-        return self.button_end_march.collidepoint(pos)
+        # Boutons Oui et Non
+        button_width = 100
+        button_height = 50
+        button_yes = pygame.Rect(box_x + 30, box_y + box_height - button_height - 20, button_width, button_height)
+        button_no = pygame.Rect(box_x + box_width - button_width - 30, box_y + box_height - button_height - 20, button_width, button_height)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if button_yes.collidepoint(event.pos):
+                        return True
+                    elif button_no.collidepoint(event.pos):
+                        return False
+
+            # Dessiner la boîte de dialogue
+            pygame.draw.rect(self.screen, (200, 200, 200), (box_x, box_y, box_width, box_height))
+            pygame.draw.rect(self.screen, (0, 0, 0), (box_x, box_y, box_width, box_height), 2)
+
+            # Dessiner le texte
+            font = pygame.font.SysFont(None, 36)
+            text = font.render("Voulez-vous effectuer un deuxième déplacement ?", True, (0, 0, 0))
+            text_rect = text.get_rect(center=(box_x + box_width // 2, box_y + box_height // 2 - 20))
+            self.screen.blit(text, text_rect)
+
+            # Dessiner les boutons
+            pygame.draw.rect(self.screen, (0, 255, 0), button_yes)
+            pygame.draw.rect(self.screen, (255, 0, 0), button_no)
+            text_yes = font.render("Oui", True, (255, 255, 255))
+            text_no = font.render("Non", True, (255, 255, 255))
+            self.screen.blit(text_yes, text_yes.get_rect(center=button_yes.center))
+            self.screen.blit(text_no, text_no.get_rect(center=button_no.center))
+
+            pygame.display.flip()
+            self.clock.tick(60)
 
     def draw(self):
         self.draw_board()
@@ -645,6 +680,118 @@ class RootDisplay:
             self.clock.tick(60)
 
         return selected_item, selected_type
+
+    def ask_for_action(self, card):
+        actions = ["recruit", "move", "battle", "build"]
+        action_buttons = []
+        button_width = 100
+        button_height = 50
+        x_offset = (config.WIDTH - button_width) // 2
+        y_offset = (config.HEIGHT - button_height * len(actions)) // 2
+
+        for action in actions:
+            button_rect = pygame.Rect(x_offset, y_offset, button_width, button_height)
+            action_buttons.append((button_rect, action))
+            y_offset += button_height + 10
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    for button_rect, action in action_buttons:
+                        if button_rect.collidepoint(event.pos):
+                            return action
+
+            # Dessiner uniquement ce qui est nécessaire
+            self.draw()
+
+            # Dessiner les boutons d'action
+            for button_rect, action in action_buttons:
+                pygame.draw.rect(self.screen, (0, 128, 0), button_rect)
+                text = self.font.render(action, True, (255, 255, 255))
+                text_rect = text.get_rect(center=button_rect.center)
+                self.screen.blit(text, text_rect)
+
+            # Rafraîchir l'écran
+            pygame.display.flip()
+            self.clock.tick(60)
+
+    def ask_for_decree_card_and_action(self, player):
+        selected_card = None
+        card_width = 220
+        card_height = 300
+        x_offset = 10
+        y_offset = HEIGHT - card_height - 10
+
+        while selected_card is None:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = event.pos
+                    x_offset = 10  # Reset x_offset for each click check
+                    for card in player.cards:
+                        card_pos = (x_offset, y_offset)
+                        if pygame.Rect(card_pos[0], card_pos[1], card_width, card_height).collidepoint(pos):
+                            selected_card = card
+                            break
+                        x_offset += card_width + 10
+
+            # Dessiner uniquement ce qui est nécessaire
+            self.draw()
+
+            # Dessiner les cartes en surbrillance
+            x_offset = 10
+            for card in player.cards:
+                card_pos = (x_offset, y_offset)
+                if card != selected_card:
+                    pygame.draw.rect(self.screen, (255, 0, 0), (card_pos[0], card_pos[1], card_width, card_height), 3)
+                x_offset += card_width + 10
+
+            # Rafraîchir l'écran
+            pygame.display.flip()
+            self.clock.tick(60)
+
+        action = self.ask_for_action(selected_card)
+        return selected_card, action
+
+    def ask_to_continue_or_finish(self):
+        button_width = 200
+        button_height = 50
+        x_offset = (config.WIDTH - button_width) // 2
+        y_offset = (config.HEIGHT - button_height) // 2
+
+        continue_button = pygame.Rect(x_offset, y_offset - 60, button_width, button_height)
+        finish_button = pygame.Rect(x_offset, y_offset + 60, button_width, button_height)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if continue_button.collidepoint(event.pos):
+                        return "continue"
+                    elif finish_button.collidepoint(event.pos):
+                        return "finish"
+
+            # Dessiner uniquement ce qui est nécessaire
+            self.draw()
+
+            # Dessiner les boutons
+            pygame.draw.rect(self.screen, (0, 128, 0), continue_button)
+            pygame.draw.rect(self.screen, (128, 0, 0), finish_button)
+            continue_text = self.font.render("Continuer", True, (255, 255, 255))
+            finish_text = self.font.render("Terminer", True, (255, 255, 255))
+            self.screen.blit(continue_text, continue_text.get_rect(center=continue_button.center))
+            self.screen.blit(finish_text, finish_text.get_rect(center=finish_button.center))
+
+            # Rafraîchir l'écran
+            pygame.display.flip()
+            self.clock.tick(60)
 
 ###############################################################################################
 #################################### FONCTIONS D'EVENEMENT ####################################
