@@ -20,7 +20,7 @@ BUG :
 
 Ordre 
 
-
+- Fusionner ask_second_march et ask_to_continue decret 
 - Rajouter interaction avec les cartes pour les jouer
 - Rajouter actions Canopée
 - Rajouter le nombre de cartes que tire un joueur

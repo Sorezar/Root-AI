@@ -26,26 +26,11 @@ class Player:
     def add_points(self, points):
         self.points += points
         
+    # Pour plus tard lors de la mise au propre
     def play_turn(self):
         self.faction.birdsong_phase()
         self.faction.daylight_phase()
         self.faction.evening_phase()
-    
-    def get_controlled_clearings(self, board):
-        return [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["control"] == self.faction.id]
-    
-    def get_clearings_with_units(self, board):
-        return [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["units"].get(self.faction.id, 0) > 0]
-    
-    def get_clearings_with_recruiters(self, board):
-        if self.faction.id == 0:
-            return [clearing for clearing in board.graph.nodes if any(building["type"] == "recruiter" for building in board.graph.nodes[clearing]["buildings"])]
-        if self.faction.id == 1:
-            return [clearing for clearing in board.graph.nodes if any(building["type"] == "roost" for building in board.graph.nodes[clearing]["buildings"])]
-        if self.faction.id == 2:
-            return [clearing for clearing in board.graph.nodes if any(token["type"] == "sympathy" for token in board.graph.nodes[clearing]["tokens"])]
-        if self.faction.id == 3:
-            return None
     
     def get_available_actions(self, board):
         available_actions = []
@@ -61,23 +46,15 @@ class Player:
                 return False
             
             has_bird_card = any(card['color'] == "bird" for card in self.cards)
-            for clearing in self.get_clearings_with_units(board):
+            for clearing in board.get_clearings_with_units(self.faction.id):
                 if board.graph.nodes[clearing]["type"] in [card['color'] for card in self.cards if card['color'] != "bird"]:
                     if any(building["type"] == "sawmill" and building["owner"] == self.faction.id for building in board.graph.nodes[clearing]["buildings"]):
                         return True
             return has_bird_card and self.faction.buildings["sawmill"] < 6
         
         if action == 'Battle':
-            for clearing in self.get_clearings_with_units(board):
-                for token in board.graph.nodes[clearing]["tokens"]:
-                    if token["owner"] != self.faction.id:
-                        return True
-                for building in board.graph.nodes[clearing]["buildings"]:
-                    if building["owner"] != self.faction.id and building["type"] != "ruins":
-                        return True
-                if sum(units for owner, units in board.graph.nodes[clearing]["units"].items() if owner != self.faction.id) > 0:
-                    return True
-            return False
+            possible, _ = self.faction.is_battle_possible(board)
+            return possible
         
         if action == 'Build':
             possible , _ = self.faction.is_building_possible(board)
@@ -93,5 +70,5 @@ class Player:
             return False
         
         if action == "March" or action == "Move":
-            return bool(self.get_clearings_with_units(board))
-        # Ajoutez d'autres vérifications pour d'autres actions
+            possible, _ = self.faction.is_move_possible(board)
+            return possible

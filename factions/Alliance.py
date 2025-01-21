@@ -21,3 +21,6 @@ class Alliance(Base):
             return True 
         else :
             return False
+        
+    def is_building_possible(self, board):
+        return super().is_building_possible(board)

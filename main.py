@@ -69,12 +69,12 @@ def initial_setup(lobby, board, display):
     alliance.faction.tokens["sympathy"] -= 1
     board.graph.nodes[7]["tokens"].append({"type": "sympathy", "owner": alliance.faction.id})
 
-def movement_phase(display, board, current_player):
+def move(display, board, current_player):
     # Rajouter gestion de l'achat du bateau
     
     # Récup from_clearing
-    clearing_with_units = current_player.get_clearings_with_units(board)
-    controled_clearings = current_player.get_controlled_clearings(board) 
+    clearing_with_units = board.get_clearings_with_units(current_player.faction.id)
+    controled_clearings = board.get_controlled_clearings(current_player.faction.id) 
     from_clearing = display.ask_for_clearing(clearing_with_units)
     
     # Récup to_clearing
@@ -112,6 +112,13 @@ def build(display, board, current_player):
         current_player.faction.buildings[building] -= 1
         board.graph.nodes[clearing]["buildings"].append({"type": building, "owner": current_player.faction.id})
         current_player.faction.use_wood_for_building(board, group, clearing, cost)
+        
+    # Pour Canopée
+    elif current_player.faction.id == 1:
+        _, clearings = current_player.faction.is_building_possible(board)
+        clearing = display.ask_for_clearing(clearings)
+        current_player.faction.buildings['roost'] -= 1
+        board.graph.nodes[clearing]["buildings"].append({"type": "roost", "owner": current_player.faction.id})
     
     board.update_control(clearing)
 
@@ -237,8 +244,7 @@ def spend_bird(display, current_player):
 
 def recruit(display, board, current_player):
         
-    recruiters_clearings = current_player.get_clearings_with_recruiters(board)
-    print("Ca commence le recrutement")
+    recruiters_clearings = board.get_clearings_with_recruiters(current_player.faction.id)
     
     # Pour la Marquise     
     if current_player.faction.id == 0:            
@@ -254,16 +260,13 @@ def recruit(display, board, current_player):
                 
     # Pour Canopée
     elif current_player.faction.id == 1:
-        print("Ca recrute")
         if len(recruiters_clearings) > current_player.faction.units :
-            print("1er cas")
             while current_player.faction.is_recruitments_possible():
                 recruit_clearing = display.ask_for_clearing(current_player.get_clearings_with_recruiters(board))
                 current_player.faction.units -= 1
                 board.graph.nodes[recruit_clearing]["units"][current_player.faction.id] += 1
         else:
             for r in recruiters_clearings:
-                print("2eme cas")
                 current_player.faction.units -= 1
                 board.graph.nodes[r]["units"][current_player.faction.id] += 1
 
@@ -274,25 +277,27 @@ def resolve_decree(display, lobby, board, current_player):
         print(f"Action: {action}")
         for color in canopee.decrees[action]:
             print(f"Action: {action}, colors: {color}")
+            
             if action == "recruit":
                 print("Recruit")
                 if not current_player.is_action_available("Recruit", board):
-                    print("pas d'action disponible")
                     trigger_crisis(display, lobby, board, current_player)
                     return
-                print("On fait l'action")
                 recruit(display, board, current_player)
+                
             elif action == "move":
                 print("Move")
                 if not current_player.is_action_available("Move", board):
                     trigger_crisis(display, lobby, board, current_player)
                     return
-                movement_phase(display, board, current_player)
+                move(display, board, current_player)
+                
             elif action == "battle":
                 if not current_player.is_action_available("Battle", board):
                     trigger_crisis(display, lobby, board, current_player)
                     return
                 battle(display, lobby, board, current_player)
+                
             elif action == "build":
                 if not current_player.is_action_available("Build", board):
                     trigger_crisis(display, lobby, board, current_player)
@@ -304,6 +309,10 @@ def trigger_crisis(display, lobby, board, current_player):
     bird_cards = sum(color == "bird" for action in canopee.decrees.values() for color in action)
     current_player.points = max(0, current_player.points - bird_cards)
     canopee.decrees = {action: [] for action in canopee.decrees}
+    
+    # Afficher le message de crise
+    display.draw_message("La Canopée tombe en crise !", duration=2000)
+    
     # Choisir un nouveau leader (non implémenté ici)
     lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
 
@@ -314,20 +323,18 @@ def run(display, lobby, board):
     while running:
         current_player = lobby.get_player(lobby.current_player)
         
-        if current_player.faction.id == 1:  # Canopée
+        # Canopée
+        if current_player.faction.id == 1:  
             for _ in range(2):
                 selected_card, action = display.ask_for_decree_card_and_action(current_player)
                 current_player.faction.decrees[action].append(selected_card["color"])
                 current_player.remove_card(selected_card)
-                choice = display.ask_to_continue_or_finish()
-                if choice == "finish":
+                if _ == 0 and display.ask_to_continue_or_finish() == "finish":
                     break
-            print(current_player.faction.decrees)
             resolve_decree(display, lobby, board, current_player)
             
             # Joueur suivant
             lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
-
         
         for event in pygame.event.get():
             
@@ -366,14 +373,14 @@ def run(display, lobby, board):
                     
                     if action == "March":
                         for _ in range(2):
-                            movement_phase(display, board, current_player)
+                            move(display, board, current_player)
                             if _ == 0: 
                                 if not display.ask_for_second_march():
                                     break
                         cat_actions_remaining -= 1
                     
                     if action == "Move":
-                        movement_phase(display, board, current_player)
+                        move(display, board, current_player)
                         cat_actions_remaining -= current_player.faction.id == 0
                     
                     if action == "Recruit":

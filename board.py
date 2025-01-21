@@ -157,3 +157,23 @@ class RootBoard:
                 adjacent_forests.append(forest_id)
                 
         return adjacent_forests
+    
+    def get_clearings_with_units(self, faction_id=None):
+        if faction_id is None:
+            return [clearing for clearing in self.graph.nodes if self.graph.nodes[clearing]["units"] != {}]
+        return [clearing for clearing in self.graph.nodes if self.graph.nodes[clearing]["units"].get(faction_id, 0) > 0]
+    
+    def get_controlled_clearings(self, faction_id=None):
+        if faction_id is None:
+            return [clearing for clearing in self.graph.nodes if self.graph.nodes[clearing]["control"] is not None]
+        return [clearing for clearing in self.graph.nodes if self.graph.nodes[clearing]["control"] == faction_id]
+    
+    def get_clearings_with_recruiters(self, faction_id):
+        if faction_id == 0:
+            return [clearing for clearing in self.graph.nodes if any(building["type"] == "recruiter" for building in self.graph.nodes[clearing]["buildings"])]
+        if faction_id == 1:
+            return [clearing for clearing in self.graph.nodes if any(building["type"] == "roost" for building in self.graph.nodes[clearing]["buildings"])]
+        if faction_id == 2:
+            return [clearing for clearing in self.graph.nodes if any(token["type"] == "sympathy" for token in self.graph.nodes[clearing]["tokens"])]
+        if faction_id == 3:
+            return None

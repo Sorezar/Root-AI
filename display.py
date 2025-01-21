@@ -374,51 +374,57 @@ class RootDisplay:
         confirm_text_rect = confirm_text.get_rect(center=self.button_confirm.center)
         self.screen.blit(confirm_text, confirm_text_rect)
 
-    def ask_for_second_march(self):
-        # Dimensions de la boîte de dialogue
-        box_width = 300
-        box_height = 150
-        box_x = (config.WIDTH - box_width) // 2
-        box_y = (config.HEIGHT - box_height) // 2
+    def draw_decree(self, current_player):
+        decree = current_player.faction.decrees
+        actions = ["recruit", "move", "battle", "build"]
+        action_labels = ["Recruit", "Move", "Battle", "Build"]
+        column_width = 30
+        column_height = 90
+        padding = 40  # Augmenter l'espacement entre les colonnes
+        label_offset = 10  # Réduire l'espace entre les images et le titre des colonnes
+        line_height = 90  # Hauteur des lignes verticales
 
-        # Boutons Oui et Non
-        button_width = 100
-        button_height = 50
-        button_yes = pygame.Rect(box_x + 30, box_y + box_height - button_height - 20, button_width, button_height)
-        button_no = pygame.Rect(box_x + box_width - button_width - 30, box_y + box_height - button_height - 20, button_width, button_height)
+        # Calculer les offsets pour centrer le décret
+        total_width = len(actions) * (column_width + padding) - padding
+        total_height = column_height + label_offset  # Inclure l'espace pour les labels
+        x_offset = config.BOARD_WIDTH + (config.PANEL_WIDTH - total_width) // 2
+        y_offset = config.PANEL_HEIGHT + (config.HEIGHT - config.PANEL_HEIGHT - total_height) // 2
 
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if button_yes.collidepoint(event.pos):
-                        return True
-                    elif button_no.collidepoint(event.pos):
-                        return False
+        for i, action in enumerate(actions):
+            # Dessiner le label de l'action
+            label_text = self.font.render(action_labels[i], True, COLORS["text"])
+            label_rect = label_text.get_rect(center=(x_offset + column_width // 2, y_offset - label_offset))
+            self.screen.blit(label_text, label_rect)
 
-            # Dessiner la boîte de dialogue
-            pygame.draw.rect(self.screen, (200, 200, 200), (box_x, box_y, box_width, box_height))
-            pygame.draw.rect(self.screen, (0, 0, 0), (box_x, box_y, box_width, box_height), 2)
+            # Dessiner les cartes du décret
+            for j, color in enumerate(decree[action]):
+                sprite_path = os.path.join("sprites", "type", f"{color}.png")
+                if os.path.exists(sprite_path):
+                    sprite_image = pygame.image.load(sprite_path)
+                    sprite_image = pygame.transform.scale(sprite_image, (column_width, column_width))
+                    sprite_pos = (x_offset, y_offset + j * column_width)
+                    self.screen.blit(sprite_image, sprite_pos)
 
-            # Dessiner le texte
-            font = pygame.font.SysFont(None, 36)
-            text = font.render("Voulez-vous effectuer un deuxième déplacement ?", True, (0, 0, 0))
-            text_rect = text.get_rect(center=(box_x + box_width // 2, box_y + box_height // 2 - 20))
-            self.screen.blit(text, text_rect)
+            # Dessiner les lignes verticales entre les colonnes
+            if i < len(actions) - 1:
+                line_x = x_offset + column_width + padding // 2
+                line_y_start = y_offset - label_offset // 2
+                line_y_end = line_y_start + line_height
+                pygame.draw.line(self.screen, COLORS["text"], (line_x, line_y_start), (line_x, line_y_end), 2)
 
-            # Dessiner les boutons
-            pygame.draw.rect(self.screen, (0, 255, 0), button_yes)
-            pygame.draw.rect(self.screen, (255, 0, 0), button_no)
-            text_yes = font.render("Oui", True, (255, 255, 255))
-            text_no = font.render("Non", True, (255, 255, 255))
-            self.screen.blit(text_yes, text_yes.get_rect(center=button_yes.center))
-            self.screen.blit(text_no, text_no.get_rect(center=button_no.center))
-
-            pygame.display.flip()
-            self.clock.tick(60)
-
+            x_offset += column_width + padding
+            
+    def draw_message(self, message, duration=2000):
+        font = pygame.font.SysFont(None, 48)
+        text = font.render(message, True, COLORS["text"])
+        text_rect = text.get_rect(center=(config.WIDTH // 2, config.HEIGHT // 2))
+        
+        self.draw()  
+        self.screen.blit(text, text_rect)
+        pygame.display.flip()
+        
+        pygame.time.delay(duration)
+        
     def draw(self):
         self.draw_board()
         self.draw_panel()
@@ -427,6 +433,8 @@ class RootDisplay:
         self.draw_actions()
         current_player = self.lobby.get_player(self.lobby.current_player)
         self.draw_cards(current_player)
+        if current_player.faction.id == 1:  # Canopée
+            self.draw_decree(current_player)
 
 ###############################################################################################
 ################################### FONCTIONS D'INTERACTION ###################################
@@ -790,6 +798,51 @@ class RootDisplay:
             self.screen.blit(finish_text, finish_text.get_rect(center=finish_button.center))
 
             # Rafraîchir l'écran
+            pygame.display.flip()
+            self.clock.tick(60)
+
+    def ask_for_second_march(self):
+        # Dimensions de la boîte de dialogue
+        box_width = 300
+        box_height = 150
+        box_x = (config.WIDTH - box_width) // 2
+        box_y = (config.HEIGHT - box_height) // 2
+
+        # Boutons Oui et Non
+        button_width = 100
+        button_height = 50
+        button_yes = pygame.Rect(box_x + 30, box_y + box_height - button_height - 20, button_width, button_height)
+        button_no = pygame.Rect(box_x + box_width - button_width - 30, box_y + box_height - button_height - 20, button_width, button_height)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if button_yes.collidepoint(event.pos):
+                        return True
+                    elif button_no.collidepoint(event.pos):
+                        return False
+
+            # Dessiner la boîte de dialogue
+            pygame.draw.rect(self.screen, (200, 200, 200), (box_x, box_y, box_width, box_height))
+            pygame.draw.rect(self.screen, (0, 0, 0), (box_x, box_y, box_width, box_height), 2)
+
+            # Dessiner le texte
+            font = pygame.font.SysFont(None, 36)
+            text = font.render("Voulez-vous effectuer un deuxième déplacement ?", True, (0, 0, 0))
+            text_rect = text.get_rect(center=(box_x + box_width // 2, box_y + box_height // 2 - 20))
+            self.screen.blit(text, text_rect)
+
+            # Dessiner les boutons
+            pygame.draw.rect(self.screen, (0, 255, 0), button_yes)
+            pygame.draw.rect(self.screen, (255, 0, 0), button_no)
+            text_yes = font.render("Oui", True, (255, 255, 255))
+            text_no = font.render("Non", True, (255, 255, 255))
+            self.screen.blit(text_yes, text_yes.get_rect(center=button_yes.center))
+            self.screen.blit(text_no, text_no.get_rect(center=button_no.center))
+
             pygame.display.flip()
             self.clock.tick(60)
 
