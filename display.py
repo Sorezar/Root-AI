@@ -134,7 +134,7 @@ class RootDisplay:
         self.action_buttons = []
         current_player = self.lobby.get_player(self.lobby.current_player)
         actions = current_player.faction.actions
-        available_actions = current_player.get_available_actions(self.board)
+        possible_actions = current_player.get_possible_actions(self.board)
         faction_id = current_player.faction.id
 
         for action in actions:
@@ -150,7 +150,7 @@ class RootDisplay:
                 text_rect = text.get_rect(center=button_pass.center)
                 self.screen.blit(text, text_rect)
             
-            if action not in available_actions:
+            if action not in possible_actions:
                 overlay = pygame.Surface((button_width, button_height))
                 overlay.set_alpha(128)  
                 overlay.fill((0, 0, 0))
@@ -546,7 +546,7 @@ class RootDisplay:
             pygame.display.flip()
             self.clock.tick(60)
             
-    def ask_for_building_cats(self, pos, wood_costs, max_wood, player):
+    def ask_for_building_cats(self, pos, wood_costs, max_wood, buildings):
         selected_building = None
         building_types = ["sawmill", "workshop", "recruiter"]
         building_width = 40
@@ -562,7 +562,7 @@ class RootDisplay:
                     click_pos = event.pos
                     for i, building in enumerate(building_types):
                         building_rect = pygame.Rect(pos[0] + i * (building_width + padding), pos[1] - building_height // 2, building_width, building_height)
-                        if building_rect.collidepoint(click_pos) and wood_costs[i] <= max_wood and player.faction.buildings[building] > 0:
+                        if building_rect.collidepoint(click_pos) and wood_costs[i] <= max_wood and buildings[building] > 0:
                             selected_building = building
                             break
 
@@ -579,7 +579,7 @@ class RootDisplay:
                 self.screen.blit(cost_text, (building_rect.x + building_width // 2 - cost_text.get_width() // 2, building_rect.y + building_height + 5))
 
                 # Appliquer un filtre noirci si le coût en bois est supérieur à max_wood ou si le nombre de bâtiments est épuisé
-                if cost > max_wood or player.faction.buildings[building] <= 0:
+                if cost > max_wood or buildings[building] <= 0:
                     overlay = pygame.Surface((building_width, building_height))
                     overlay.set_alpha(128)
                     overlay.fill((0, 0, 0))

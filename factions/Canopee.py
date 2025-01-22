@@ -10,7 +10,6 @@ class Canopee(Base):
             "roost": 7
         }
         self.units = 20
-        self.actions = []
         self.decrees = {
             "recruit": [],
             "move": [],
@@ -18,21 +17,25 @@ class Canopee(Base):
             "build": []
         }
 
-    def is_recruitments_possible(self, board):
-        if len(self.decrees["recruit"]) == 0:
-            return False
+############################################################################################################
+###################################### VERIFICATIONS ACTIONS POSSIBLES #####################################
+############################################################################################################ 
+
+    def is_recruit_possible(self, board):
+        recruitable_clearings = []
         
-        for decree_type in self.decrees:
-            for action in self.decrees[decree_type]:
-                print(f"{decree_type}: {action}")
+        if len(self.decrees["recruit"]) == 0:
+            return False, recruitable_clearings
         
         for clearing in board.graph.nodes:
             if ("bird" in self.decrees["recruit"] or board.graph.nodes[clearing]['type'] in self.decrees["recruit"]) and any(building['type'] == "roost" for building in board.graph.nodes[clearing]["buildings"]):
-                return True
-            
-        return False
+                recruitable_clearings.append(clearing)
+        
+        if recruitable_clearings:
+            return True, recruitable_clearings
+        return False, recruitable_clearings
     
-    def is_building_possible(self, board):
+    def is_build_possible(self, board):
         
         buildable_clearings = []
         
@@ -42,7 +45,7 @@ class Canopee(Base):
                     if ("bird" in self.decrees["build"] or board.graph.nodes[clearing]['type'] in self.decrees["build"]):
                         if not any(building['type'] == "roost" for building in board.graph.nodes[clearing]["buildings"]):
                             buildable_clearings.append(clearing)
-                    
+                            
         if buildable_clearings:
             return True, buildable_clearings
         return False, buildable_clearings
@@ -83,3 +86,95 @@ class Canopee(Base):
         if move_clearings:
             return True, move_clearings
         return False, move_clearings
+    
+    def get_possible_actions(self, board):
+        possible_actions = []
+        for action in self.decrees.keys():
+            is_action_available_method = getattr(self, f'is_{action}_possible')
+            if is_action_available_method(board)[0]:
+                possible_actions.append(action)
+        return possible_actions
+    
+############################################################################################################
+################################################# ACTIONS ##################################################
+############################################################################################################
+
+    def recruit(self, display, board):
+        super().recruit(display, board)
+        
+    def move(self, display, board):
+        # Rajouter gestion de l'achat du bateau
+        
+        # Récup from_clearing et to_clearing
+        _, move_options = self.is_move_possible(board)
+        from_clearing = display.ask_for_clearing([option[0] for option in move_options])
+        to_clearing = display.ask_for_clearing([option[1] for option in move_options if option[0] == from_clearing])
+        
+        # Nb unités
+        max_units = board.graph.nodes[from_clearing]["units"][self.id]
+        if max_units > 1:
+            units_to_move = display.ask_for_units_to_move(max_units, board.graph.nodes[to_clearing]["pos"])
+        else:
+            units_to_move = 1
+            
+        # Mise à jour des unités
+        board.graph.nodes[from_clearing]["units"][self.id] -= units_to_move
+        board.graph.nodes[to_clearing]["units"][self.id] = board.graph.nodes[to_clearing]["units"].get(self.id, 0) + units_to_move
+
+        # Mise à jour du contrôle
+        board.update_control(from_clearing)
+        board.update_control(to_clearing)
+        
+    def battle(self, display, lobby, board):
+        super().battle(display, lobby, board)
+        
+    def build(self, display, board):
+        _, clearings = self.is_build_possible(board)
+        clearing = display.ask_for_clearing(clearings)
+        self.buildings['roost'] -= 1
+        board.graph.nodes[clearing]["buildings"].append({"type": "roost", "owner": self.id})
+    
+        board.update_control(clearing)
+
+############################################################################################################
+############################################## GESTION DECRET ##############################################
+############################################################################################################
+
+    def resolve_decree(self, display, lobby, board):
+        for action in self.decrees.keys():
+            print(f"Action: {action}")
+            for color in self.decrees[action]:
+                if action == "recruit":
+                    if not self.is_recruit_possible(board):
+                        self.trigger_crisis(display, lobby)
+                        return
+                    self.recruit(display, board)
+                    
+                elif action == "move":
+                    if not self.is_move_possible(board):
+                        self.trigger_crisis(display, lobby)
+                        return
+                    self.move(display, board)
+                    
+                elif action == "battle":
+                    if not self.is_battle_possible(board):
+                        self.trigger_crisis(display, lobby)
+                        return
+                    self.battle(display, lobby, board)
+                    
+                elif action == "build":
+                    if not self.is_build_possible(board):
+                        self.trigger_crisis(display, lobby)
+                        return
+                    self.build(display, board)
+                    
+    def trigger_crisis(self, display, lobby):
+        bird_cards = sum(color == "bird" for action in self.decrees.values() for color in action)
+        self.points = max(0, self.points - bird_cards)
+        self.decrees = {action: [] for action in self.decrees}
+        
+        # Afficher le message de crise
+        display.draw_message("La Canopée tombe en crise !", duration=2000)
+        
+        # Choisir un nouveau leader (non implémenté ici)
+        lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
