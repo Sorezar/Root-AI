@@ -178,3 +178,40 @@ class Canopee(Base):
         
         # Choisir un nouveau leader (non implémenté ici)
         lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
+
+############################################################################################################
+############################################### TOUR DE JEU ################################################
+############################################################################################################
+
+    def birdsong_phase(self, current_player, display):
+        
+        # 1 - Si main vide on pioche une carte - v
+        if current_player.cards.is_empty():
+            current_player.cards.draw(1)
+            
+        # 2 - Add 1 or 2 cards to the decree - v
+        for _ in range(2):
+            selected_card, action = display.ask_for_decree_card_and_action(current_player)
+            self.decrees[action].append(selected_card["color"])
+            current_player.remove_card(selected_card)
+            if _ == 0 and display.ask_to_continue_or_finish() == "finish":
+                break
+        
+        # 3 - If no roosts, place a roost and 3 warriors in the clearing with the fewest total pieces - x
+
+    def daylight_phase(self, display, lobby, board):
+            
+        # 1 - Implémentation du crafting - x
+        
+        
+        # 2 - Résolution du décret - v
+        self.resolve_decree(display, lobby, board)
+
+    def evening_phase(self, display, current_player, deck):
+        
+        # Score points - v
+        current_player.add_points(self.scoring["roost"][7 - self.buildings["roost"] - 1])
+        
+        # Draw a card - v
+        self.draw(self, display, current_player, deck)
+        

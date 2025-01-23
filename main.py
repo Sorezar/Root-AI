@@ -76,26 +76,7 @@ def run(display, lobby, board):
     while running:
         current_player = lobby.get_player(lobby.current_player)
         
-        # Canopée
-        if current_player.faction.id == 1:  
-            for _ in range(2):
-                selected_card, action = display.ask_for_decree_card_and_action(current_player)
-                current_player.faction.decrees[action].append(selected_card["color"])
-                current_player.remove_card(selected_card)
-                if _ == 0 and display.ask_to_continue_or_finish() == "finish":
-                    break
-            current_player.faction.resolve_decree(display, lobby, board)
-            
-            # Joueur suivant
-            lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
-        
         for event in pygame.event.get():
-            
-            # Si le  chat n'a plus d'actions
-            if current_player.faction.id == 0 :
-                if current_player.faction.actions_remaining == 0:
-                    current_player.faction.actions_remaining = 3
-                    lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
             
             # Si on quitte le jeu
             if event.type == pygame.QUIT:
@@ -107,40 +88,20 @@ def run(display, lobby, board):
                 # Bouton Pass
                 if display.is_button_pass_clicked(event.pos):
                     lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
-                    if lobby.current_player == 0:
-                        current_player = lobby.get_player(lobby.current_player)
-                        current_player.faction.actions_remaining = 3
-                        
-                        if 6 - current_player.faction.buildings["sawmill"] < current_player.faction.tokens['wood']:
-                            current_player.faction.produce_wood(board)
-                        else :
-                            current_player.faction.choose_wood_distribution(display, board)
-                            
                     
                 # Si on clique sur une action de faction
                 action = display.is_action_button_clicked(event.pos)
                 if action in current_player.get_possible_actions(board):
-                    
-                    if action == "spend_bird":
-                        current_player.faction.spend_bird(display, current_player)
-                    
-                    if action == "march":
-                        current_player.faction.march(display, board)
-                    
-                    if action == "move":
-                        current_player.faction.move(display, board)
-                    
-                    if action == "recruit":
-                        current_player.faction.recruit(display, board)
-                            
-                    if action == "build":
-                        current_player.faction.build(display, board)
-                            
-                    if action == "overwork":
-                        current_player.faction.overwork(display, board, current_player)
-                        
-                    if action == "battle":
-                        current_player.faction.battle(display, lobby, board)
+                    action_methods = {
+                        "spend_bird": lambda: current_player.faction.spend_bird(display, current_player),
+                        "march":      lambda: current_player.faction.march(display, board),
+                        "move":       lambda: current_player.faction.move(display, board),
+                        "recruit":    lambda: current_player.faction.recruit(display, board),
+                        "build":      lambda: current_player.faction.build(display, board),
+                        "overwork":   lambda: current_player.faction.overwork(display, board, current_player),
+                        "battle":     lambda: current_player.faction.battle(display, lobby, board)
+                    }
+                    action_methods[action]()
                         
         display.draw()
         pygame.display.flip()

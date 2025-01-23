@@ -261,3 +261,28 @@ class Marquise(Base):
                         wood_count += 1
             wood_per_group.append(wood_count)
         return wood_per_group
+    
+############################################################################################################
+############################################### TOUR DE JEU ################################################
+############################################################################################################
+
+    def birdsong_phase(self, display, board):
+            if 6 - self.buildings["sawmill"] < self.tokens['wood']:
+                self.produce_wood(board)
+            else:
+                self.choose_wood_distribution(display, board)
+
+    def daylight_phase(self, display, lobby, board):
+        self.actions_remaining = 3
+        
+        # 1 - Implémentation du crafting
+        
+        
+        # 2 - Implémentation des actions
+        
+
+    def evening_phase(self, display, current_player, deck):
+        
+        # Draw a card
+        self.draw(self, display, current_player, deck)
+        
