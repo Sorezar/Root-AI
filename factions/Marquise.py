@@ -1,4 +1,5 @@
 from factions.BaseFaction import Base
+import pygame
 
 class Marquise(Base):
     def __init__(self):
@@ -267,22 +268,61 @@ class Marquise(Base):
 ############################################################################################################
 
     def birdsong_phase(self, display, board):
-            if 6 - self.buildings["sawmill"] < self.tokens['wood']:
-                self.produce_wood(board)
-            else:
-                self.choose_wood_distribution(display, board)
+        if 6 - self.buildings["sawmill"] < self.tokens['wood']:
+            self.produce_wood(board)
+        else:
+            self.choose_wood_distribution(display, board)
 
-    def daylight_phase(self, display, lobby, board):
-        self.actions_remaining = 3
+    def daylight_phase(self, display, lobby, board, current_player):
+        
         
         # 1 - Implémentation du crafting
         
         
         # 2 - Implémentation des actions
         
+        self.actions_remaining = 3
+        
+        while self.actions_remaining > 0:
+            
+            for event in pygame.event.get():
+                possible_actions = self.get_possible_actions(board, current_player.cards)
+                
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    
+                    if display.is_button_pass_clicked(event.pos):
+                        print("yeah")
+                        return 
+                    
+                    action = display.is_action_button_clicked(pygame.mouse.get_pos())
+                    
+                    if action in possible_actions:
+                        action_methods = {
+                            "spend_bird": lambda: self.spend_bird(display, lobby.get_player(lobby.current_player)),
+                            "march": lambda: self.march(display, board),
+                            "recruit": lambda: self.recruit(display, board),
+                            "build": lambda: self.build(display, board),
+                            "overwork": lambda: self.overwork(display, board, lobby.get_player(lobby.current_player)),
+                            "battle": lambda: self.battle(display, lobby, board)
+                        }
+                        action_methods[action]()
+                        
+                display.draw()
+                display.draw_actions(self.id, self.actions, possible_actions)
+                pygame.display.flip()
+                display.clock.tick(60)
+        return
 
-    def evening_phase(self, display, current_player, deck):
+    def evening_phase(self, display, current_player, cards):
         
         # Draw a card
-        self.draw(self, display, current_player, deck)
-        
+        self.draw(display, current_player, cards)
+    
+    def play(self, display, board, lobby, current_player, cards):
+        self.birdsong_phase(display, board)
+        self.daylight_phase(display, lobby, board, current_player)
+        self.evening_phase(display, current_player, cards)

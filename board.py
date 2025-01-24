@@ -108,7 +108,11 @@ class RootBoard:
             if len(controlling_factions) == 1:
                 self.graph.nodes[clearing_id]["control"] = controlling_factions[0]
             else:
-                self.graph.nodes[clearing_id]["control"] = None
+                # Si la Canopée fait partie des factions ayant le plus de pièces, elle contrôle
+                if 1 in controlling_factions:
+                    self.graph.nodes[clearing_id]["control"] = 1
+                else:
+                    self.graph.nodes[clearing_id]["control"] = None
         else:
             self.graph.nodes[clearing_id]["control"] = None
             

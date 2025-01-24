@@ -126,16 +126,12 @@ class RootDisplay:
         text_rect = text.get_rect(center=self.button_pass.center)
         self.screen.blit(text, text_rect)
     
-    def draw_actions(self):
+    def draw_actions(self, faction_id, actions, possible_actions):
         x_offset = WIDTH - ACTIONS_WIDTH + 10
         y_offset = HEIGHT - ACTIONS_HEIGHT + 10
         button_width = 60
         button_height = 60
         self.action_buttons = []
-        current_player = self.lobby.get_player(self.lobby.current_player)
-        actions = current_player.faction.actions
-        possible_actions = current_player.get_possible_actions(self.board)
-        faction_id = current_player.faction.id
 
         for action in actions:
             button_pass = pygame.Rect(x_offset, y_offset, button_width, button_height)
@@ -430,7 +426,6 @@ class RootDisplay:
         self.draw_panel()
         self.draw_items()
         self.draw_button_pass()
-        self.draw_actions()
         current_player = self.lobby.get_player(self.lobby.current_player)
         self.draw_cards(current_player)
         if current_player.faction.id == 1:  # Canopée

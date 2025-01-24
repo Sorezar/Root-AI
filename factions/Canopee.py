@@ -142,52 +142,54 @@ class Canopee(Base):
 
     def resolve_decree(self, display, lobby, board):
         for action in self.decrees.keys():
-            print(f"Action: {action}")
             for color in self.decrees[action]:
                 if action == "recruit":
-                    if not self.is_recruit_possible(board):
+                    possible, _ = self.is_recruit_possible(board)
+                    if not possible:
                         self.trigger_crisis(display, lobby)
                         return
                     self.recruit(display, board)
                     
                 elif action == "move":
-                    if not self.is_move_possible(board):
+                    possible, _ = self.is_move_possible(board)
+                    if not possible:
                         self.trigger_crisis(display, lobby)
                         return
                     self.move(display, board)
                     
                 elif action == "battle":
-                    if not self.is_battle_possible(board):
+                    possible, _ = self.is_battle_possible(board)
+                    if not possible:
                         self.trigger_crisis(display, lobby)
                         return
                     self.battle(display, lobby, board)
                     
                 elif action == "build":
-                    if not self.is_build_possible(board):
+                    possible, _ = self.is_build_possible(board)
+                    if not possible:
                         self.trigger_crisis(display, lobby)
                         return
                     self.build(display, board)
                     
     def trigger_crisis(self, display, lobby):
         bird_cards = sum(color == "bird" for action in self.decrees.values() for color in action)
-        self.points = max(0, self.points - bird_cards)
+        self.points = max(0, lobby.players[lobby.current_player].points - bird_cards)
         self.decrees = {action: [] for action in self.decrees}
         
         # Afficher le message de crise
         display.draw_message("La Canopée tombe en crise !", duration=2000)
         
         # Choisir un nouveau leader (non implémenté ici)
-        lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
 
 ############################################################################################################
 ############################################### TOUR DE JEU ################################################
 ############################################################################################################
 
-    def birdsong_phase(self, current_player, display):
+    def birdsong_phase(self, current_player, display, cards):
         
         # 1 - Si main vide on pioche une carte - v
-        if current_player.cards.is_empty():
-            current_player.cards.draw(1)
+        if current_player.cards == []:
+            current_player.cards.draw_cards(cards)
             
         # 2 - Add 1 or 2 cards to the decree - v
         for _ in range(2):
@@ -207,11 +209,16 @@ class Canopee(Base):
         # 2 - Résolution du décret - v
         self.resolve_decree(display, lobby, board)
 
-    def evening_phase(self, display, current_player, deck):
+    def evening_phase(self, display, current_player, cards):
         
         # Score points - v
         current_player.add_points(self.scoring["roost"][7 - self.buildings["roost"] - 1])
         
         # Draw a card - v
-        self.draw(self, display, current_player, deck)
+        self.draw(display, current_player, cards)
+        
+    def play(self, display, board, lobby, current_player, cards):
+        self.birdsong_phase(current_player, display, cards)
+        self.daylight_phase(display, lobby, board)
+        self.evening_phase(display, current_player, cards)
         

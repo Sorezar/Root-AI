@@ -190,8 +190,8 @@ class Base:
         # Update control
         board.update_control(attack_clearing)   
         
-    def draw(self, display, current_player, deck):
-        current_player.draw_cards(deck, self.number_card_draw_bonus + 1)
+    def draw(self, display, current_player, cards):
+        current_player.draw_cards(cards, self.number_card_draw_bonus + 1)
         while len(current_player.cards) > 5:
-            card_selected = display.ask_for_card(current_player)
+            card_selected = display.ask_for_cards(current_player)
             current_player.remove_card(card_selected)

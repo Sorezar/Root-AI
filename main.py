@@ -6,12 +6,14 @@ from config import *
 from player import Player
 from lobby import Lobby
 from items import Items
+from cards import Cards
 from factions.Marquise import Marquise
 from factions.Canopee import Canopee
 from factions.Alliance import Alliance
 from factions.Vagabond import Vagabond
 
 # External imports
+import pygame
 import json
 
 def initial_setup(lobby, board, display):
@@ -26,7 +28,7 @@ def initial_setup(lobby, board, display):
 
     # Piocher des cartes pour chaque joueur
     for player in lobby.players:
-        player.draw_cards(deck, 3)
+        player.draw_cards(cards, 3)
 
     # Récupérer la clairière
     dungeon_clearing = display.ask_for_clearing([1, 3, 9, 12])
@@ -75,33 +77,13 @@ def run(display, lobby, board):
     
     while running:
         current_player = lobby.get_player(lobby.current_player)
-        
-        for event in pygame.event.get():
-            
-            # Si on quitte le jeu
-            if event.type == pygame.QUIT:
-                running = False 
-            
-            # Si on clique sur un bouton
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+        current_player.faction.play(display, board, lobby, current_player, cards)
                 
-                # Bouton Pass
-                if display.is_button_pass_clicked(event.pos):
-                    lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
-                    
-                # Si on clique sur une action de faction
-                action = display.is_action_button_clicked(event.pos)
-                if action in current_player.get_possible_actions(board):
-                    action_methods = {
-                        "spend_bird": lambda: current_player.faction.spend_bird(display, current_player),
-                        "march":      lambda: current_player.faction.march(display, board),
-                        "move":       lambda: current_player.faction.move(display, board),
-                        "recruit":    lambda: current_player.faction.recruit(display, board),
-                        "build":      lambda: current_player.faction.build(display, board),
-                        "overwork":   lambda: current_player.faction.overwork(display, board, current_player),
-                        "battle":     lambda: current_player.faction.battle(display, lobby, board)
-                    }
-                    action_methods[action]()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                        
+        lobby.current_player = (lobby.current_player + 1) % len(lobby.players)
                         
         display.draw()
         pygame.display.flip()
@@ -130,8 +112,8 @@ if __name__ == "__main__":
     tests = RootTest()
     
     # Deck
-    with open(CARDS_FILE, "r") as f:
-        deck = json.load(f)
+    cards = Cards(json.load(open(CARDS_FILE)))
+    cards.shuffle()
     
     # Initialisation de l'affichage
     print("Initialisation de l'affichage")
