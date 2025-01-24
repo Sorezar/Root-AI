@@ -196,7 +196,7 @@ class Canopee(Base):
             selected_card, action = display.ask_for_decree_card_and_action(current_player)
             self.decrees[action].append(selected_card["color"])
             current_player.remove_card(selected_card)
-            if _ == 0 and display.ask_to_continue_or_finish() == "finish":
+            if _ == 0 and not display.ask_yes_no("Ajouter une deuxième carte ?"):
                 break
         
         # 3 - If no roosts, place a roost and 3 warriors in the clearing with the fewest total pieces - x

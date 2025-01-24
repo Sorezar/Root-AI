@@ -176,7 +176,7 @@ class Marquise(Base):
     def march(self, display, board):  
         for _ in range(2):
             super().move(display, board)
-            if _ == 0 and not display.ask_for_second_march():
+            if _ == 0 and not display.ask_yes_no("Deuxième déplacement ?"):
                 break
         self.actions_remaining -= 1
     
@@ -276,10 +276,10 @@ class Marquise(Base):
     def daylight_phase(self, display, lobby, board, current_player):
         
         
-        # 1 - Implémentation du crafting
+        # 1 - Crafts
         
         
-        # 2 - Implémentation des actions
+        # 2 - Actions
         
         self.actions_remaining = 3
         
@@ -293,9 +293,7 @@ class Marquise(Base):
                     exit()
                 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    
                     if display.is_button_pass_clicked(event.pos):
-                        print("yeah")
                         return 
                     
                     action = display.is_action_button_clicked(pygame.mouse.get_pos())
@@ -318,8 +316,6 @@ class Marquise(Base):
         return
 
     def evening_phase(self, display, current_player, cards):
-        
-        # Draw a card
         self.draw(display, current_player, cards)
     
     def play(self, display, board, lobby, current_player, cards):

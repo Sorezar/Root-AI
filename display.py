@@ -586,7 +586,6 @@ class RootDisplay:
             
         return selected_building, wood_costs[building_types.index(selected_building)]
  
-
     def ask_for_enemy(self, clearing, enemy_factions):
         selected_faction = None
         icon_size = 40
@@ -761,42 +760,7 @@ class RootDisplay:
         action = self.ask_for_action(selected_card)
         return selected_card, action
 
-    def ask_to_continue_or_finish(self):
-        button_width = 200
-        button_height = 50
-        x_offset = (config.WIDTH - button_width) // 2
-        y_offset = (config.HEIGHT - button_height) // 2
-
-        continue_button = pygame.Rect(x_offset, y_offset - 60, button_width, button_height)
-        finish_button = pygame.Rect(x_offset, y_offset + 60, button_width, button_height)
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if continue_button.collidepoint(event.pos):
-                        return "continue"
-                    elif finish_button.collidepoint(event.pos):
-                        return "finish"
-
-            # Dessiner uniquement ce qui est nécessaire
-            self.draw()
-
-            # Dessiner les boutons
-            pygame.draw.rect(self.screen, (0, 128, 0), continue_button)
-            pygame.draw.rect(self.screen, (128, 0, 0), finish_button)
-            continue_text = self.font.render("Continuer", True, (255, 255, 255))
-            finish_text = self.font.render("Terminer", True, (255, 255, 255))
-            self.screen.blit(continue_text, continue_text.get_rect(center=continue_button.center))
-            self.screen.blit(finish_text, finish_text.get_rect(center=finish_button.center))
-
-            # Rafraîchir l'écran
-            pygame.display.flip()
-            self.clock.tick(60)
-
-    def ask_for_second_march(self):
+    def ask_yes_no(self, message):
         # Dimensions de la boîte de dialogue
         box_width = 300
         box_height = 150
@@ -826,7 +790,7 @@ class RootDisplay:
 
             # Dessiner le texte
             font = pygame.font.SysFont(None, 36)
-            text = font.render("Voulez-vous effectuer un deuxième déplacement ?", True, (0, 0, 0))
+            text = font.render(message, True, (0, 0, 0))
             text_rect = text.get_rect(center=(box_x + box_width // 2, box_y + box_height // 2 - 20))
             self.screen.blit(text, text_rect)
 

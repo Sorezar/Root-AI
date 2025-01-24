@@ -1,30 +1,13 @@
-# Moteur de jeu
-- Rajouter les actions communes à toutes les factions
-- Rajouter les actions propres à chaque faction
-
-# Interface
-- Rajouter les animations de mouvement
-
-# Contenu
-- Ajouter les différentes factions : Chat, Piafs, Rebelles, Vagabond, Loutre, Lézard, Corvidés, Taupes, Gardiens, Seigneur des Cents
-- Rajouter les différentes maps
-- Rajouter les différents decks
-
-# Plus tard
-- Rajouter le système de nomades
-
-
-BUG :
-- Possible de move avec alliance alors qu'aucune clairière d'arrivée
-
 ORDRE :
 
-- Implémenter le système de phase et modifier le moteur de jeu en fonction
+Gameplay - Rajouter les actions communes à toutes les factions (craft, utilisation des cartes)
+Gameplay - Ajouter un système de consommation temporaire des couleurs du decret
+Gameplay - Ajouter le fait de faire les actions possibles avant de tomber en crise
 
-- Ajouter un système de consommation temporaire des couleurs du decret
-- Ajouter le fait de faire les actions possibles avant de tomber en crise
+Contenu - Rajouter Rebelles, Vagabond, Loutre, Lézard, Corvidés, Taupes, Gardiens, Seigneur des Cents
+Contenu - Rajouter les différentes maps
+Contenu - Rajouter les différents decks
 
-- Fusionner ask_second_march et ask_to_continue decret 
-- Rajouter interaction avec les cartes pour les jouer
-- Rajouter les actions communes à toutes les factions
-- Rajouter les actions propres à chaque faction
+Interface - Rajouter les animations de mouvement
+
+Plus tard - Rajouter le système de nomades
