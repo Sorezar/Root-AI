@@ -5,7 +5,8 @@ class Player:
         self.name    = name
         self.faction = faction
         self.cards   = []
-        self.items   = {}
+        self.crafted_cards = []
+        self.items   = []
         self.points  = 0
         self.id      = id
         

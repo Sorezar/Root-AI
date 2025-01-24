@@ -58,7 +58,7 @@ class Base:
             return True, move_clearings
         return False, move_clearings
     
-    def get_available_actions(self, board):
+    def get_possible_actions(self, board):
         raise NotImplementedError()
     
 ############################################################################################################
@@ -109,7 +109,7 @@ class Base:
         board.update_control(from_clearing)
         board.update_control(to_clearing)
         
-    def battle(self, display, lobby, board):
+    def battle(self, display, lobby, board, cards):
     
         def _have_ennemy_things(clearing, thing, board):
             if thing == "units":
@@ -130,6 +130,25 @@ class Base:
                             
         # Get the ennemy faction
         defender_faction_id = ennemy_factions[0] if len(ennemy_factions) == 1 else display.ask_for_enemy(attack_clearing, ennemy_factions)
+                   
+        """# Gestion ambushes
+        defender = lobby.get_player(defender_faction_id)
+        ambush_cards = [card for card in defender.cards if card["type"] == "ambush" and (card["color"] == board.graph.nodes[attack_clearing]["color"] or card["color"] == "bird")]
+        
+        if ambush_cards and display.ask_play_ambush(defender_faction_id, ambush_cards) :
+            ambush_card = display.ask_for_card(ambush_cards)
+            defender.remove_card(ambush_card)
+            attacker_units = board.graph.nodes[attack_clearing]["units"].get(self.id, 0)
+            units_lost = min(2, attacker_units)
+            board.graph.nodes[attack_clearing]["units"][self.id] -= units_lost
+            self.units += units_lost
+            if board.graph.nodes[attack_clearing]["units"].get(self.id, 0) == 0:
+                return
+            
+        # Gestion cartes de bataille
+        def_effect = defender.faction.get_battle_defender_effect(defender)
+        if def_effect:
+            card = display.ask_for_crafted_card()"""
                                                 
         # Roll the dice
         dices =  [random.randint(0, 3), random.randint(0, 3)]
@@ -195,3 +214,80 @@ class Base:
         while len(current_player.cards) > 5:
             card_selected = display.ask_for_cards(current_player)
             current_player.remove_card(card_selected)
+            
+############################################################################################################
+############################################ ACTIONS COMMUNES ##############################################
+############################################################################################################
+
+    ################################################
+    # CRAFT : Cartes de craft d'objets et/ou effet #
+    ################################################
+    
+    def get_objects(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "object"]
+    
+    def get_cratable_cards(self, current_player):
+        return [card for card in current_player.cards if "effect" in card["type"] or card["type"] == "favor"]
+    
+    ############################################
+    # EFFETS : Cartes craftée qui ont un effet #
+    ############################################
+
+    ## EFFETS DE DEBUT DE PHASE
+    def get_start_birdsong_effect(self, current_player):
+        return [card for card in current_player.crafted_cards if card["type"] == "start_birdsong_effect" or card["type"] == "dominance"]
+    def get_start_daylight_effect(self, current_player):
+        return [card for card in current_player.crafted_cards if card["type"] == "start_daylight_effect"]
+    def get_start_evening_effect(self, current_player):
+        return [card for card in current_player.crafted_cards if card["type"] == "start_evening_effect"]
+
+    ## EFFET A N'IMPORTE QUEL MOMENT DE LA PHASE DE JEU
+    def get_birdsong_effect(self, current_player):
+        return [card for card in current_player.crafted_cards if card["type"] == "birdsong_effect"]
+    def get_daylight_effect(self, current_player):
+        return [card for card in current_player.crafted_cards if card["type"] == "daylight_effect"]
+    def get_evening_effect(self, current_player):
+        return [card for card in current_player.crafted_cards if card["type"] == "evening_effect"]
+    
+    ## EFFET DE BATAILLE
+    
+    ### Effets en tant qu'attaquant
+    def get_battle_attacker_effect(self, current_player):
+        return [card for card in current_player.crafted_cards if card["type"] == "battle_attacker_effect" or card["type"] == "battle_effect"]
+    
+    ### Effets en tant que défenseur
+    def get_battle_defender_effect(self, current_player):
+        return [card for card in current_player.crafted_cards if card["type"] == "battle_defender_effect" or card["type"] == "battle_effect"]
+    
+    ###########################################################
+    # ACTIFS : Cartes qui ont un effect actif à l'utilisation #
+    ###########################################################
+    
+    ## ACTIFS DE DEBUT DE PHASE
+    def get_start_birdsong_active(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "start_birdsong_active"]
+    def get_start_daylight_active(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "start_daylight_active"]
+    def get_start_evening_active(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "start_evening_active"]
+    
+    ## ACTIFS A N'IMPORTE QUEL MOMENT DE LA PHASE DE JEU
+    
+    def get_birdsong_active(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "birdsong_active"]
+    def get_daylight_active(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "daylight_active"]
+    def get_evening_active(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "evening_active"]
+    
+    ## ACTIFS DE BATAILLE
+    
+    ### Actifs en tant qu'attaquant
+    def get_battle_attacker_active(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "battle_attacker_active"]
+    
+    ### Actifs en tant que défenseur
+    def get_battle_defender_active(self, current_player):
+        return [card for card in current_player.cards if card["type"] == "battle_defender_active" or card["type"] == "ambush"]
+
+    

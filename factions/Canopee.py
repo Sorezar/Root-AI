@@ -217,7 +217,7 @@ class Canopee(Base):
         # Draw a card - v
         self.draw(display, current_player, cards)
         
-    def play(self, display, board, lobby, current_player, cards):
+    def play(self, display, board, lobby, current_player, cards, items):
         self.birdsong_phase(current_player, display, cards)
         self.daylight_phase(display, lobby, board)
         self.evening_phase(display, current_player, cards)

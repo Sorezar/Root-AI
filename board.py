@@ -178,6 +178,16 @@ class RootBoard:
         if faction_id == 1:
             return [clearing for clearing in self.graph.nodes if any(building["type"] == "roost" for building in self.graph.nodes[clearing]["buildings"])]
         if faction_id == 2:
-            return [clearing for clearing in self.graph.nodes if any(token["type"] == "sympathy" for token in self.graph.nodes[clearing]["tokens"])]
+            return [clearing for clearing in self.graph.nodes if any("base" in building['type'] for building in self.graph.nodes[clearing]["buildings"])]
         if faction_id == 3:
             return None
+        
+    def get_clearings_with_crafters(self, faction_id):
+        if faction_id == 0:
+            return [clearing for clearing in self.graph.nodes if any(building["type"] == "workshop" for building in self.graph.nodes[clearing]["buildings"])]
+        if faction_id == 1:
+            return [clearing for clearing in self.graph.nodes if any(building["type"] == "roost" for building in self.graph.nodes[clearing]["buildings"])]
+        if faction_id == 2:
+            return [clearing for clearing in self.graph.nodes if any(token["type"] == "sympathy" for token in self.graph.nodes[clearing]["tokens"])]
+        if faction_id == 3:
+            return [clearing for clearing in self.graph.nodes if self.graph.nodes[clearing]["units"].get(3, 0) > 0]

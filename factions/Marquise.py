@@ -267,22 +267,96 @@ class Marquise(Base):
 ############################################### TOUR DE JEU ################################################
 ############################################################################################################
 
-    def birdsong_phase(self, display, board):
+    def birdsong_phase(self, display, board, current_player):
+        
+        self.get_start_birdsong_effect(current_player)
+        
         if 6 - self.buildings["sawmill"] < self.tokens['wood']:
             self.produce_wood(board)
         else:
             self.choose_wood_distribution(display, board)
+            
+        self.get_birdsong_effect(current_player)
 
-    def daylight_phase(self, display, lobby, board, current_player):
-        
-        
+    def daylight_phase(self, display, lobby, board, current_player, cards, items):
         # 1 - Crafts
         
+        objects    = self.get_objects(current_player)
+        craftables = self.get_cratable_cards(current_player)
+        usables = objects + craftables
+        
+        valid_usables = []
+        clearings_with_workshops = board.get_clearings_with_crafters(self.id)
+        builders = {
+            "fox": 0,
+            "mouse": 0,
+            "rabbit": 0,
+        }
+        
+        for clearing in clearings_with_workshops:
+            builders[board.graph.nodes[clearing]["type"]] += sum(1 for building in board.graph.nodes[clearing]["buildings"] if building["type"] == "workshop")
+        
+        for card in usables:
+            
+            print(card['cost_type'], card['cost'], builders.get(card['cost_type'], 0))
+            
+            if card['cost_type'] == "none":
+                if card['cost'] <= sum(builders.values()):
+                    valid_usables.append(card)
+            elif card['cost'] <= builders.get(card['cost_type'], 0):
+                valid_usables.append(card)
+        
+        while valid_usables:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                    
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if display.is_button_pass_clicked(event.pos):
+                        break
+                    
+                valid_usables_ids = [card['id'] for card in valid_usables]
+                card = display.ask_for_cards(current_player, criteria="id", values=valid_usables_ids)
+                
+                if card['type'] == "object":
+                    current_player.items.append(items.available_items[card['item']])
+                    items.available_items[card['item']] -= 1
+                    current_player.add_points(card['gain'])
+                    current_player.remove_card(card)
+                    valid_usables.remove(card)
+                    builders[card['cost_type']] -= card['cost']
+                    
+                elif "effect" in card['type']:
+                    current_player.crafted_cards.append(card)
+                    current_player.remove_card(card)
+                    valid_usables.remove(card)
+                    builders[card['cost_type']] -= card['cost']
+                    
+                elif card['type'] == "favor":
+                    points = 0
+                    for clearing in board.graph.nodes:
+                        if board.graph.nodes[clearing]["type"] == card['color']:
+                            points += len([building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] != self.id])
+                            points += len([token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] != self.id])
+                            board.graph.nodes[clearing]["buildings"] = [building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] == self.id]
+                            board.graph.nodes[clearing]["tokens"] = [token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] == self.id]
+                            if self.id in board.graph.nodes[clearing]["units"]:
+                                board.graph.nodes[clearing]["units"] = {current_player.id: board.graph.nodes[clearing]["units"][self.id]}
+                            else:
+                                board.graph.nodes[clearing]["units"] = {}
+                    current_player.add_points(points)
+                    current_player.remove_card(card)
+                    valid_usables.remove(card)
+                    builders[card['cost_type']] -= card['cost']
+            
+                display.draw()
+                pygame.display.flip()
+                display.clock.tick(60)
         
         # 2 - Actions
         
         self.actions_remaining = 3
-        
         while self.actions_remaining > 0:
             
             for event in pygame.event.get():
@@ -318,7 +392,7 @@ class Marquise(Base):
     def evening_phase(self, display, current_player, cards):
         self.draw(display, current_player, cards)
     
-    def play(self, display, board, lobby, current_player, cards):
-        self.birdsong_phase(display, board)
-        self.daylight_phase(display, lobby, board, current_player)
+    def play(self, display, board, lobby, current_player, cards, items):
+        self.birdsong_phase(display, board, current_player)
+        self.daylight_phase(display, lobby, board, current_player, cards, items)
         self.evening_phase(display, current_player, cards)

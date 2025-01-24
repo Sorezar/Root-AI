@@ -273,7 +273,7 @@
         "color": "rabbit",
         "cost": 2,
         "cost_type": "rabbit",
-        "type": "daylight_effect"
+        "type": "start_daylight_effect"
     },
     {
         "id": 33,
@@ -281,7 +281,7 @@
         "color": "rabbit",
         "cost": 2,
         "cost_type": "rabbit",
-        "type": "daylight_effect"
+        "type": "start_daylight_effect"
     },
     {
         "id": 34,
@@ -289,7 +289,7 @@
         "color": "rabbit",
         "cost": 2,
         "cost_type": "rabbit",
-        "type": "birdsong_effect"
+        "type": "start_birdsong_effect"
     },
     {
         "id": 35,
@@ -297,7 +297,7 @@
         "color": "rabbit",
         "cost": 2,
         "cost_type": "rabbit",
-        "type": "birdsong_effect"
+        "type": "start_birdsong_effect"
     },
     {
         "id": 36,
@@ -305,7 +305,7 @@
         "color": "rabbit",
         "cost": 2,
         "cost_type": "rabbit",
-        "type": "evening_effect"
+        "type": "start_evening_effect"
     },
     {
         "id": 37,
@@ -313,7 +313,7 @@
         "color": "rabbit",
         "cost": 2,
         "cost_type": "rabbit",
-        "type": "evening_effect"
+        "type": "start_evening_effect"
     },
     {
         "id": 38,

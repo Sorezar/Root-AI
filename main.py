@@ -72,12 +72,12 @@ def initial_setup(lobby, board, display):
     #alliance.faction.tokens["sympathy"] -= 1
     #board.graph.nodes[7]["tokens"].append({"type": "sympathy", "owner": alliance.faction.id})
 
-def run(display, lobby, board):
+def run(display, lobby, board, cards, items):
     running = True
     
     while running:
         current_player = lobby.get_player(lobby.current_player)
-        current_player.faction.play(display, board, lobby, current_player, cards)
+        current_player.faction.play(display, board, lobby, current_player, cards, items)
                 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -131,4 +131,4 @@ if __name__ == "__main__":
     tests.test_buildings(board)
 
     # The boucle
-    run(display, lobby, board)
+    run(display, lobby, board, cards, items)
