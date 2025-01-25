@@ -78,21 +78,25 @@ class Base:
                     self.units -= 1
                     board.graph.nodes[r]["units"][self.id] += 1
                                  
-    def move(self, display, board):
+    def move(self, display, board, pass_available=False):
         # Rajouter gestion de l'achat du bateau
         
         # Récup from_clearing
         clearing_with_units = board.get_clearings_with_units(self.id)
         controled_clearings = board.get_controlled_clearings(self.id) 
-        from_clearing = display.ask_for_clearing(clearing_with_units)
+        from_clearing = display.ask_for_clearing(clearing_with_units, pass_available)
+        
+        if from_clearing == "pass": return "pass"
         
         # Récup to_clearing
         adjacent_clearings = board.get_adjacent_clearings(from_clearing)
         adjacent_and_controlled_clearings = [clearing for clearing in adjacent_clearings if clearing in controled_clearings]
         if from_clearing not in controled_clearings:
-            to_clearing = display.ask_for_clearing(adjacent_and_controlled_clearings)
+            to_clearing = display.ask_for_clearing(adjacent_and_controlled_clearings, pass_available)
         else :
-            to_clearing = display.ask_for_clearing(adjacent_clearings)
+            to_clearing = display.ask_for_clearing(adjacent_clearings, pass_available)
+        
+        if to_clearing == "pass": return "pass"
         
         # Nb unités
         max_units = board.graph.nodes[from_clearing]["units"][self.id]
@@ -109,7 +113,7 @@ class Base:
         board.update_control(from_clearing)
         board.update_control(to_clearing)
         
-    def battle(self, display, lobby, board, cards):
+    def battle(self, display, lobby, board, cards, pass_available=False):
     
         def _have_ennemy_things(clearing, thing, board):
             if thing == "units":
@@ -119,8 +123,10 @@ class Base:
             return any(t["owner"] != self.id for t in board.graph.nodes[clearing][thing])
         
         attackable_clearings = [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["units"].get(self.id, 0) > 0 and any(_have_ennemy_things(clearing, thing, board) for thing in ["units", "buildings", "tokens"])]
-        attack_clearing = display.ask_for_clearing(attackable_clearings)
-                            
+        attack_clearing = display.ask_for_clearing(attackable_clearings, pass_available)
+        
+        if attack_clearing == "pass": return "pass"
+        
         ennemy_factions = {faction_id for thing in ["units", "buildings", "tokens"]
                             for item in board.graph.nodes[attack_clearing][thing]
                             if (faction_id := (item if thing == "units" else item['owner'])) != self.id
@@ -129,9 +135,11 @@ class Base:
         ennemy_factions = list(ennemy_factions)
                             
         # Get the ennemy faction
-        defender_faction_id = ennemy_factions[0] if len(ennemy_factions) == 1 else display.ask_for_enemy(attack_clearing, ennemy_factions)
+        defender_faction_id = ennemy_factions[0] if len(ennemy_factions) == 1 else display.ask_for_enemy(attack_clearing, ennemy_factions, pass_available)
+        
+        if defender_faction_id == "pass": return "pass"
                    
-        """# Gestion ambushes
+        # Gestion ambushes
         defender = lobby.get_player(defender_faction_id)
         ambush_cards = [card for card in defender.cards if card["type"] == "ambush" and (card["color"] == board.graph.nodes[attack_clearing]["color"] or card["color"] == "bird")]
         
@@ -142,13 +150,13 @@ class Base:
             units_lost = min(2, attacker_units)
             board.graph.nodes[attack_clearing]["units"][self.id] -= units_lost
             self.units += units_lost
-            if board.graph.nodes[attack_clearing]["units"].get(self.id, 0) == 0:
-                return
+            if board.graph.nodes[attack_clearing]["units"].get(self.id, 0) == 0: return
             
         # Gestion cartes de bataille
         def_effect = defender.faction.get_battle_defender_effect(defender)
         if def_effect:
-            card = display.ask_for_crafted_card()"""
+            card = display.ask_for_crafted_card()
+        
                                                 
         # Roll the dice
         dices =  [random.randint(0, 3), random.randint(0, 3)]

@@ -193,11 +193,12 @@ class Canopee(Base):
             
         # 2 - Add 1 or 2 cards to the decree - v
         for _ in range(2):
-            selected_card, action = display.ask_for_decree_card_and_action(current_player)
+            selected_card = display.ask_for_cards(current_player, pass_available=(_ != 0))
+            if selected_card == "pass": break
+            
+            action = display.ask_for_action(selected_card)
             self.decrees[action].append(selected_card["color"])
             current_player.remove_card(selected_card)
-            if _ == 0 and not display.ask_yes_no("Ajouter une deuxième carte ?"):
-                break
         
         # 3 - If no roosts, place a roost and 3 warriors in the clearing with the fewest total pieces - x
 

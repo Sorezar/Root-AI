@@ -135,7 +135,8 @@ class Marquise(Base):
         self.actions_remaining -= 1
 
     def spend_bird(self, display, current_player):
-        selected_card = display.ask_for_cards(current_player, criteria="color", values=["bird"])
+        selected_card = display.ask_for_cards(current_player, criteria="color", values=["bird"], pass_available=True)
+        if selected_card == "pass": return
         current_player.remove_card(selected_card)
         self.actions_remaining += 1
         
@@ -143,10 +144,13 @@ class Marquise(Base):
         clearings_with_sawmills = [clearing for clearing in board.graph.nodes if any(building["type"] == "sawmill" and building["owner"] == self.id for building in board.graph.nodes[clearing]["buildings"])]
         type_of_clearing = list(set(board.graph.nodes[clearing]["type"] for clearing in clearings_with_sawmills))
         
-        selected_card = display.ask_for_cards(current_player, criteria="color", values=type_of_clearing + ["bird"])
+        selected_card = display.ask_for_cards(current_player, criteria="color", values=type_of_clearing + ["bird"], pass_available=True)
+        if selected_card == "pass": return
         valid_clearings = clearings_with_sawmills if selected_card["color"] == "bird" else [clearing for clearing in clearings_with_sawmills if board.graph.nodes[clearing]["type"] == selected_card["color"]]
         
-        selected_clearing = display.ask_for_clearing(valid_clearings)
+        selected_clearing = display.ask_for_clearing(valid_clearings, pass_available=True)
+        if selected_card == "pass": return
+        
         current_player.remove_card(selected_card)
         board.graph.nodes[selected_clearing]["tokens"].append({"type": "wood", "owner": self.id})
         
@@ -154,7 +158,8 @@ class Marquise(Base):
     
     def build(self, display, board):
         _, clearings = self.is_build_possible(board)
-        clearing = display.ask_for_clearing(clearings)
+        clearing = display.ask_for_clearing(clearings, pass_available=True)
+        if clearing == "pass": return 
         wood_costs = []
         [wood_costs.append(self.wood_cost[::-1][building-1]) for building in self.buildings.values()]
                                 
@@ -175,13 +180,16 @@ class Marquise(Base):
   
     def march(self, display, board):  
         for _ in range(2):
-            super().move(display, board)
-            if _ == 0 and not display.ask_yes_no("Deuxième déplacement ?"):
-                break
+            result = super().move(display, board, pass_available=True)
+            if result == "pass":
+                if _ == 1:
+                    self.actions_remaining -= 1
+                return
         self.actions_remaining -= 1
     
     def battle(self, display, lobby, board):
-        super().battle(display, lobby, board)
+        result = super().battle(display, lobby, board, pass_available=True)
+        if result == "pass": return
         self.actions_remaining -= 1
     
 ############################################################################################################
@@ -279,8 +287,8 @@ class Marquise(Base):
         self.get_birdsong_effect(current_player)
 
     def daylight_phase(self, display, lobby, board, current_player, cards, items):
-        # 1 - Crafts
         
+        # 1 - Crafts
         objects    = self.get_objects(current_player)
         craftables = self.get_cratable_cards(current_player)
         usables = objects + craftables
@@ -296,64 +304,68 @@ class Marquise(Base):
         for clearing in clearings_with_workshops:
             builders[board.graph.nodes[clearing]["type"]] += sum(1 for building in board.graph.nodes[clearing]["buildings"] if building["type"] == "workshop")
         
-        for card in usables:
-            
-            print(card['cost_type'], card['cost'], builders.get(card['cost_type'], 0))
-            
-            if card['cost_type'] == "none":
-                if card['cost'] <= sum(builders.values()):
+        # Check if the player can craft the item (Plus d'item = pas usable)
+        
+        def check_valid(list):
+            valid_usables = []
+            for card in usables:
+                if card['cost_type'] == "none":
+                    if card['cost'] <= sum(builders.values()):
+                        valid_usables.append(card)
+                elif card['cost_type'] == "each":
+                    if all(builders[color] >= 1 for color in ["fox", "mouse", "rabbit"]):
+                        valid_usables.append(card)
+                elif card['cost'] <= builders.get(card['cost_type'], 0):
                     valid_usables.append(card)
-            elif card['cost'] <= builders.get(card['cost_type'], 0):
-                valid_usables.append(card)
+            return valid_usables
+        
+        valid_usables = check_valid(usables)
         
         while valid_usables:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
                     
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if display.is_button_pass_clicked(event.pos):
-                        break
-                    
-                valid_usables_ids = [card['id'] for card in valid_usables]
-                card = display.ask_for_cards(current_player, criteria="id", values=valid_usables_ids)
-                
-                if card['type'] == "object":
-                    current_player.items.append(items.available_items[card['item']])
-                    items.available_items[card['item']] -= 1
-                    current_player.add_points(card['gain'])
-                    current_player.remove_card(card)
-                    valid_usables.remove(card)
-                    builders[card['cost_type']] -= card['cost']
-                    
-                elif "effect" in card['type']:
-                    current_player.crafted_cards.append(card)
-                    current_player.remove_card(card)
-                    valid_usables.remove(card)
-                    builders[card['cost_type']] -= card['cost']
-                    
-                elif card['type'] == "favor":
-                    points = 0
-                    for clearing in board.graph.nodes:
-                        if board.graph.nodes[clearing]["type"] == card['color']:
-                            points += len([building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] != self.id])
-                            points += len([token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] != self.id])
-                            board.graph.nodes[clearing]["buildings"] = [building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] == self.id]
-                            board.graph.nodes[clearing]["tokens"] = [token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] == self.id]
-                            if self.id in board.graph.nodes[clearing]["units"]:
-                                board.graph.nodes[clearing]["units"] = {current_player.id: board.graph.nodes[clearing]["units"][self.id]}
-                            else:
-                                board.graph.nodes[clearing]["units"] = {}
-                    current_player.add_points(points)
-                    current_player.remove_card(card)
-                    valid_usables.remove(card)
-                    builders[card['cost_type']] -= card['cost']
+            valid_usables_ids = [card['id'] for card in valid_usables]
+            card = display.ask_for_cards(current_player, criteria="id", values=valid_usables_ids, pass_available=True)
             
-                display.draw()
-                pygame.display.flip()
-                display.clock.tick(60)
+            if card == "pass": break
+            
+            if card['type'] == "object":
+                current_player.items.append(items.available_items[card['item']])
+                items.available_items[card['item']] -= 1
+                current_player.add_points(card['gain'])
+                current_player.remove_card(card)
+                valid_usables.remove(card)
+                builders[card['cost_type']] -= card['cost']
+                valid_usables = check_valid(valid_usables)
+                
+            elif "effect" in card['type']:
+                current_player.crafted_cards.append(card)
+                current_player.remove_card(card)
+                valid_usables.remove(card)
+                builders[card['cost_type']] -= card['cost']
+                valid_usables = check_valid(valid_usables)
+                
+            elif card['type'] == "favor":
+                points = 0
+                for clearing in board.graph.nodes:
+                    if board.graph.nodes[clearing]["type"] == card['color']:
+                        points += len([building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] != self.id])
+                        points += len([token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] != self.id])
+                        board.graph.nodes[clearing]["buildings"] = [building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] == self.id]
+                        board.graph.nodes[clearing]["tokens"] = [token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] == self.id]
+                        if self.id in board.graph.nodes[clearing]["units"]:
+                            board.graph.nodes[clearing]["units"] = {current_player.id: board.graph.nodes[clearing]["units"][self.id]}
+                        else:
+                            board.graph.nodes[clearing]["units"] = {}
+                current_player.add_points(points)
+                current_player.remove_card(card)
+                valid_usables.remove(card)
+                builders[card['cost_type']] -= card['cost']
+                valid_usables = check_valid(valid_usables)
         
+            display.draw()
+            pygame.display.flip()
+            display.clock.tick(60)
+    
         # 2 - Actions
         
         self.actions_remaining = 3
@@ -367,8 +379,7 @@ class Marquise(Base):
                     exit()
                 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if display.is_button_pass_clicked(event.pos):
-                        return 
+                    if display.is_button_pass_clicked(event.pos): return 
                     
                     action = display.is_action_button_clicked(pygame.mouse.get_pos())
                     

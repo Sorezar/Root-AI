@@ -421,6 +421,98 @@ class RootDisplay:
         
         pygame.time.delay(duration)
         
+    def draw_crafted_cards(self, current_player, phase):
+        crafted_cards = current_player.crafted_cards
+        card_width = 220
+        card_height = 300
+        x_offset = (config.WIDTH - card_width * 3) // 2
+        y_offset = (config.HEIGHT - card_height * 2) // 2
+        close_button_rect = pygame.Rect(config.WIDTH - 50, 10, 40, 40)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if close_button_rect.collidepoint(event.pos):
+                        return None
+                    for i, card in enumerate(crafted_cards):
+                        card_rect = pygame.Rect(x_offset + (i % 3) * (card_width + 10), y_offset + (i // 3) * (card_height + 10), card_width, card_height)
+                        if card_rect.collidepoint(event.pos):
+                            if self.is_card_playable(card, phase):
+                                return card
+
+            self.draw()
+            for i, card in enumerate(crafted_cards):
+                card_rect = pygame.Rect(x_offset + (i % 3) * (card_width + 10), y_offset + (i // 3) * (card_height + 10), card_width, card_height)
+                card_image = self.card_images.get(card['id'])
+                if card_image:
+                    card_image = pygame.transform.scale(card_image, (card_width, card_height))
+                    self.screen.blit(card_image, card_rect.topleft)
+                    if self.is_card_playable(card, phase):
+                        pygame.draw.rect(self.screen, (255, 0, 0), card_rect, 3)
+
+            pygame.draw.rect(self.screen, (255, 0, 0), close_button_rect)
+            close_text = self.font.render("X", True, (255, 255, 255))
+            close_text_rect = close_text.get_rect(center=close_button_rect.center)
+            self.screen.blit(close_text, close_text_rect)
+
+            pygame.display.flip()
+            self.clock.tick(60)
+            
+    def draw_card_selection_interface(self, cards):
+        card_width = 220
+        card_height = 300
+        x_offset = (config.WIDTH - card_width * 3) // 2
+        y_offset = (config.HEIGHT - card_height * 2) // 2
+        close_button_rect = pygame.Rect(config.WIDTH - 50, 10, 40, 40)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if close_button_rect.collidepoint(event.pos):
+                        return None
+                    for i, card in enumerate(cards):
+                        card_rect = pygame.Rect(x_offset + (i % 3) * (card_width + 10), y_offset + (i // 3) * (card_height + 10), card_width, card_height)
+                        if card_rect.collidepoint(event.pos):
+                            return card
+
+            self.draw()
+            for i, card in enumerate(cards):
+                card_rect = pygame.Rect(x_offset + (i % 3) * (card_width + 10), y_offset + (i // 3) * (card_height + 10), card_width, card_height)
+                card_image = self.card_images.get(card['id'])
+                if card_image:
+                    card_image = pygame.transform.scale(card_image, (card_width, card_height))
+                    self.screen.blit(card_image, card_rect.topleft)
+
+            pygame.draw.rect(self.screen, (255, 0, 0), close_button_rect)
+            close_text = self.font.render("X", True, (255, 255, 255))
+            close_text_rect = close_text.get_rect(center=close_button_rect.center)
+            self.screen.blit(close_text, close_text_rect)
+
+            pygame.display.flip()
+            self.clock.tick(60)        
+
+    def draw_crafted_cards_button(self):
+        current_player = self.lobby.get_player(self.lobby.current_player)
+        if current_player.crafted_cards:
+            button_rect = pygame.Rect(config.WIDTH - 60, config.HEIGHT - 60, 50, 50)
+            card_icon = pygame.image.load("sprites/icons/card.png")
+            card_icon = pygame.transform.scale(card_icon, (50, 50))
+            self.screen.blit(card_icon, button_rect.topleft)
+
+            if any(self.is_card_playable(card, self.current_phase) for card in current_player.crafted_cards):
+                pygame.draw.rect(self.screen, (255, 0, 0), button_rect, 3)
+
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if button_rect.collidepoint(event.pos):
+                        self.draw_crafted_cards(current_player, self.current_phase)
+
     def draw(self):
         self.draw_board()
         self.draw_panel()
@@ -435,7 +527,7 @@ class RootDisplay:
 ################################### FONCTIONS D'INTERACTION ###################################
 ###############################################################################################
 
-    def ask_for_clearing(self, valid_clearings):
+    def ask_for_clearing(self, valid_clearings, pass_available=False):
         selected_clearing = None
         circle_radius = NODE_RADIUS - 10
         growing = True
@@ -448,6 +540,9 @@ class RootDisplay:
                     exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     pos = event.pos
+                    if pass_available and self.is_button_pass_clicked(pos):
+                        print("Pass ask clearing")
+                        return "pass"
                     for clearing in valid_clearings:
                         clearing_pos = self.board.graph.nodes[clearing]["pos"]
                         scaled_pos = (int(clearing_pos[0] * SCALE + BOARD_OFFSET_X), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
@@ -480,12 +575,13 @@ class RootDisplay:
 
         return selected_clearing
 
-    def ask_for_cards(self, player, criteria=None, values=None):
+    def ask_for_cards(self, player, criteria=None, values=None, pass_available=False):
         selected_card = None
         card_width = 220
         card_height = 300
         x_offset = 10
         y_offset = HEIGHT - card_height - 10
+
 
         while selected_card is None:
             for event in pygame.event.get():
@@ -494,6 +590,9 @@ class RootDisplay:
                     exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     pos = event.pos
+                    if pass_available and self.is_button_pass_clicked(pos):
+                        print("Pass")
+                        return "pass"
                     x_offset = 10  # Reset x_offset for each click check
                     for card in player.cards:
                         if criteria is None or card.get(criteria) in values:
@@ -513,7 +612,7 @@ class RootDisplay:
                 if criteria is None or card.get(criteria) in values:
                     pygame.draw.rect(self.screen, (255, 0, 0), (card_pos[0], card_pos[1], card_width, card_height), 3)
                 x_offset += card_width + 10
-
+                
             # Rafraîchir l'écran
             pygame.display.flip()
             self.clock.tick(60)
@@ -586,7 +685,7 @@ class RootDisplay:
             
         return selected_building, wood_costs[building_types.index(selected_building)]
  
-    def ask_for_enemy(self, clearing, enemy_factions):
+    def ask_for_enemy(self, clearing, enemy_factions, pass_available=False):
         selected_faction = None
         icon_size = 40
         padding = 10
@@ -607,10 +706,13 @@ class RootDisplay:
                     pygame.quit()
                     exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    click_pos = event.pos
+                    pos = event.pos
+                    if pass_available and self.is_button_pass_clicked(pos):
+                        print("Pass ask enemy")
+                        return "pass"
                     for i, faction_id in enumerate(enemy_factions):
                         icon_rect = pygame.Rect(scaled_pos[0] - icon_size // 2, scaled_pos[1] - (i + 1) * (icon_size + padding), icon_size, icon_size)
-                        if icon_rect.collidepoint(click_pos):
+                        if icon_rect.collidepoint(pos):
                             selected_faction = faction_id
                             break
 
@@ -826,3 +928,19 @@ class RootDisplay:
             if button_pass.collidepoint(pos):
                 return action
         return None
+    
+    def is_card_playable(self, card, phase):
+        if phase == "start_birdsong":
+            return card["type"] in ["start_birdsong_effect"]
+        elif phase == "start_daylight":
+            return card["type"] in ["start_daylight_effect"]
+        elif phase == "start_evening":
+            return card["type"] in ["start_evening_effect"]
+        elif phase == "birdsong":
+            return card["type"] in ["birdsong_effect"]
+        elif phase == "daylight":
+            return card["type"] in ["daylight_effect"]
+        elif phase == "evening":
+            return card["type"] in ["evening_effect"]
+        
+        return False

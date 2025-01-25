@@ -1,5 +1,7 @@
 ORDRE :
 
+Gérer les appels de cartes (cf battle pas terminé)
+
 Gameplay - Rajouter les actions communes à toutes les factions (craft, utilisation des cartes)
 Gameplay - Ajouter un système de consommation temporaire des couleurs du decret
 Gameplay - Ajouter le fait de faire les actions possibles avant de tomber en crise
