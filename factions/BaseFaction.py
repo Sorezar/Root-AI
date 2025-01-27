@@ -1,5 +1,5 @@
 import random
-
+import pygame
 class Base:
     def __init__(self, name, id):
         self.id    = id
@@ -9,6 +9,7 @@ class Base:
         self.tokens = {}
         self.actions = []
         self.number_card_draw_bonus = 0
+        self.phase = "birdsong"
 
 ############################################################################################################
 ###################################### VERIFICATIONS ACTIONS POSSIBLES #####################################
@@ -113,7 +114,7 @@ class Base:
         board.update_control(from_clearing)
         board.update_control(to_clearing)
         
-    def battle(self, display, lobby, board, cards, pass_available=False):
+    def battle(self, display, lobby, board, pass_available=False):
     
         def _have_ennemy_things(clearing, thing, board):
             if thing == "units":
@@ -141,22 +142,33 @@ class Base:
                    
         # Gestion ambushes
         defender = lobby.get_player(defender_faction_id)
-        ambush_cards = [card for card in defender.cards if card["type"] == "ambush" and (card["color"] == board.graph.nodes[attack_clearing]["color"] or card["color"] == "bird")]
+        attacker = lobby.get_player(lobby.current_player)
+        ambush_cards_def = [card for card in defender.cards if card["type"] == "ambush" and (card["color"] == board.graph.nodes[attack_clearing]["type"] or card["color"] == "bird")]
+        ambush_cards_att = [card for card in attacker.cards if card["type"] == "ambush" and (card["color"] == board.graph.nodes[attack_clearing]["type"] or card["color"] == "bird")]
         
-        if ambush_cards and display.ask_play_ambush(defender_faction_id, ambush_cards) :
-            ambush_card = display.ask_for_card(ambush_cards)
-            defender.remove_card(ambush_card)
-            attacker_units = board.graph.nodes[attack_clearing]["units"].get(self.id, 0)
-            units_lost = min(2, attacker_units)
-            board.graph.nodes[attack_clearing]["units"][self.id] -= units_lost
-            self.units += units_lost
-            if board.graph.nodes[attack_clearing]["units"].get(self.id, 0) == 0: return
+        if ambush_cards_def and "Scouting Party" not in attacker.crafted_cards:
+            lobby.current_player = lobby.get_player(defender.id)
+            ambush_card = display.ask_for_cards(ambush_cards_def, pass_available=True)
+            lobby.current_player = lobby.get_player(attacker.id)
             
-        # Gestion cartes de bataille
-        def_effect = defender.faction.get_battle_defender_effect(defender)
-        if def_effect:
-            card = display.ask_for_crafted_card()
-        
+            # Si ambush defenseur
+            if ambush_card != "pass": 
+                defender.remove_card(ambush_card)
+                
+                # Si y'a une ambush attaquant pour contrer
+                if ambush_cards_att != []:
+                    ambush_card_att = display.ask_for_cards(ambush_cards_att, pass_available=True)
+                    # Si il la joue
+                    if ambush_card_att != "pass":
+                        self.remove_card(ambush_card_att)
+                        
+                # Si pas d'ambush attaquant ou qu'il ne la joue pas
+                if ambush_card_att == [] or ambush_card_att == "pass":
+                    attacker_units = board.graph.nodes[attack_clearing]["units"].get(self.id, 0)
+                    units_lost = min(2, attacker_units)
+                    board.graph.nodes[attack_clearing]["units"][self.id] -= units_lost
+                    self.units += units_lost
+            if board.graph.nodes[attack_clearing]["units"].get(self.id, 0) == 0: return
                                                 
         # Roll the dice
         dices =  [random.randint(0, 3), random.randint(0, 3)]
@@ -168,9 +180,47 @@ class Base:
                             
         # Si défenseur sans défense
         attacker_damage += 1 if board.graph.nodes[attack_clearing]["units"].get(defender_faction_id, 0) == 0 else 0
-                            
-        # TODO : Gérer les dégâts supplémentaires
-                            
+                     
+        # TODO : Affichage les dommages et les dés
+        
+        display.set_battle_results(attack_clearing, attacker_roll, defender_roll, attacker_damage, defender_damage)
+        display.show_battle_results = True
+        display.draw()
+        pygame.display.flip() 
+        pygame.time.delay(1000)
+        
+        # Gestion cartes de bataille défenseur
+        def_effect = defender.faction.get_battle_defender_effect(defender)
+        while def_effect:
+            lobby.current_player = defender.id
+            card = display.ask_for_crafted_card(def_effect, pass_available=True)
+            if card != "pass":
+                defender.remove_crafted_card(card)
+                
+                if card['name'] == "Armorers" :
+                    attacker_damage = 0
+                    
+                if card['name'] == "Sappers" :
+                    defender_damage += 1
+            else : break
+        
+        lobby.current_player = self.id
+        
+        # Gestion cartes de bataille attaquant
+        att_effect = self.get_battle_attacker_effect(attacker)
+        while att_effect:
+            card = display.ask_for_crafted_card(att_effect, pass_available=True)
+            if card != "pass":
+                self.remove_crafted_card(card)
+                
+                if card['name'] == "Armorers" :
+                    defender_damage = 0
+                    
+                if card['name'] == "Brutal Tactics" :
+                    attacker_damage += 1
+                    lobby.get_player(defender_faction_id).points += 1
+            else : break
+            
         def _inflict_damage(lobby, board, clearing, faction_id, base_damage):
             damage = base_damage
             faction = lobby.get_player(faction_id).faction
@@ -210,7 +260,13 @@ class Base:
                             board.graph.nodes[clearing]['tokens'].remove(removed)
                             faction.tokens[removed['type']] += 1
                     lobby.current_player = original_player
-                                        
+        
+        # Update display
+        display.show_battle_results = False
+        display.draw()
+        pygame.display.flip()
+        
+        # Inflict damage               
         _inflict_damage(lobby, board, attack_clearing, defender_faction_id, attacker_damage)
         _inflict_damage(lobby, board, attack_clearing, self.id, defender_damage)
         

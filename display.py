@@ -58,63 +58,45 @@ class RootDisplay:
         pygame.display.set_caption("Root")
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), config.get_screen_mode())
         self.clock  = pygame.time.Clock()
+        self.clock.tick(60)
         self.font   = pygame.font.SysFont(None, 24)
         self.unit_font = pygame.font.SysFont(None, 18)
         self.button_font = pygame.font.SysFont(None, 36)
         self.unit_selection_font = pygame.font.SysFont(None, 24)
         self.action_history = []
+        self.show_battle_results = False
+        self.battle_results = {}
+        self.show_crafted_cards = False
         
-        # Charger les sprites des items
-        self.item_images = {
-            item: pygame.image.load(os.path.join("sprites", "items", f"{item}.png"))
-            for item in items.get_items()
-        }
         
-        # Charger les sprites des jetons
-        self.token_images = {}
-        token_path = os.path.join("sprites", "tokens")
-        for filename in os.listdir(token_path):
-            if filename.endswith(".png"):
-                token_name = os.path.splitext(filename)[0]
-                self.token_images[token_name] = pygame.image.load(os.path.join(token_path, filename))
-                
-        # Charger les sprites des bâtiments
-        self.building_images = {}
-        building_path = os.path.join("sprites", "buildings")
-        for filename in os.listdir(building_path):
-            if filename.endswith(".png"):
-                building_name = os.path.splitext(filename)[0]
-                self.building_images[building_name] = pygame.image.load(os.path.join(building_path, filename))
-        
-        # Charger les sprites des cartes
-        self.card_images = {}
-        card_dir = os.path.join("sprites", "cards", "base_deck")
-        for card_file in os.listdir(card_dir):
-            if card_file.endswith(".png"):
-                card_id = int(os.path.splitext(card_file)[0])
-                image_path = os.path.join(card_dir, card_file)
-                self.card_images[card_id] = pygame.image.load(image_path)
-        
-        # Charger les sprites des cartes format réduit
-        self.card_images_panel = {}
-        card_dir = os.path.join("sprites", "cards", "base_deck", "panels")
-        for card_file in os.listdir(card_dir):
-            if card_file.endswith(".png"):
-                card_id = int(os.path.splitext(card_file)[0])
-                image_path = os.path.join(card_dir, card_file)
-                self.card_images_panel[card_id] = pygame.image.load(image_path)
-                
-        # Charger les sprites des types de clairières
-        self.clearing_types = {}
-        type_path = os.path.join("sprites", "type")
-        for filename in os.listdir(type_path):
-            if filename.endswith(".png"):
-                type_name = os.path.splitext(filename)[0]
-                self.clearing_types[type_name] = pygame.image.load(os.path.join(type_path, filename))
+        self.icon_images = self.preload_images("sprites/icons", (40, 40))
+        self.item_images = self.preload_images("sprites/items", (ITEM_SIZE, ITEM_SIZE))
+        self.token_images = self.preload_images("sprites/tokens", (TOKEN_SIZE, TOKEN_SIZE))
+        self.building_images = self.preload_images("sprites/buildings", (BUILDING_SIZE, BUILDING_SIZE))
+        self.card_images = self.preload_images("sprites/cards/base_deck", (220, 300))
+        self.card_images_panel = self.preload_images("sprites/cards/base_deck/panels", (100, 136))
+        self.clearing_types = self.preload_images("sprites/type", (SYMBOL_SIZE, SYMBOL_SIZE))
+        self.action_images = {}
+        for faction_id in range(len(os.listdir("sprites/actions"))):
+            faction_folder = os.path.join("sprites/actions", str(faction_id))
+            self.action_images[faction_id] = self.preload_images(faction_folder, (60, 60))
         
         # Bouton pour finir le tour
         self.button_pass = pygame.Rect(WIDTH - 200, HEIGHT - 80, 100, 60)
         self.action_buttons = []        
+
+    def preload_images(self, folder_path, size):
+        images = {}
+        if not os.path.exists(folder_path):
+            return images
+
+        for filename in os.listdir(folder_path):
+            if filename.endswith(".png"):
+                image_name = os.path.splitext(filename)[0]
+                image_path = os.path.join(folder_path, filename)
+                image = pygame.image.load(image_path)
+                images[image_name] = pygame.transform.scale(image, size)
+        return images
 
 ###############################################################################################
 ##################################### FONCTIONS DE DESSIN #####################################
@@ -134,11 +116,10 @@ class RootDisplay:
         self.action_buttons = []
 
         for action in actions:
+            
             button_pass = pygame.Rect(x_offset, y_offset, button_width, button_height)
-            action_image_path = os.path.join("sprites", "actions", str(faction_id), f"{action}.png")
-            if os.path.exists(action_image_path):
-                action_image = pygame.image.load(action_image_path)
-                action_image = pygame.transform.scale(action_image, (button_width, button_height))
+            action_image = self.action_images[faction_id][action]
+            if action_image :
                 self.screen.blit(action_image, (x_offset, y_offset))
             else:
                 pygame.draw.rect(self.screen, (0, 128, 0), button_pass)
@@ -155,7 +136,7 @@ class RootDisplay:
             self.action_buttons.append((button_pass, action))
             y_offset += button_height + 10
     
-    def draw_wavy_line(self, start_pos, end_pos, amplitude=6, frequency=2, color=COLORS["rivers"], width=10):
+    def draw_wavy_line(self, start_pos, end_pos, amplitude=7, frequency=2, color=COLORS["rivers"], width=10):
         x1, y1 = start_pos
         x2, y2 = end_pos
         length = math.hypot(x2 - x1, y2 - y1)
@@ -185,8 +166,7 @@ class RootDisplay:
                 slot_pos = (x_offset + (item_count // 2) * (ITEM_SIZE + 10), y_offset + (item_count % 2) * (ITEM_SIZE + 10))
                 pygame.draw.rect(self.screen, COLORS["slots"], (*slot_pos, ITEM_SIZE, ITEM_SIZE))
                 pygame.draw.rect(self.screen, COLORS["borders"], (*slot_pos, ITEM_SIZE, ITEM_SIZE), 1)
-                item_image = pygame.transform.scale(self.item_images[item], (ITEM_SIZE, ITEM_SIZE))
-                self.screen.blit(item_image, slot_pos)
+                self.screen.blit(self.item_images[item], slot_pos)
                 item_count += 1
 
     def draw_board(self):
@@ -241,9 +221,8 @@ class RootDisplay:
 
             # Type de clairière
             clearing_type = data["type"]
-            clearing_type_image = pygame.transform.scale(self.clearing_types[clearing_type], (SYMBOL_SIZE, SYMBOL_SIZE))
             clearing_type_pos = (pos[0] + NODE_RADIUS - 20, pos[1] + NODE_RADIUS - 20)
-            self.screen.blit(clearing_type_image, clearing_type_pos)
+            self.screen.blit(self.clearing_types[clearing_type], clearing_type_pos)
 
             # Dessiner les bâtiments
             
@@ -251,9 +230,8 @@ class RootDisplay:
                 building_type = building["type"]
                 owner = building["owner"]
                 if building_type in self.building_images:
-                    building_image = pygame.transform.scale(self.building_images[building_type], (BUILDING_SIZE, BUILDING_SIZE))
                     building_pos = (pos[0] - (data["slots"] * (BUILDING_SIZE + 5)) // 2 + i * (BUILDING_SIZE + 5), pos[1] - (NODE_RADIUS // 2) - BUILDING_SIZE + 10)
-                    self.screen.blit(building_image, building_pos)
+                    self.screen.blit(self.building_images[building_type], building_pos)
 
             # Emplacements libres
             for i in range(len(data["buildings"]), data["slots"]):
@@ -289,9 +267,8 @@ class RootDisplay:
                 for i, token in enumerate(row_tokens):
                     token_type = token["type"]
                     if token_type in self.token_images:
-                        token_image = pygame.transform.scale(self.token_images[token_type], (TOKEN_SIZE, TOKEN_SIZE))
                         token_pos_x = start_x + i * (TOKEN_SIZE + 5)
-                        self.screen.blit(token_image, (token_pos_x, token_pos_y))
+                        self.screen.blit(self.token_images[token_type], (token_pos_x, token_pos_y))
 
     def draw_panel(self):
         y_offset = 20
@@ -310,9 +287,8 @@ class RootDisplay:
             # Afficher les cartes du joueur
             x_offset = config.BOARD_WIDTH + 30
             for card in player.cards:
-                card_image_panel = self.card_images_panel.get(card['id'])
+                card_image_panel = self.card_images_panel[str(card['id'])]
                 if card_image_panel:
-                    card_image_panel = pygame.transform.scale(card_image_panel, (card_width, card_height))
                     self.screen.blit(card_image_panel, (x_offset, y_offset))
                     x_offset += card_width + 5
             y_offset += card_height + 10
@@ -331,9 +307,8 @@ class RootDisplay:
         y_offset = HEIGHT - card_height - 10
 
         for card in player.cards:
-            card_image = self.card_images.get(card['id'])
+            card_image = self.card_images[str(card['id'])]
             if card_image:
-                card_image = pygame.transform.scale(card_image, (card_width, card_height))
                 self.screen.blit(card_image, (x_offset, y_offset))
             x_offset += card_width + 10
 
@@ -394,12 +369,8 @@ class RootDisplay:
 
             # Dessiner les cartes du décret
             for j, color in enumerate(decree[action]):
-                sprite_path = os.path.join("sprites", "type", f"{color}.png")
-                if os.path.exists(sprite_path):
-                    sprite_image = pygame.image.load(sprite_path)
-                    sprite_image = pygame.transform.scale(sprite_image, (column_width, column_width))
-                    sprite_pos = (x_offset, y_offset + j * column_width)
-                    self.screen.blit(sprite_image, sprite_pos)
+                sprite_pos = (x_offset, y_offset + j * column_width)
+                self.screen.blit(self.clearing_types[color], sprite_pos)
 
             # Dessiner les lignes verticales entre les colonnes
             if i < len(actions) - 1:
@@ -420,98 +391,40 @@ class RootDisplay:
         pygame.display.flip()
         
         pygame.time.delay(duration)
+
+    def draw_battle_results(self):
+        attack_clearing = self.battle_results["attack_clearing"]
+        attacker_roll = self.battle_results["attacker_roll"]
+        defender_roll = self.battle_results["defender_roll"]
+        attacker_damage = self.battle_results["attacker_damage"]
+        defender_damage = self.battle_results["defender_damage"]
+
+        clearing_pos = self.board.graph.nodes[attack_clearing]["pos"]
+        scaled_pos = (int(clearing_pos[0] * SCALE + BOARD_OFFSET_X), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
+
+        # Dessiner les résultats des dés
+        font = pygame.font.SysFont(None, 24)
+        text_color = (255, 0, 0)
+        background_color = (255, 255, 255)
         
-    def draw_crafted_cards(self, current_player, phase):
-        crafted_cards = current_player.crafted_cards
-        card_width = 220
-        card_height = 300
-        x_offset = (config.WIDTH - card_width * 3) // 2
-        y_offset = (config.HEIGHT - card_height * 2) // 2
-        close_button_rect = pygame.Rect(config.WIDTH - 50, 10, 40, 40)
+        attacker_roll_text = font.render(f"Att Dice : {attacker_roll}", True, text_color, background_color)
+        defender_roll_text = font.render(f"Def Dice: {defender_roll}", True, text_color, background_color)
+        attacker_damage_text = font.render(f"Att Dmg: {attacker_damage}", True, text_color, background_color)
+        defender_damage_text = font.render(f"Def Dmg: {defender_damage}", True, text_color, background_color)
+        
+        self.screen.blit(attacker_roll_text, (scaled_pos[0] - attacker_roll_text.get_width() // 2, scaled_pos[1] - 100))
+        self.screen.blit(defender_roll_text, (scaled_pos[0] - defender_roll_text.get_width() // 2, scaled_pos[1] - 70))
+        self.screen.blit(attacker_damage_text, (scaled_pos[0] - attacker_damage_text.get_width() // 2, scaled_pos[1] - 40))
+        self.screen.blit(defender_damage_text, (scaled_pos[0] - defender_damage_text.get_width() // 2, scaled_pos[1] - 10))
 
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if close_button_rect.collidepoint(event.pos):
-                        return None
-                    for i, card in enumerate(crafted_cards):
-                        card_rect = pygame.Rect(x_offset + (i % 3) * (card_width + 10), y_offset + (i // 3) * (card_height + 10), card_width, card_height)
-                        if card_rect.collidepoint(event.pos):
-                            if self.is_card_playable(card, phase):
-                                return card
-
-            self.draw()
-            for i, card in enumerate(crafted_cards):
-                card_rect = pygame.Rect(x_offset + (i % 3) * (card_width + 10), y_offset + (i // 3) * (card_height + 10), card_width, card_height)
-                card_image = self.card_images.get(card['id'])
-                if card_image:
-                    card_image = pygame.transform.scale(card_image, (card_width, card_height))
-                    self.screen.blit(card_image, card_rect.topleft)
-                    if self.is_card_playable(card, phase):
-                        pygame.draw.rect(self.screen, (255, 0, 0), card_rect, 3)
-
-            pygame.draw.rect(self.screen, (255, 0, 0), close_button_rect)
-            close_text = self.font.render("X", True, (255, 255, 255))
-            close_text_rect = close_text.get_rect(center=close_button_rect.center)
-            self.screen.blit(close_text, close_text_rect)
-
-            pygame.display.flip()
-            self.clock.tick(60)
-            
-    def draw_card_selection_interface(self, cards):
-        card_width = 220
-        card_height = 300
-        x_offset = (config.WIDTH - card_width * 3) // 2
-        y_offset = (config.HEIGHT - card_height * 2) // 2
-        close_button_rect = pygame.Rect(config.WIDTH - 50, 10, 40, 40)
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if close_button_rect.collidepoint(event.pos):
-                        return None
-                    for i, card in enumerate(cards):
-                        card_rect = pygame.Rect(x_offset + (i % 3) * (card_width + 10), y_offset + (i // 3) * (card_height + 10), card_width, card_height)
-                        if card_rect.collidepoint(event.pos):
-                            return card
-
-            self.draw()
-            for i, card in enumerate(cards):
-                card_rect = pygame.Rect(x_offset + (i % 3) * (card_width + 10), y_offset + (i // 3) * (card_height + 10), card_width, card_height)
-                card_image = self.card_images.get(card['id'])
-                if card_image:
-                    card_image = pygame.transform.scale(card_image, (card_width, card_height))
-                    self.screen.blit(card_image, card_rect.topleft)
-
-            pygame.draw.rect(self.screen, (255, 0, 0), close_button_rect)
-            close_text = self.font.render("X", True, (255, 255, 255))
-            close_text_rect = close_text.get_rect(center=close_button_rect.center)
-            self.screen.blit(close_text, close_text_rect)
-
-            pygame.display.flip()
-            self.clock.tick(60)        
-
-    def draw_crafted_cards_button(self):
-        current_player = self.lobby.get_player(self.lobby.current_player)
-        if current_player.crafted_cards:
-            button_rect = pygame.Rect(config.WIDTH - 60, config.HEIGHT - 60, 50, 50)
-            card_icon = pygame.image.load("sprites/icons/card.png")
-            card_icon = pygame.transform.scale(card_icon, (50, 50))
-            self.screen.blit(card_icon, button_rect.topleft)
-
-            if any(self.is_card_playable(card, self.current_phase) for card in current_player.crafted_cards):
-                pygame.draw.rect(self.screen, (255, 0, 0), button_rect, 3)
-
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if button_rect.collidepoint(event.pos):
-                        self.draw_crafted_cards(current_player, self.current_phase)
+    def set_battle_results(self, attack_clearing, attacker_roll, defender_roll, attacker_damage, defender_damage):
+        self.battle_results = {
+            "attack_clearing": attack_clearing,
+            "attacker_roll": attacker_roll,
+            "defender_roll": defender_roll,
+            "attacker_damage": attacker_damage,
+            "defender_damage": defender_damage
+        }   
 
     def draw(self):
         self.draw_board()
@@ -522,6 +435,8 @@ class RootDisplay:
         self.draw_cards(current_player)
         if current_player.faction.id == 1:  # Canopée
             self.draw_decree(current_player)
+        if self.show_battle_results:
+            self.draw_battle_results()
 
 ###############################################################################################
 ################################### FONCTIONS D'INTERACTION ###################################
@@ -571,7 +486,6 @@ class RootDisplay:
 
             # Rafraîchir l'écran
             pygame.display.flip()
-            self.clock.tick(60)
 
         return selected_clearing
 
@@ -615,7 +529,6 @@ class RootDisplay:
                 
             # Rafraîchir l'écran
             pygame.display.flip()
-            self.clock.tick(60)
 
         return selected_card
 
@@ -638,7 +551,6 @@ class RootDisplay:
             self.draw_units_selection(units_to_move, max_units, pos)
             
             pygame.display.flip()
-            self.clock.tick(60)
             
     def ask_for_building_cats(self, pos, wood_costs, max_wood, buildings):
         selected_building = None
@@ -665,8 +577,7 @@ class RootDisplay:
             # Dessiner les bâtiments et leurs coûts
             for i, (building, cost) in enumerate(zip(building_types, wood_costs)):
                 building_rect = pygame.Rect(pos[0] + i * (building_width + padding), pos[1] - building_height // 2, building_width, building_height)
-                building_image = pygame.transform.scale(self.building_images[building], (building_width, building_height))
-                self.screen.blit(building_image, building_rect.topleft)
+                self.screen.blit(self.building_images[building], building_rect.topleft)
 
                 # Afficher le coût en bois
                 cost_text = self.font.render(str(cost), True, COLORS["text"])
@@ -681,7 +592,6 @@ class RootDisplay:
 
             # Rafraîchir l'écran
             pygame.display.flip()
-            self.clock.tick(60)
             
         return selected_building, wood_costs[building_types.index(selected_building)]
  
@@ -689,14 +599,7 @@ class RootDisplay:
         selected_faction = None
         icon_size = 40
         padding = 10
-
-        # Charger les icônes des factions ennemies
-        enemy_icons = {}
-        for faction_id in enemy_factions:
-            icon_path = os.path.join("sprites", "icons", f"{faction_id}.png")
-            if os.path.exists(icon_path):
-                enemy_icons[faction_id] = pygame.image.load(icon_path)
-
+        
         clearing_pos = self.board.graph.nodes[clearing]["pos"]
         scaled_pos = (int(clearing_pos[0] * SCALE + BOARD_OFFSET_X), int(clearing_pos[1] * SCALE + BOARD_OFFSET_Y))
 
@@ -722,13 +625,10 @@ class RootDisplay:
             # Dessiner les icônes des factions ennemies
             for i, faction_id in enumerate(enemy_factions):
                 icon_rect = pygame.Rect(scaled_pos[0] - icon_size // 2, scaled_pos[1] - (i + 1) * (icon_size + padding), icon_size, icon_size)
-                if faction_id in enemy_icons:
-                    icon_image = pygame.transform.scale(enemy_icons[faction_id], (icon_size, icon_size))
-                    self.screen.blit(icon_image, icon_rect.topleft)
+                self.screen.blit(self.icon_images[str(faction_id)], icon_rect.topleft)
 
             # Rafraîchir l'écran
             pygame.display.flip()
-            self.clock.tick(60)
 
         return selected_faction
     
@@ -770,9 +670,9 @@ class RootDisplay:
                 item_rect = pygame.Rect(x_offset + i * (item_width + padding), scaled_pos[1] - item_height - 10, item_width, item_height)
                 if "type" in item:
                     if item["type"] in self.building_images:
-                        item_image = pygame.transform.scale(self.building_images[item["type"]], (item_width, item_height))
+                        item_image = self.building_images[item["type"]],
                     elif item["type"] in self.token_images:
-                        item_image = pygame.transform.scale(self.token_images[item["type"]], (item_width, item_height))
+                        item_image = self.token_images[item["type"]]
                     else:
                         continue
                 else:
@@ -781,11 +681,10 @@ class RootDisplay:
 
             # Rafraîchir l'écran
             pygame.display.flip()
-            self.clock.tick(60)
 
         return selected_item, selected_type
 
-    def ask_for_action(self, card):
+    def ask_for_action_birds(self):
         actions = ["recruit", "move", "battle", "build"]
         action_buttons = []
         button_width = 100
@@ -820,93 +719,11 @@ class RootDisplay:
 
             # Rafraîchir l'écran
             pygame.display.flip()
-            self.clock.tick(60)
 
-    def ask_for_decree_card_and_action(self, player):
-        selected_card = None
-        card_width = 220
-        card_height = 300
-        x_offset = 10
-        y_offset = HEIGHT - card_height - 10
-
-        while selected_card is None:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    pos = event.pos
-                    x_offset = 10  # Reset x_offset for each click check
-                    for card in player.cards:
-                        card_pos = (x_offset, y_offset)
-                        if pygame.Rect(card_pos[0], card_pos[1], card_width, card_height).collidepoint(pos):
-                            selected_card = card
-                            break
-                        x_offset += card_width + 10
-
-            # Dessiner uniquement ce qui est nécessaire
-            self.draw()
-
-            # Dessiner les cartes en surbrillance
-            x_offset = 10
-            for card in player.cards:
-                card_pos = (x_offset, y_offset)
-                if card != selected_card:
-                    pygame.draw.rect(self.screen, (255, 0, 0), (card_pos[0], card_pos[1], card_width, card_height), 3)
-                x_offset += card_width + 10
-
-            # Rafraîchir l'écran
-            pygame.display.flip()
-            self.clock.tick(60)
-
-        action = self.ask_for_action(selected_card)
-        return selected_card, action
-
-    def ask_yes_no(self, message):
-        # Dimensions de la boîte de dialogue
-        box_width = 300
-        box_height = 150
-        box_x = (config.WIDTH - box_width) // 2
-        box_y = (config.HEIGHT - box_height) // 2
-
-        # Boutons Oui et Non
-        button_width = 100
-        button_height = 50
-        button_yes = pygame.Rect(box_x + 30, box_y + box_height - button_height - 20, button_width, button_height)
-        button_no = pygame.Rect(box_x + box_width - button_width - 30, box_y + box_height - button_height - 20, button_width, button_height)
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if button_yes.collidepoint(event.pos):
-                        return True
-                    elif button_no.collidepoint(event.pos):
-                        return False
-
-            # Dessiner la boîte de dialogue
-            pygame.draw.rect(self.screen, (200, 200, 200), (box_x, box_y, box_width, box_height))
-            pygame.draw.rect(self.screen, (0, 0, 0), (box_x, box_y, box_width, box_height), 2)
-
-            # Dessiner le texte
-            font = pygame.font.SysFont(None, 36)
-            text = font.render(message, True, (0, 0, 0))
-            text_rect = text.get_rect(center=(box_x + box_width // 2, box_y + box_height // 2 - 20))
-            self.screen.blit(text, text_rect)
-
-            # Dessiner les boutons
-            pygame.draw.rect(self.screen, (0, 255, 0), button_yes)
-            pygame.draw.rect(self.screen, (255, 0, 0), button_no)
-            text_yes = font.render("Oui", True, (255, 255, 255))
-            text_no = font.render("Non", True, (255, 255, 255))
-            self.screen.blit(text_yes, text_yes.get_rect(center=button_yes.center))
-            self.screen.blit(text_no, text_no.get_rect(center=button_no.center))
-
-            pygame.display.flip()
-            self.clock.tick(60)
-
+    # TODO: Ajouter une fonction pour demander à l'utilisateur de choisir une carte parmi une liste de cartes craftées
+    #def ask_for_crafted_card(self, player, phase):
+    #    pass
+        
 ###############################################################################################
 #################################### FONCTIONS D'EVENEMENT ####################################
 ###############################################################################################
@@ -928,19 +745,3 @@ class RootDisplay:
             if button_pass.collidepoint(pos):
                 return action
         return None
-    
-    def is_card_playable(self, card, phase):
-        if phase == "start_birdsong":
-            return card["type"] in ["start_birdsong_effect"]
-        elif phase == "start_daylight":
-            return card["type"] in ["start_daylight_effect"]
-        elif phase == "start_evening":
-            return card["type"] in ["start_evening_effect"]
-        elif phase == "birdsong":
-            return card["type"] in ["birdsong_effect"]
-        elif phase == "daylight":
-            return card["type"] in ["daylight_effect"]
-        elif phase == "evening":
-            return card["type"] in ["evening_effect"]
-        
-        return False

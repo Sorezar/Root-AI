@@ -186,6 +186,7 @@ class Canopee(Base):
 ############################################################################################################
 
     def birdsong_phase(self, current_player, display, cards):
+        self.phase = "birdsong"
         
         # 1 - Si main vide on pioche une carte - v
         if current_player.cards == []:
@@ -196,13 +197,14 @@ class Canopee(Base):
             selected_card = display.ask_for_cards(current_player, pass_available=(_ != 0))
             if selected_card == "pass": break
             
-            action = display.ask_for_action(selected_card)
+            action = display.ask_for_action_birds()
             self.decrees[action].append(selected_card["color"])
             current_player.remove_card(selected_card)
         
         # 3 - If no roosts, place a roost and 3 warriors in the clearing with the fewest total pieces - x
 
     def daylight_phase(self, display, lobby, board):
+        self.phase = "daylight"
             
         # 1 - Implémentation du crafting - x
         
@@ -211,6 +213,7 @@ class Canopee(Base):
         self.resolve_decree(display, lobby, board)
 
     def evening_phase(self, display, current_player, cards):
+        self.phase = "evening"
         
         # Score points - v
         current_player.add_points(self.scoring["roost"][7 - self.buildings["roost"] - 1])

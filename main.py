@@ -29,6 +29,10 @@ def initial_setup(lobby, board, display):
     # Piocher des cartes pour chaque joueur
     for player in lobby.players:
         player.draw_cards(cards, 3)
+         
+    # DEBUG 
+    marquise.draw_card_by_id(9, cards)
+    canopee.draw_card_by_id(10, cards)  
 
     # Récupérer la clairière
     dungeon_clearing = display.ask_for_clearing([1, 3, 9, 12])

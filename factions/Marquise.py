@@ -22,6 +22,7 @@ class Marquise(Base):
         self.units = 25
         self.actions = ["build", "recruit", "march", "battle", "overwork", "spend_bird"]
         self.actions_remaining = 3
+        self.phase = "birdsong"
 
 ############################################################################################################
 ###################################### VERIFICATIONS ACTIONS POSSIBLES #####################################
@@ -276,6 +277,7 @@ class Marquise(Base):
 ############################################################################################################
 
     def birdsong_phase(self, display, board, current_player):
+        self.phase = "birdsong"
         
         self.get_start_birdsong_effect(current_player)
         
@@ -287,6 +289,7 @@ class Marquise(Base):
         self.get_birdsong_effect(current_player)
 
     def daylight_phase(self, display, lobby, board, current_player, cards, items):
+        self.phase = "daylight"
         
         # 1 - Crafts
         objects    = self.get_objects(current_player)
@@ -401,6 +404,7 @@ class Marquise(Base):
         return
 
     def evening_phase(self, display, current_player, cards):
+        self.phase = "evening"
         self.draw(display, current_player, cards)
     
     def play(self, display, board, lobby, current_player, cards, items):
