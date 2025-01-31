@@ -146,18 +146,21 @@ class Base:
         ambush_cards_def = [card for card in defender.cards if card["type"] == "ambush" and (card["color"] == board.graph.nodes[attack_clearing]["type"] or card["color"] == "bird")]
         ambush_cards_att = [card for card in attacker.cards if card["type"] == "ambush" and (card["color"] == board.graph.nodes[attack_clearing]["type"] or card["color"] == "bird")]
         
+        ambush_cards_def_id = [card['id'] for card in ambush_cards_def]
+        ambush_cards_att_id = [card['id'] for card in ambush_cards_att]
+        
         if ambush_cards_def and "Scouting Party" not in attacker.crafted_cards:
             lobby.current_player = lobby.get_player(defender.id)
-            ambush_card = display.ask_for_cards(ambush_cards_def, pass_available=True)
+            ambush_card_def = display.ask_for_cards(defender, criteria='id', values=ambush_cards_def_id, pass_available=True)
             lobby.current_player = lobby.get_player(attacker.id)
             
             # Si ambush defenseur
-            if ambush_card != "pass": 
-                defender.remove_card(ambush_card)
+            if ambush_card_def != "pass": 
+                defender.remove_card(ambush_card_def)
                 
                 # Si y'a une ambush attaquant pour contrer
                 if ambush_cards_att != []:
-                    ambush_card_att = display.ask_for_cards(ambush_cards_att, pass_available=True)
+                    ambush_card_att = display.ask_for_cards(attacker, criteria='id', values=ambush_cards_att_id, pass_available=True)
                     # Si il la joue
                     if ambush_card_att != "pass":
                         self.remove_card(ambush_card_att)
@@ -182,18 +185,28 @@ class Base:
         attacker_damage += 1 if board.graph.nodes[attack_clearing]["units"].get(defender_faction_id, 0) == 0 else 0
                      
         # TODO : Affichage les dommages et les dés
-        
-        display.set_battle_results(attack_clearing, attacker_roll, defender_roll, attacker_damage, defender_damage)
+        display.battle_results = {
+            "attack_clearing": attack_clearing,
+            "attacker_roll": attacker_roll,
+            "defender_roll": defender_roll,
+            "attacker_damage": attacker_damage,
+            "defender_damage": defender_damage
+        }
         display.show_battle_results = True
         display.draw()
         pygame.display.flip() 
         pygame.time.delay(1000)
         
         # Gestion cartes de bataille défenseur
+        att_effect = self.get_battle_attacker_effect(attacker)
         def_effect = defender.faction.get_battle_defender_effect(defender)
+        
+        att_effect_id = [card['id'] for card in att_effect]
+        def_effect_id = [card['id'] for card in def_effect]
+        
         while def_effect:
             lobby.current_player = defender.id
-            card = display.ask_for_crafted_card(def_effect, pass_available=True)
+            card = display.ask_for_crafted_cards(defender, criteria='id', values=def_effect_id, pass_available=True)
             if card != "pass":
                 defender.remove_crafted_card(card)
                 
@@ -202,16 +215,18 @@ class Base:
                     
                 if card['name'] == "Sappers" :
                     defender_damage += 1
+                    
+                def_effect = defender.faction.get_battle_defender_effect(defender)
             else : break
-        
+            
         lobby.current_player = self.id
         
         # Gestion cartes de bataille attaquant
-        att_effect = self.get_battle_attacker_effect(attacker)
+        
         while att_effect:
-            card = display.ask_for_crafted_card(att_effect, pass_available=True)
+            card = display.ask_for_crafted_cards(attacker, criteria='id', values=att_effect_id, pass_available=True)
             if card != "pass":
-                self.remove_crafted_card(card)
+                attacker.remove_crafted_card(card)
                 
                 if card['name'] == "Armorers" :
                     defender_damage = 0
@@ -219,6 +234,8 @@ class Base:
                 if card['name'] == "Brutal Tactics" :
                     attacker_damage += 1
                     lobby.get_player(defender_faction_id).points += 1
+                    
+                self.get_battle_attacker_effect(attacker)
             else : break
             
         def _inflict_damage(lobby, board, clearing, faction_id, base_damage):

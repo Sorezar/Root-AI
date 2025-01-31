@@ -22,7 +22,6 @@ class Marquise(Base):
         self.units = 25
         self.actions = ["build", "recruit", "march", "battle", "overwork", "spend_bird"]
         self.actions_remaining = 3
-        self.phase = "birdsong"
 
 ############################################################################################################
 ###################################### VERIFICATIONS ACTIONS POSSIBLES #####################################
@@ -277,8 +276,8 @@ class Marquise(Base):
 ############################################################################################################
 
     def birdsong_phase(self, display, board, current_player):
-        self.phase = "birdsong"
         
+        # Gestion des effets de début de tour
         self.get_start_birdsong_effect(current_player)
         
         if 6 - self.buildings["sawmill"] < self.tokens['wood']:
@@ -287,9 +286,8 @@ class Marquise(Base):
             self.choose_wood_distribution(display, board)
             
         self.get_birdsong_effect(current_player)
-
+        
     def daylight_phase(self, display, lobby, board, current_player, cards, items):
-        self.phase = "daylight"
         
         # 1 - Crafts
         objects    = self.get_objects(current_player)
@@ -332,7 +330,7 @@ class Marquise(Base):
             if card == "pass": break
             
             if card['type'] == "object":
-                current_player.items.append(items.available_items[card['item']])
+                current_player.items[card['item']] += 1
                 items.available_items[card['item']] -= 1
                 current_player.add_points(card['gain'])
                 current_player.remove_card(card)
@@ -404,7 +402,6 @@ class Marquise(Base):
         return
 
     def evening_phase(self, display, current_player, cards):
-        self.phase = "evening"
         self.draw(display, current_player, cards)
     
     def play(self, display, board, lobby, current_player, cards, items):

@@ -1,17 +1,17 @@
 {
     "nodes": [
     { "id": 1,  "pos": [0.05, 0.10], "slots": 1, "ruins": 0, "type": "fox"},
-    { "id": 2,  "pos": [0.50, 0.10], "slots": 2, "ruins": 0, "type": "rabbit"},
-    { "id": 3,  "pos": [0.90, 0.20], "slots": 2, "ruins": 0, "type": "mouse"},
-    { "id": 4,  "pos": [0.40, 0.30], "slots": 2, "ruins": 1, "type": "rabbit"},
-    { "id": 5,  "pos": [0.05, 0.35], "slots": 2, "ruins": 0, "type": "mouse"},
-    { "id": 6,  "pos": [0.30, 0.55], "slots": 2, "ruins": 1, "type": "fox"},
-    { "id": 7,  "pos": [0.60, 0.45], "slots": 3, "ruins": 1, "type": "mouse"},
-    { "id": 8,  "pos": [0.95, 0.50], "slots": 2, "ruins": 1, "type": "fox"},
-    { "id": 9,  "pos": [0.10, 0.80], "slots": 1, "ruins": 0, "type": "rabbit"},
-    { "id": 10, "pos": [0.35, 0.85], "slots": 2, "ruins": 0, "type": "fox"},
-    { "id": 11, "pos": [0.55, 0.75], "slots": 2, "ruins": 0, "type": "mouse"},
-    { "id": 12, "pos": [0.90, 0.85], "slots": 1, "ruins": 0, "type": "rabbit"}
+    { "id": 2,  "pos": [0.55, 0.10], "slots": 2, "ruins": 0, "type": "rabbit"},
+    { "id": 3,  "pos": [0.90, 0.15], "slots": 2, "ruins": 0, "type": "mouse"},
+    { "id": 4,  "pos": [0.50, 0.30], "slots": 2, "ruins": 1, "type": "rabbit"},
+    { "id": 5,  "pos": [0.05, 0.45], "slots": 2, "ruins": 0, "type": "mouse"},
+    { "id": 6,  "pos": [0.35, 0.60], "slots": 2, "ruins": 1, "type": "fox"},
+    { "id": 7,  "pos": [0.65, 0.50], "slots": 3, "ruins": 1, "type": "mouse"},
+    { "id": 8,  "pos": [0.95, 0.55], "slots": 2, "ruins": 1, "type": "fox"},
+    { "id": 9,  "pos": [0.10, 0.85], "slots": 1, "ruins": 0, "type": "rabbit"},
+    { "id": 10, "pos": [0.40, 0.90], "slots": 2, "ruins": 0, "type": "fox"},
+    { "id": 11, "pos": [0.60, 0.80], "slots": 2, "ruins": 0, "type": "mouse"},
+    { "id": 12, "pos": [0.90, 0.90], "slots": 1, "ruins": 0, "type": "rabbit"}
   ],
   "edges": [
     [1, 2],

@@ -16,7 +16,7 @@ from factions.Vagabond import Vagabond
 import pygame
 import json
 
-def initial_setup(lobby, board, display):
+def initial_setup(lobby, board, display, cards):
 
     for player in lobby.players:
         if player.faction.id == 0:
@@ -29,6 +29,10 @@ def initial_setup(lobby, board, display):
     # Piocher des cartes pour chaque joueur
     for player in lobby.players:
         player.draw_cards(cards, 3)
+        for _ in range(3):
+            player.items["bag"] += 1
+        for _ in range(5):
+            player.crafted_cards.append(cards.draw()[0])
          
     # DEBUG 
     marquise.draw_card_by_id(9, cards)
@@ -91,7 +95,6 @@ def run(display, lobby, board, cards, items):
                         
         display.draw()
         pygame.display.flip()
-        display.clock.tick(60)
     pygame.quit()
 
 if __name__ == "__main__":
@@ -101,33 +104,20 @@ if __name__ == "__main__":
     lobby = Lobby()
     lobby.add_player("J1", Marquise())
     lobby.add_player("J2", Canopee()) 
-    #lobby.add_player("J3", Alliance())
+    lobby.add_player("J3", Alliance())
+    lobby.add_player("J4", Vagabond())
     
-    # Initialisation de la carte
-    print("Initialisation de la carte")
-    board = RootBoard(MAP_FILE)
-    
-    # Initialisation des objets
-    print("Initialisation des objets")
-    items = Items()
-    
-    # Initialisation des tests
-    print("Initialisation des tests")
-    tests = RootTest()
-    
-    # Deck
-    cards = Cards(json.load(open(CARDS_FILE)))
+    board   = RootBoard(MAP_FILE)
+    items   = Items()
+    tests   = RootTest()
+    cards   = Cards(json.load(open(CARDS_FILE)))
+    display = RootDisplay(board, lobby, items)
     cards.shuffle()
     
-    # Initialisation de l'affichage
-    print("Initialisation de l'affichage")
-    display = RootDisplay(board, lobby, items)
-    
     # Mise en place initiale
-    initial_setup(lobby, board, display)
+    initial_setup(lobby, board, display, cards)
     
     # Tests
-    print("Tests")
     tests.test_adjacency(board)
     tests.test_control(board)
     tests.test_units(board, lobby)
