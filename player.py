@@ -7,7 +7,7 @@ class Player:
         self.cards   = []
         self.crafted_cards = []
         self.items   = {
-            "bag":      1,
+            "bag":      0,
             "boot":     0,
             "crossbow": 0,
             "hammer":   0,

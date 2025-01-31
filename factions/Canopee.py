@@ -185,8 +185,7 @@ class Canopee(Base):
 ############################################### TOUR DE JEU ################################################
 ############################################################################################################
 
-    def birdsong_phase(self, current_player, display, cards):
-        self.phase = "birdsong"
+    def birdsong_phase(self, current_player, display, cards, board):
         
         # 1 - Si main vide on pioche une carte - v
         if current_player.cards == []:
@@ -202,10 +201,34 @@ class Canopee(Base):
             current_player.remove_card(selected_card)
         
         # 3 - If no roosts, place a roost and 3 warriors in the clearing with the fewest total pieces - x
-
-    def daylight_phase(self, display, lobby, board):
-        self.phase = "daylight"
+        if self.buildings["roost"] == 7:
+            min_pieces = float('inf')
+            target_clearings = []
+            for clearing in board.graph.nodes:
+                total_pieces = sum(units for owner, units in board.graph.nodes[clearing]["units"].items() if owner != self.id)
+                total_pieces += len([building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] != self.id])
+                total_pieces += len([token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] != self.id])
             
+            if total_pieces < min_pieces:
+                min_pieces = total_pieces
+                target_clearings = [clearing]
+            elif total_pieces == min_pieces:
+                target_clearings.append(clearing)
+            
+            if target_clearings:
+                if len(target_clearings) > 1:
+                    target_clearing = display.ask_for_clearing(target_clearings)
+                else:
+                    target_clearing = target_clearings[0]
+            
+            board.graph.nodes[target_clearing]["buildings"].append({"type": "roost", "owner": self.id})
+            board.graph.nodes[target_clearing]["units"][self.id] = board.graph.nodes[target_clearing]["units"].get(self.id, 0) + 3
+            self.buildings["roost"] -= 1
+            self.units -= 3
+            board.update_control(target_clearing)
+            
+        
+    def daylight_phase(self, display, lobby, board):
         # 1 - Implémentation du crafting - x
         
         
@@ -213,8 +236,6 @@ class Canopee(Base):
         self.resolve_decree(display, lobby, board)
 
     def evening_phase(self, display, current_player, cards):
-        self.phase = "evening"
-        
         # Score points - v
         current_player.add_points(self.scoring["roost"][7 - self.buildings["roost"] - 1])
         
@@ -222,7 +243,7 @@ class Canopee(Base):
         self.draw(display, current_player, cards)
         
     def play(self, display, board, lobby, current_player, cards, items):
-        self.birdsong_phase(current_player, display, cards)
+        self.birdsong_phase(current_player, display, cards, board)
         self.daylight_phase(display, lobby, board)
         self.evening_phase(display, current_player, cards)
         

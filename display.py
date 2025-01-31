@@ -464,6 +464,7 @@ class RootDisplay:
     def draw(self):
         current_player = self.lobby.get_player(self.lobby.current_player)
         self.screen.fill(config.COLORS["background"])
+        
         self.draw_players()
         self.draw_items()
         self.draw_history()
@@ -481,6 +482,42 @@ class RootDisplay:
 ###############################################################################################
 ################################### FONCTIONS D'INTERACTION ###################################
 ###############################################################################################
+
+    def ask_for_players(self, players, pass_available=False):
+        selected_player = None
+        player_width = config.PLAYERS_WIDTH // len(self.lobby.players)
+        player_height = config.PLAYERS_HEIGHT
+
+        while selected_player is None:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = event.pos
+                    if pass_available and self.is_button_pass_clicked(pos): return "pass"
+                    for i, player in enumerate(self.lobby.players):
+                        if player in players:
+                            x_offset = config.PLAYERS_X + i * player_width
+                            y_offset = config.PLAYERS_Y
+                            player_rect = pygame.Rect(x_offset, y_offset, player_width, player_height)
+                            if player_rect.collidepoint(pos):
+                                selected_player = player
+                                break
+
+            self.draw()
+
+            # Highlight selectable players
+            for i, player in enumerate(self.lobby.players):
+                if player in players:
+                    x_offset = config.PLAYERS_X + i * player_width
+                    y_offset = config.PLAYERS_Y
+                    player_rect = pygame.Rect(x_offset, y_offset, player_width, player_height)
+                    pygame.draw.rect(self.screen, (255, 0, 0), player_rect, 3)
+
+            pygame.display.flip()
+
+        return selected_player
 
     def ask_for_clearing(self, valid_clearings, pass_available=False):
         selected_clearing = None
@@ -527,7 +564,6 @@ class RootDisplay:
 
     def ask_for_cards(self, player, criteria=None, values=None, pass_available=False):
         selected_card = None
-        print(player.cards)
         num_cards = len(player.cards)
         total_width = num_cards * config.CARDS_WIDTH + (num_cards - 1) * 5
         x_offset = config.CARDS_ZONE_X + (config.CARDS_ZONE_WIDTH - total_width) // 2

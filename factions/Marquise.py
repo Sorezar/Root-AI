@@ -275,23 +275,26 @@ class Marquise(Base):
 ############################################### TOUR DE JEU ################################################
 ############################################################################################################
 
-    def birdsong_phase(self, display, board, current_player):
-        
+    def birdsong_phase(self, display, board, current_player, cards, lobby):
+        print("Start Birdsong phase")
         # Gestion des effets de début de tour
-        self.get_start_birdsong_effect(current_player)
+        
+        cards.resolve_start_birdsong_effect(current_player, lobby, board, display)
         
         if 6 - self.buildings["sawmill"] < self.tokens['wood']:
             self.produce_wood(board)
         else:
             self.choose_wood_distribution(display, board)
-            
-        self.get_birdsong_effect(current_player)
+        
+        print("Birdsong phase")
+        cards.resolve_birdsong_effect(current_player, lobby, board, display)
+        print("End Birdsong phase")
         
     def daylight_phase(self, display, lobby, board, current_player, cards, items):
-        
+        print("Start Daylight phase")
         # 1 - Crafts
-        objects    = self.get_objects(current_player)
-        craftables = self.get_cratable_cards(current_player)
+        objects    = cards.get_objects(current_player)
+        craftables = cards.get_cratable_cards(current_player)
         usables = objects + craftables
         
         valid_usables = []
@@ -307,7 +310,7 @@ class Marquise(Base):
         
         # Check if the player can craft the item (Plus d'item = pas usable)
         
-        def check_valid(list):
+        def check_valid(usables):
             valid_usables = []
             for card in usables:
                 if card['cost_type'] == "none":
@@ -405,6 +408,6 @@ class Marquise(Base):
         self.draw(display, current_player, cards)
     
     def play(self, display, board, lobby, current_player, cards, items):
-        self.birdsong_phase(display, board, current_player)
+        self.birdsong_phase(display, board, current_player, cards, lobby)
         self.daylight_phase(display, lobby, board, current_player, cards, items)
         self.evening_phase(display, current_player, cards)

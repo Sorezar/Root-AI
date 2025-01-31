@@ -81,7 +81,7 @@ ACTIONS_SIZE   = 60 * SCALE
  
 # Couleurs
 COLORS = {
-    "forests":    (34, 139, 34),    # Vert forêt
+    "forests":    (9, 82, 40),      # Vert forêt
     "nodes":      (255, 255, 255),  # Blanc pour les clairières
     "edges":      (0, 0, 0),        # Noir pour les connexions
     "rivers":     (119,181,254),    # Bleu pour les rivières
