@@ -1,18 +1,9 @@
 ORDRE :
 
 
-CORRIGER BUG LATENCE DU AUX CRAFTEDS CARDS
-
-
-display.ask_for_crafted_cards()
-Bouger les actions de carte de BaseFaction dans player, ça serait peut-être mieux
-
+CORRIGER BUG BOIS Marquise (parfois bois pas consommé, bizarre)
 
 PLAN ON THE COMMET (comme disent les ricains)
-
-Gameplay - Rajouter les actions communes à toutes les factions (craft, utilisation des cartes)
-Gameplay - Ajouter un système de consommation temporaire des couleurs du decret
-Gameplay - Ajouter le fait de faire les actions possibles avant de tomber en crise
 
 Contenu - Rajouter Rebelles, Vagabond, Loutre, Lézard, Corvidés, Taupes, Gardiens, Seigneur des Cents
 Contenu - Rajouter les différentes maps

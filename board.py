@@ -95,26 +95,33 @@ class RootBoard:
         units = self.graph.nodes[clearing_id]["units"]
         buildings = self.graph.nodes[clearing_id]["buildings"]
         
-        faction_units = units.copy()
-        
+        faction_units  = {faction: count for faction, count in units.items() if count > 0}
+        building_units = {}
         for building in buildings:
             owner = building.get("owner")
-            if owner:
-                faction_units[owner] = faction_units.get(owner, 0) + 1
+            if owner is not None:  # Ignorer les bâtiments sans propriétaire
+                building_units[owner] = building_units.get(owner, 0) + 1
         
-        if faction_units and sum(faction_units.values()) > 0:
-            max_units = max(faction_units.values())
-            controlling_factions = [faction for faction, count in faction_units.items() if count == max_units]
-            if len(controlling_factions) == 1:
-                self.graph.nodes[clearing_id]["control"] = controlling_factions[0]
-            else:
-                # Si la Canopée fait partie des factions ayant le plus de pièces, elle contrôle
-                if 1 in controlling_factions:
-                    self.graph.nodes[clearing_id]["control"] = 1
-                else:
-                    self.graph.nodes[clearing_id]["control"] = None
-        else:
+        total_control = {}
+        for faction in set(faction_units.keys()).union(set(building_units.keys())):
+            total_control[faction] = faction_units.get(faction, 0) + building_units.get(faction, 0)
+        
+        # Si aucune faction n'a de points de contrôle, la clairière n'est pas contrôlée
+        if not total_control:
             self.graph.nodes[clearing_id]["control"] = None
+            return
+        
+        max_control = max(total_control.values())
+        controlling_factions = [faction for faction, count in total_control.items() if count == max_control]
+        
+        if len(controlling_factions) == 1:
+            self.graph.nodes[clearing_id]["control"] = controlling_factions[0]
+        else:
+            # Si la Canopée fait partie des factions ayant le plus de points de contrôle, elle contrôle
+            if 1 in controlling_factions:
+                self.graph.nodes[clearing_id]["control"] = 1
+            else:
+                self.graph.nodes[clearing_id]["control"] = None
             
     def get_adjacent_clearings_through_river(self, location):
         return self.get_adjacent_clearings(location, is_river=True)
@@ -182,6 +189,16 @@ class RootBoard:
         if faction_id == 3:
             return None
         
+    def get_number_of_recruiters_for_a_clearing(self, clearing_id, faction_id):
+        if faction_id == 0:
+            return sum(1 for building in self.graph.nodes[clearing_id]["buildings"] if building["type"] == "recruiter")
+        if faction_id == 1:
+            return sum(1 for building in self.graph.nodes[clearing_id]["buildings"] if building["type"] == "roost")
+        if faction_id == 2:
+            return sum(1 for building in self.graph.nodes[clearing_id]["buildings"] if "base" in building["type"])
+        if faction_id == 3:
+            return 0
+        
     def get_clearings_with_crafters(self, faction_id):
         if faction_id == 0:
             return [clearing for clearing in self.graph.nodes if any(building["type"] == "workshop" for building in self.graph.nodes[clearing]["buildings"])]
@@ -191,3 +208,14 @@ class RootBoard:
             return [clearing for clearing in self.graph.nodes if any(token["type"] == "sympathy" for token in self.graph.nodes[clearing]["tokens"])]
         if faction_id == 3:
             return [clearing for clearing in self.graph.nodes if self.graph.nodes[clearing]["units"].get(3, 0) > 0]
+        
+    def get_number_of_crafters_for_a_clearing(self, clearing_id, faction_id):
+        if faction_id == 0:
+            return sum(1 for building in self.graph.nodes[clearing_id]["buildings"] if building["type"] == "workshop")
+        if faction_id == 1:
+            return sum(1 for building in self.graph.nodes[clearing_id]["buildings"] if building["type"] == "roost")
+        if faction_id == 2:
+            return sum(1 for token in self.graph.nodes[clearing_id]["tokens"] if token["type"] == "sympathy")
+        if faction_id == 3:
+            # A implementer, nombre de marteau utilisable par le vagabond
+            pass

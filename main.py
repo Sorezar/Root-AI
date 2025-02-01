@@ -29,15 +29,7 @@ def initial_setup(lobby, board, display, cards):
     # Piocher des cartes pour chaque joueur
     for player in lobby.players:
         player.draw_cards(cards, 3)
-        for _ in range(3):
-            player.items["bag"] += 1
-        for _ in range(5):
-            player.crafted_cards.append(cards.draw()[0])
          
-    # DEBUG 
-    marquise.draw_card_by_id(9, cards)
-    canopee.draw_card_by_id(10, cards)  
-
     # Récupérer la clairière
     dungeon_clearing = display.ask_for_clearing([1, 3, 9, 12])
 
@@ -104,8 +96,8 @@ if __name__ == "__main__":
     lobby = Lobby()
     lobby.add_player("J1", Marquise())
     lobby.add_player("J2", Canopee()) 
-    lobby.add_player("J3", Alliance())
-    lobby.add_player("J4", Vagabond())
+    #lobby.add_player("J3", Alliance())
+    #lobby.add_player("J4", Vagabond())
     
     board   = RootBoard(MAP_FILE)
     items   = Items()

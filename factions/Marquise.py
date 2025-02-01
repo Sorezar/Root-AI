@@ -38,7 +38,6 @@ class Marquise(Base):
         return False, recruitable_clearings
 
     def is_build_possible(self, board):
-        
         groups = self.get_controlled_groups(board)
         wood_per_group = self.get_wood_per_group(board, groups)
         least_constructed_building = max(self.buildings.values())
@@ -170,10 +169,11 @@ class Marquise(Base):
                 max_wood = wood_count
                                 
         building, cost = display.ask_for_building_cats(board.graph.nodes[clearing]["pos"], wood_costs, max_wood, self.buildings)
-                                
+                  
+        self.use_wood_for_building(board, group, clearing, cost)              
         self.buildings[building] -= 1
         board.graph.nodes[clearing]["buildings"].append({"type": building, "owner": self.id})
-        self.use_wood_for_building(board, group, clearing, cost)
+        
         
         board.update_control(clearing)
         self.actions_remaining -= 1
@@ -187,7 +187,7 @@ class Marquise(Base):
                 return
         self.actions_remaining -= 1
     
-    def battle(self, display, lobby, board):
+    def battle(self, display, lobby, board, cards):
         result = super().battle(display, lobby, board, pass_available=True)
         if result == "pass": return
         self.actions_remaining -= 1
@@ -218,14 +218,12 @@ class Marquise(Base):
 
     def use_wood_for_building(self, board, group, clearing, cost):
         wood_needed = cost
-        wood_used = 0
         visited = set()
         queue = [(clearing, 0)]
 
         while queue and wood_needed > 0:
             current_clearing, distance = queue.pop(0)
-            if current_clearing in visited or current_clearing not in group:
-                continue
+            if current_clearing in visited or current_clearing not in group: continue
             visited.add(current_clearing)
 
             tokens = board.graph.nodes[current_clearing]["tokens"]
@@ -233,11 +231,11 @@ class Marquise(Base):
                 if token["type"] == "wood" and wood_needed > 0:
                     tokens.remove(token)
                     wood_needed -= 1
-                    wood_used += 1
 
-            for neighbor in board.graph.neighbors(current_clearing):
+            for neighbor in board.get_adjacent_clearings(clearing):
                 if neighbor not in visited:
                     queue.append((neighbor, distance + 1))
+                    
         self.tokens["wood"] += cost
         
     def get_controlled_groups(self, board):
@@ -248,7 +246,8 @@ class Marquise(Base):
         def dfs(clearing, group):
             visited.add(clearing)
             group.append(clearing)
-            for neighbor in board.graph.neighbors(clearing):
+            
+            for neighbor in board.get_adjacent_clearings(clearing):
                 if neighbor in controlled_clearings and neighbor not in visited:
                     dfs(neighbor, group)
 
@@ -292,83 +291,9 @@ class Marquise(Base):
         
     def daylight_phase(self, display, lobby, board, current_player, cards, items):
         print("Start Daylight phase")
+        
         # 1 - Crafts
-        objects    = cards.get_objects(current_player)
-        craftables = cards.get_cratable_cards(current_player)
-        usables = objects + craftables
-        
-        valid_usables = []
-        clearings_with_workshops = board.get_clearings_with_crafters(self.id)
-        builders = {
-            "fox": 0,
-            "mouse": 0,
-            "rabbit": 0,
-        }
-        
-        for clearing in clearings_with_workshops:
-            builders[board.graph.nodes[clearing]["type"]] += sum(1 for building in board.graph.nodes[clearing]["buildings"] if building["type"] == "workshop")
-        
-        # Check if the player can craft the item (Plus d'item = pas usable)
-        
-        def check_valid(usables):
-            valid_usables = []
-            for card in usables:
-                if card['cost_type'] == "none":
-                    if card['cost'] <= sum(builders.values()):
-                        valid_usables.append(card)
-                elif card['cost_type'] == "each":
-                    if all(builders[color] >= 1 for color in ["fox", "mouse", "rabbit"]):
-                        valid_usables.append(card)
-                elif card['cost'] <= builders.get(card['cost_type'], 0):
-                    valid_usables.append(card)
-            return valid_usables
-        
-        valid_usables = check_valid(usables)
-        
-        while valid_usables:
-                    
-            valid_usables_ids = [card['id'] for card in valid_usables]
-            card = display.ask_for_cards(current_player, criteria="id", values=valid_usables_ids, pass_available=True)
-            
-            if card == "pass": break
-            
-            if card['type'] == "object":
-                current_player.items[card['item']] += 1
-                items.available_items[card['item']] -= 1
-                current_player.add_points(card['gain'])
-                current_player.remove_card(card)
-                valid_usables.remove(card)
-                builders[card['cost_type']] -= card['cost']
-                valid_usables = check_valid(valid_usables)
-                
-            elif "effect" in card['type']:
-                current_player.crafted_cards.append(card)
-                current_player.remove_card(card)
-                valid_usables.remove(card)
-                builders[card['cost_type']] -= card['cost']
-                valid_usables = check_valid(valid_usables)
-                
-            elif card['type'] == "favor":
-                points = 0
-                for clearing in board.graph.nodes:
-                    if board.graph.nodes[clearing]["type"] == card['color']:
-                        points += len([building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] != self.id])
-                        points += len([token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] != self.id])
-                        board.graph.nodes[clearing]["buildings"] = [building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] == self.id]
-                        board.graph.nodes[clearing]["tokens"] = [token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] == self.id]
-                        if self.id in board.graph.nodes[clearing]["units"]:
-                            board.graph.nodes[clearing]["units"] = {current_player.id: board.graph.nodes[clearing]["units"][self.id]}
-                        else:
-                            board.graph.nodes[clearing]["units"] = {}
-                current_player.add_points(points)
-                current_player.remove_card(card)
-                valid_usables.remove(card)
-                builders[card['cost_type']] -= card['cost']
-                valid_usables = check_valid(valid_usables)
-        
-            display.draw()
-            pygame.display.flip()
-            display.clock.tick(60)
+        super().craft(display, board, current_player, cards, items)
     
         # 2 - Actions
         
@@ -394,14 +319,13 @@ class Marquise(Base):
                             "recruit": lambda: self.recruit(display, board),
                             "build": lambda: self.build(display, board),
                             "overwork": lambda: self.overwork(display, board, lobby.get_player(lobby.current_player)),
-                            "battle": lambda: self.battle(display, lobby, board)
+                            "battle": lambda: self.battle(display, lobby, board, cards)
                         }
                         action_methods[action]()
                         
                 display.draw()
                 display.draw_actions(self.id, self.actions, possible_actions)
                 pygame.display.flip()
-                display.clock.tick(60)
         return
 
     def evening_phase(self, display, current_player, cards):

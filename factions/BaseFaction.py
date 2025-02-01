@@ -114,7 +114,7 @@ class Base:
         board.update_control(from_clearing)
         board.update_control(to_clearing)
         
-    def battle(self, display, lobby, board, pass_available=False):
+    def battle(self, display, lobby, board, cards, pass_available=False):
     
         def _have_ennemy_things(clearing, thing, board):
             if thing == "units":
@@ -198,8 +198,8 @@ class Base:
         pygame.time.delay(1000)
         
         # Gestion cartes de bataille défenseur
-        att_effect = self.get_battle_attacker_effect(attacker)
-        def_effect = defender.faction.get_battle_defender_effect(defender)
+        att_effect = cards.get_battle_attacker_effect(attacker)
+        def_effect = cards.get_battle_defender_effect(defender)
         
         att_effect_id = [card['id'] for card in att_effect]
         def_effect_id = [card['id'] for card in def_effect]
@@ -216,7 +216,7 @@ class Base:
                 if card['name'] == "Sappers" :
                     defender_damage += 1
                     
-                def_effect = defender.faction.get_battle_defender_effect(defender)
+                def_effect = cards.get_battle_defender_effect(defender)
             else : break
             
         lobby.current_player = self.id
@@ -235,7 +235,7 @@ class Base:
                     attacker_damage += 1
                     lobby.get_player(defender_faction_id).points += 1
                     
-                self.get_battle_attacker_effect(attacker)
+                cards.get_battle_attacker_effect(attacker)
             else : break
             
         def _inflict_damage(lobby, board, clearing, faction_id, base_damage):
@@ -295,4 +295,79 @@ class Base:
         while len(current_player.cards) > 5:
             card_selected = display.ask_for_cards(current_player)
             current_player.remove_card(card_selected)            
-    
+
+    def craft(self, display, board, current_player, cards, items):
+        objects    = cards.get_objects(current_player)
+        craftables = cards.get_cratable_cards(current_player)
+        usables = objects + craftables
+        
+        valid_usables = []
+        clearings_with_crafters = board.get_clearings_with_crafters(self.id)
+        builders = {
+            "fox": 0,
+            "mouse": 0,
+            "rabbit": 0,
+        }
+        
+        for clearing in clearings_with_crafters:
+            builders[board.graph.nodes[clearing]["type"]] = board.get_number_of_crafters_for_a_clearing(clearing, self.id)
+        
+        # Check if the player can craft the item (Plus d'item = pas usable)
+        
+        def check_valid(usables):
+            valid_usables = []
+            for card in usables:
+                if card['cost_type'] == "none":
+                    if card['cost'] <= sum(builders.values()):
+                        valid_usables.append(card)
+                elif card['cost_type'] == "each":
+                    if all(builders[color] >= 1 for color in ["fox", "mouse", "rabbit"]):
+                        valid_usables.append(card)
+                elif card['cost'] <= builders.get(card['cost_type'], 0):
+                    valid_usables.append(card)
+            return valid_usables
+        
+        valid_usables = check_valid(usables)
+        
+        while valid_usables:
+            valid_usables_ids = [card['id'] for card in valid_usables]
+            card = display.ask_for_cards(current_player, criteria="id", values=valid_usables_ids, pass_available=True)
+            
+            if card == "pass": break
+            
+            if card['type'] == "object":
+                current_player.items[card['item']]  += 1
+                items.available_items[card['item']] -= 1
+                current_player.add_points(card['gain'])
+                current_player.remove_card(card)
+                valid_usables.remove(card)
+                builders[card['cost_type']] -= card['cost']
+                valid_usables = check_valid(valid_usables)
+                
+            elif "effect" in card['type']:
+                current_player.crafted_cards.append(card)
+                current_player.remove_card(card)
+                valid_usables.remove(card)
+                builders[card['cost_type']] -= card['cost']
+                valid_usables = check_valid(valid_usables)
+                
+            elif card['type'] == "favor":
+                points = 0
+                for clearing in board.graph.nodes:
+                    if board.graph.nodes[clearing]["type"] == card['color']:
+                        points += len([building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] != self.id])
+                        points += len([token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] != self.id])
+                        board.graph.nodes[clearing]["buildings"] = [building for building in board.graph.nodes[clearing]["buildings"] if building["owner"] == self.id]
+                        board.graph.nodes[clearing]["tokens"] = [token for token in board.graph.nodes[clearing]["tokens"] if token["owner"] == self.id]
+                        if self.id in board.graph.nodes[clearing]["units"]:
+                            board.graph.nodes[clearing]["units"] = {current_player.id: board.graph.nodes[clearing]["units"][self.id]}
+                        else:
+                            board.graph.nodes[clearing]["units"] = {}
+                current_player.add_points(points)
+                current_player.remove_card(card)
+                valid_usables.remove(card)
+                builders[card['cost_type']] -= card['cost']
+                valid_usables = check_valid(valid_usables)
+        
+            display.draw()
+            pygame.display.flip()
