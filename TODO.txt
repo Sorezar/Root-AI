@@ -1,11 +1,14 @@
 ORDRE :
 
+Contenu - Rajouter Rebelles, Vagabond
 
-CORRIGER BUG BOIS Marquise (parfois bois pas consommé, bizarre)
 
 PLAN ON THE COMMET (comme disent les ricains)
 
-Contenu - Rajouter Rebelles, Vagabond, Loutre, Lézard, Corvidés, Taupes, Gardiens, Seigneur des Cents
+Contenu - Loutre, Lézard, Corvidés, Taupes, Gardiens, Seigneur des Cents
+
+
+
 Contenu - Rajouter les différentes maps
 Contenu - Rajouter les différents decks
 

@@ -44,30 +44,18 @@ class Marquise(Base):
         min_wood_cost = self.wood_cost[::-1][least_constructed_building-1]
         
         buildable_clearings = []
-
         for group, wood_count in zip(groups, wood_per_group):
             if wood_count >= min_wood_cost:
                 for clearing in group:
                     if len(board.graph.nodes[clearing]["buildings"]) < board.graph.nodes[clearing]["slots"]:
                         buildable_clearings.append(clearing)
+        
         if buildable_clearings:
             return True, buildable_clearings
         return False, buildable_clearings
     
     def is_battle_possible(self, board):
-        battle_clearings = []
-        for clearing in board.get_clearings_with_units(self.id):
-            for token in board.graph.nodes[clearing]["tokens"]:
-                if token["owner"] != self.id:
-                    battle_clearings.append(clearing) if clearing not in battle_clearings else None
-            for building in board.graph.nodes[clearing]["buildings"]:
-                if building["owner"] != self.id and building["type"] != "ruins":
-                    battle_clearings.append(clearing) if clearing not in battle_clearings else None
-            if sum(units for owner, units in board.graph.nodes[clearing]["units"].items() if owner != self.id) > 0:
-                battle_clearings.append(clearing) if clearing not in battle_clearings else None
-        if battle_clearings:
-            return True, battle_clearings
-        return False, battle_clearings
+        return super().is_battle_possible(board)
     
     def is_march_possible(self, board):
         move_clearings = []
@@ -110,7 +98,6 @@ class Marquise(Base):
         
         for action in self.actions:
             is_action_possible_method = getattr(self, f'is_{action}_possible')
-            
             if action == "recruit" or action == "build" or action == "march" or action == "battle":
                 if is_action_possible_method(board)[0]:
                     possible_actions.append(action)

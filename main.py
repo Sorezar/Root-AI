@@ -65,12 +65,12 @@ def initial_setup(lobby, board, display, cards):
     board.update_control(roost_clearing)
     
     # Alliance (Debug)
-    #alliance.faction.units -= 1
-    #board.graph.nodes[roost_clearing]["units"][alliance.faction.id] = 1
-    #alliance.faction.buildings["base_fox"] -= 1
-    #board.graph.nodes[7]["buildings"].append({"type": "base_fox", "owner": alliance.faction.id})
-    #alliance.faction.tokens["sympathy"] -= 1
-    #board.graph.nodes[7]["tokens"].append({"type": "sympathy", "owner": alliance.faction.id})
+    alliance.faction.units -= 1
+    board.graph.nodes[roost_clearing]["units"][alliance.faction.id] = 1
+    alliance.faction.buildings["base_fox"] -= 1
+    board.graph.nodes[7]["buildings"].append({"type": "base_fox", "owner": alliance.faction.id})
+    alliance.faction.tokens["sympathy"] -= 1
+    board.graph.nodes[7]["tokens"].append({"type": "sympathy", "owner": alliance.faction.id})
 
 def run(display, lobby, board, cards, items):
     running = True
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     lobby = Lobby()
     lobby.add_player("J1", Marquise())
     lobby.add_player("J2", Canopee()) 
-    #lobby.add_player("J3", Alliance())
+    lobby.add_player("J3", Alliance())
     #lobby.add_player("J4", Vagabond())
     
     board   = RootBoard(MAP_FILE)

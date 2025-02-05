@@ -208,7 +208,10 @@ class RootBoard:
             return [clearing for clearing in self.graph.nodes if any(token["type"] == "sympathy" for token in self.graph.nodes[clearing]["tokens"])]
         if faction_id == 3:
             return [clearing for clearing in self.graph.nodes if self.graph.nodes[clearing]["units"].get(3, 0) > 0]
-        
+
+    def get_clearings_with_tokens(self, type):
+        return [clearing for clearing in self.graph.nodes if any(token["type"] == type for token in self.graph.nodes[clearing]["tokens"])]
+       
     def get_number_of_crafters_for_a_clearing(self, clearing_id, faction_id):
         if faction_id == 0:
             return sum(1 for building in self.graph.nodes[clearing_id]["buildings"] if building["type"] == "workshop")

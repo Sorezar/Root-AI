@@ -10,12 +10,17 @@ class Base:
         self.actions = []
         self.number_card_draw_bonus = 0
         self.phase = "birdsong"
+        self.builders = {
+            "fox": 0,
+            "mouse": 0,
+            "rabbit": 0,
+        }
 
 ############################################################################################################
 ###################################### VERIFICATIONS ACTIONS POSSIBLES #####################################
 ############################################################################################################            
 
-    def is_recruitments_possible(self, board):
+    def is_recruit_possible(self, board):
         recruitable_clearings = []
         if self.units > 0:
             for clearing in board.get_clearings_with_recruiters(self.id):
@@ -58,6 +63,28 @@ class Base:
         if move_clearings:
             return True, move_clearings
         return False, move_clearings
+    
+    def is_craft_possible(self, display, board, current_player, cards, items):
+        objects    = cards.get_objects(current_player)
+        craftables = cards.get_cratable_cards(current_player)
+        usables = objects + craftables
+        
+        for clearing in board.get_clearings_with_crafters(self.id):
+            self.builders[board.graph.nodes[clearing]["type"]] = board.get_number_of_crafters_for_a_clearing(clearing, self.id)
+        
+        # Check if the player can craft the item (Plus d'item = pas usable)
+
+        valid_usables = []
+        for card in usables:
+            if card['cost_type'] == "none":
+                if card['cost'] <= sum(self.builders.values()):
+                    valid_usables.append(card)
+            elif card['cost_type'] == "each":
+                if all(self.builders[color] >= 1 for color in ["fox", "mouse", "rabbit"]):
+                    valid_usables.append(card)
+            elif card['cost'] <= self.builders.get(card['cost_type'], 0):
+                valid_usables.append(card)
+        return bool(valid_usables), valid_usables
     
     def get_possible_actions(self, board):
         raise NotImplementedError()
@@ -297,41 +324,12 @@ class Base:
             current_player.remove_card(card_selected)            
 
     def craft(self, display, board, current_player, cards, items):
-        objects    = cards.get_objects(current_player)
-        craftables = cards.get_cratable_cards(current_player)
-        usables = objects + craftables
         
-        valid_usables = []
-        clearings_with_crafters = board.get_clearings_with_crafters(self.id)
-        builders = {
-            "fox": 0,
-            "mouse": 0,
-            "rabbit": 0,
-        }
+        possible, craftable_cards = self.is_craft_possible(display, board, current_player, cards, items)
         
-        for clearing in clearings_with_crafters:
-            builders[board.graph.nodes[clearing]["type"]] = board.get_number_of_crafters_for_a_clearing(clearing, self.id)
-        
-        # Check if the player can craft the item (Plus d'item = pas usable)
-        
-        def check_valid(usables):
-            valid_usables = []
-            for card in usables:
-                if card['cost_type'] == "none":
-                    if card['cost'] <= sum(builders.values()):
-                        valid_usables.append(card)
-                elif card['cost_type'] == "each":
-                    if all(builders[color] >= 1 for color in ["fox", "mouse", "rabbit"]):
-                        valid_usables.append(card)
-                elif card['cost'] <= builders.get(card['cost_type'], 0):
-                    valid_usables.append(card)
-            return valid_usables
-        
-        valid_usables = check_valid(usables)
-        
-        while valid_usables:
-            valid_usables_ids = [card['id'] for card in valid_usables]
-            card = display.ask_for_cards(current_player, criteria="id", values=valid_usables_ids, pass_available=True)
+        while possible:
+            craftable_cards_ids = [card['id'] for card in craftable_cards]
+            card = display.ask_for_cards(current_player, criteria="id", values=craftable_cards_ids, pass_available=True)
             
             if card == "pass": break
             
@@ -340,16 +338,12 @@ class Base:
                 items.available_items[card['item']] -= 1
                 current_player.add_points(card['gain'])
                 current_player.remove_card(card)
-                valid_usables.remove(card)
-                builders[card['cost_type']] -= card['cost']
-                valid_usables = check_valid(valid_usables)
+                self.builders[card['cost_type']] -= card['cost']
                 
             elif "effect" in card['type']:
                 current_player.crafted_cards.append(card)
                 current_player.remove_card(card)
-                valid_usables.remove(card)
-                builders[card['cost_type']] -= card['cost']
-                valid_usables = check_valid(valid_usables)
+                self.builders[card['cost_type']] -= card['cost']
                 
             elif card['type'] == "favor":
                 points = 0
@@ -365,9 +359,9 @@ class Base:
                             board.graph.nodes[clearing]["units"] = {}
                 current_player.add_points(points)
                 current_player.remove_card(card)
-                valid_usables.remove(card)
-                builders[card['cost_type']] -= card['cost']
-                valid_usables = check_valid(valid_usables)
-        
+                self.builders[card['cost_type']] -= card['cost']
+
+            possible, craftable_cards = self.is_craft_possible(display, board, current_player, cards, items)
+            
             display.draw()
             pygame.display.flip()

@@ -25,19 +25,14 @@ class Canopee(Base):
     
     def is_recruit_possible(self, board, color_list):
         recruitable_clearings = []
-        
         for clearing in board.graph.nodes:
             if ("bird" in color_list or board.graph.nodes[clearing]['type'] in color_list) and any(building['type'] == "roost" for building in board.graph.nodes[clearing]["buildings"]):
                 recruitable_clearings.append(clearing)
                 
-        if recruitable_clearings:
-            return True, recruitable_clearings
-        return False, recruitable_clearings
+        return bool(recruitable_clearings), recruitable_clearings
     
     def is_build_possible(self, board, color_list):
-        
         buildable_clearings = []
-        
         if self.buildings["roost"] > 0:
             for clearing in board.graph.nodes:
                 if board.graph.nodes[clearing]["control"] == self.id:
@@ -45,9 +40,7 @@ class Canopee(Base):
                         if not any(building['type'] == "roost" for building in board.graph.nodes[clearing]["buildings"]):
                             buildable_clearings.append(clearing)
                             
-        if buildable_clearings:
-            return True, buildable_clearings
-        return False, buildable_clearings
+        return bool(buildable_clearings), buildable_clearings
     
     def is_battle_possible(self, board, color_list):
         battle_clearings = []
@@ -62,9 +55,8 @@ class Canopee(Base):
                         battle_clearings.append(clearing) if clearing not in battle_clearings else None
                 if sum(units for owner, units in board.graph.nodes[clearing]["units"].items() if owner != self.id) > 0:
                     battle_clearings.append(clearing) if clearing not in battle_clearings else None
-        if battle_clearings:
-            return True, battle_clearings
-        return False, battle_clearings
+                    
+        return bool(battle_clearings), battle_clearings
     
     def is_move_possible(self, board, color_list):
         move_clearings = []
@@ -82,11 +74,8 @@ class Canopee(Base):
                         if neighbor in controlled_clearings:
                             move_clearings.append((clearing, neighbor))
         
-        if move_clearings:
-            return True, move_clearings
-        return False, move_clearings
+        return bool(move_clearings), move_clearings
     
-    # Retourne la liste des couleurs possibles pour une action donnée
     def get_possible_action(self, board, current_decree, action):
         possible_action = []
         possible_clearings = []     
@@ -346,11 +335,11 @@ class Canopee(Base):
 
     def birdsong_phase(self, current_player, display, cards, board):
         
-        # 1 - Si main vide on pioche une carte - v
+        # 1 - Si main vide on pioche une carte
         if current_player.cards == []:
             current_player.cards.draw_cards(cards)
             
-        # 2 - Add 1 or 2 cards to the decree - v
+        # 2 - Add 1 or 2 cards to the decree
         for _ in range(2):
             selected_card = display.ask_for_cards(current_player, pass_available=(_ != 0))
             if selected_card == "pass": break
@@ -359,7 +348,7 @@ class Canopee(Base):
             self.decrees[action].append(selected_card["color"])
             current_player.remove_card(selected_card)
         
-        # 3 - If no roosts, place a roost and 3 warriors in the clearing with the fewest total pieces - x
+        # 3 - If no roosts, place a roost and 3 warriors in the clearing with the fewest total pieces
         if self.buildings["roost"] == 7:
             min_pieces = float('inf')
             target_clearings = []
@@ -388,18 +377,17 @@ class Canopee(Base):
             
         
     def daylight_phase(self, display, lobby, board, cards, current_player, items):
-        # 1 - Implémentation du crafting - v
-        print("Crafting")
+        # 1 - Craft
         super().craft(display, board, current_player, cards, items)
         
-        # 2 - Résolution du décret - v
+        # 2 - Résolution du décret
         self.resolve_decree(display, lobby, board, cards)
 
     def evening_phase(self, display, current_player, cards):
-        # Score points - v
+        # Score points
         current_player.add_points(self.scoring["roost"][7 - self.buildings["roost"] - 1])
         
-        # Draw a card - v
+        # Draw a card
         self.draw(display, current_player, cards)
         
     def play(self, display, board, lobby, current_player, cards, items):
