@@ -3,8 +3,6 @@ import config
 import os
 import math
 
-
-
 class RootDisplay:
     def __init__(self, board, lobby, items):
         pygame.init()
@@ -37,7 +35,6 @@ class RootDisplay:
             self.action_images[faction_id] = self.preload_images(faction_folder, (60, 60))
         
         self.clock.tick(60)
-             
 
     def preload_images(self, folder_path, size):
         images = {}
@@ -463,6 +460,38 @@ class RootDisplay:
             else:
                 self.screen.blit(self.card_images_crafted_4[str(card['id'])], (x, y))
 
+    def draw_supporters_and_officers(self, current_player):
+        supporters = current_player.faction.supporters
+        officers = current_player.faction.officers
+
+        # Dessiner les supporters
+        supporter_types = ["fox", "rabbit", "mouse", "bird"]
+        icon_size = 25
+        padding = 10
+
+        total_width = len(supporter_types) * (icon_size + padding) - padding + icon_size + padding
+        x_offset = config.ACTIONS_ZONE_X + (config.ACTIONS_ZONE_WIDTH - total_width) // 2
+        y_offset = config.ACTIONS_ZONE_Y + 10
+
+        for i, supporter_type in enumerate(supporter_types):
+            icon = self.clearing_types[supporter_type]
+            self.screen.blit(icon, (x_offset + i * (icon_size + padding), y_offset))
+            count_text = self.font.render(str(supporters.get(supporter_type, 0)), True, config.COLORS["text"])
+            self.screen.blit(count_text, (x_offset + i * (icon_size + padding) + icon_size // 2 - count_text.get_width() // 2, y_offset + icon_size + 5))
+
+        # Dessiner la ligne verticale
+        line_x = x_offset + total_width + padding
+        pygame.draw.line(self.screen, config.COLORS["text"], (line_x, y_offset), (line_x, y_offset + icon_size + 30), 2)
+
+        # Dessiner les officiers
+        officer_icon = pygame.transform.scale(self.icon_images["officers"], (icon_size, icon_size))
+        officer_count_text = self.font.render(str(officers), True, config.COLORS["text"])
+        officer_x_offset = line_x + padding
+        officer_y_offset = y_offset
+
+        self.screen.blit(officer_icon, (officer_x_offset, officer_y_offset))
+        self.screen.blit(officer_count_text, (officer_x_offset + officer_icon.get_width() // 2 - officer_count_text.get_width() // 2, officer_y_offset + officer_icon.get_height() + 5))
+
     def draw(self):
         current_player = self.lobby.get_player(self.lobby.current_player)
         self.screen.fill(config.COLORS["background"])
@@ -478,6 +507,8 @@ class RootDisplay:
         
         if current_player.faction.id == 1:  # Canopée
             self.draw_decree(current_player)
+        elif current_player.faction.id == 2:  # Alliance
+            self.draw_supporters_and_officers(current_player)
         if self.show_battle_results:
             self.draw_battle_results()
 
@@ -521,11 +552,11 @@ class RootDisplay:
 
         return selected_player
 
-    def ask_for_clearing(self, valid_clearings, pass_available=False):
+    def ask_for_clearing(self, valid_clearings, pass_available=False, costs=None):
         selected_clearing = None
         circle_radius = config.NODE_RADIUS - 10
         growing = True
-        animation_speed = 0.4 # Vitesse de changement du rayon du cercle
+        animation_speed = 0.4
 
         while selected_clearing not in valid_clearings:
             for event in pygame.event.get():
@@ -558,6 +589,15 @@ class RootDisplay:
             for clearing in valid_clearings:
                 clearing_pos = self.board.graph.nodes[clearing]["pos"]
                 pygame.draw.circle(self.screen, (255, 0, 0), clearing_pos, int(circle_radius), 2)
+
+                # Afficher les coûts si disponibles
+                if costs:
+                    for cost in costs:
+                        if cost['clearing'] == clearing:
+                            cost_text = f"Cost: {cost['clearing_type_cost']} (Type), {cost['bird_cost']} (Bird)"
+                            cost_surface = self.font.render(cost_text, True, (255, 255, 255))
+                            cost_rect = cost_surface.get_rect(center=(clearing_pos[0], clearing_pos[1] + config.NODE_RADIUS + 15))
+                            self.screen.blit(cost_surface, cost_rect)
 
             # Rafraîchir l'écran
             pygame.display.flip()
@@ -800,15 +840,16 @@ class RootDisplay:
     def ask_for_action_birds(self):
         actions = ["recruit", "move", "battle", "build"]
         action_buttons = []
-        button_width = 100
+        button_width = 80
         button_height = 50
-        x_offset = (config.WIDTH - button_width) // 2
-        y_offset = (config.HEIGHT - button_height * len(actions)) // 2
+        total_width = len(actions) * (button_width + 10) - 10
+        x_offset = config.ACTIONS_ZONE_X + (config.ACTIONS_ZONE_WIDTH - total_width) // 2
+        y_offset = config.ACTIONS_ZONE_Y + 10
 
         for action in actions:
             button_rect = pygame.Rect(x_offset, y_offset, button_width, button_height)
             action_buttons.append((button_rect, action))
-            y_offset += button_height + 10
+            x_offset += button_width + 10
 
         while True:
             for event in pygame.event.get():

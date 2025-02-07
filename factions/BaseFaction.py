@@ -64,7 +64,7 @@ class Base:
             return True, move_clearings
         return False, move_clearings
     
-    def is_craft_possible(self, display, board, current_player, cards, items):
+    def is_craft_possible(self, board, current_player, cards, items):
         objects    = cards.get_objects(current_player)
         craftables = cards.get_cratable_cards(current_player)
         usables = objects + craftables
@@ -86,25 +86,15 @@ class Base:
                 valid_usables.append(card)
         return bool(valid_usables), valid_usables
     
-    def get_possible_actions(self, board):
+    def get_possible_actions(self):
         raise NotImplementedError()
     
 ############################################################################################################
 ################################################# ACTIONS ##################################################
 ############################################################################################################    
 
-    def recruit(self, display, board):
-        is_possible, recruitable_clearings = self.is_recruitments_possible(board)
-        if is_possible:
-            if len(recruitable_clearings) > self.units:
-                while self.units > 0:
-                    recruit_clearing = display.ask_for_clearing(recruitable_clearings)
-                    self.units -= 1
-                    board.graph.nodes[recruit_clearing]["units"][self.id] += 1
-            else:
-                for r in recruitable_clearings:
-                    self.units -= 1
-                    board.graph.nodes[r]["units"][self.id] += 1
+    def recruit(self):
+        raise NotImplementedError()
                                  
     def move(self, display, board, pass_available=False):
         # Rajouter gestion de l'achat du bateau
@@ -325,7 +315,7 @@ class Base:
 
     def craft(self, display, board, current_player, cards, items):
         
-        possible, craftable_cards = self.is_craft_possible(display, board, current_player, cards, items)
+        possible, craftable_cards = self.is_craft_possible(board, current_player, cards, items)
         
         while possible:
             craftable_cards_ids = [card['id'] for card in craftable_cards]
@@ -361,7 +351,7 @@ class Base:
                 current_player.remove_card(card)
                 self.builders[card['cost_type']] -= card['cost']
 
-            possible, craftable_cards = self.is_craft_possible(display, board, current_player, cards, items)
+            possible, craftable_cards = self.is_craft_possible(board, current_player, cards, items)
             
             display.draw()
             pygame.display.flip()

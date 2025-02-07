@@ -117,7 +117,21 @@ class Marquise(Base):
 ############################################################################################################
 
     def recruit(self, display, board):
-        super().recruit(display, board)
+        is_possible, recruitable_clearings = self.is_recruit_possible(board)
+        if is_possible:
+            if len(recruitable_clearings) > self.units:
+                while self.units > 0:
+                    recruit_clearing = display.ask_for_clearing(recruitable_clearings)
+                    self.units -= 1
+                    if self.id not in board.graph.nodes[recruit_clearing]['units']:
+                        board.graph.nodes[recruit_clearing]['units'][self.id] = 0
+                    board.graph.nodes[recruit_clearing]["units"][self.id] += 1
+            else:
+                for r in recruitable_clearings:
+                    if self.id not in board.graph.nodes[r]['units']:
+                        board.graph.nodes[r]['units'][self.id] = 0
+                    self.units -= 1
+                    board.graph.nodes[r]["units"][self.id] += 1
         self.actions_remaining -= 1
 
     def spend_bird(self, display, current_player):
@@ -142,13 +156,15 @@ class Marquise(Base):
         
         self.actions_remaining -= 1
     
-    def build(self, display, board):
+    def build(self, display, board, current_player):
         _, clearings = self.is_build_possible(board)
         clearing = display.ask_for_clearing(clearings, pass_available=True)
         if clearing == "pass": return 
         wood_costs = []
         [wood_costs.append(self.wood_cost[::-1][building-1]) for building in self.buildings.values()]
-                                
+              
+        print("wood costs", wood_costs)
+              
         groups = self.get_controlled_groups(board)
         wood_per_group = self.get_wood_per_group(board, groups)
         for group, wood_count in zip(groups, wood_per_group):
@@ -157,11 +173,11 @@ class Marquise(Base):
                                 
         building, cost = display.ask_for_building_cats(board.graph.nodes[clearing]["pos"], wood_costs, max_wood, self.buildings)
                   
-        self.use_wood_for_building(board, group, clearing, cost)              
+        self.use_wood_for_building(board, group, clearing, cost)   
+        current_player.points += self.scoring[building][6 - self.buildings[building]]           
         self.buildings[building] -= 1
         board.graph.nodes[clearing]["buildings"].append({"type": building, "owner": self.id})
-        
-        
+            
         board.update_control(clearing)
         self.actions_remaining -= 1
   
@@ -175,7 +191,7 @@ class Marquise(Base):
         self.actions_remaining -= 1
     
     def battle(self, display, lobby, board, cards):
-        result = super().battle(display, lobby, board, pass_available=True)
+        result = super().battle(display, lobby, board, cards, pass_available=True)
         if result == "pass": return
         self.actions_remaining -= 1
     
@@ -219,7 +235,7 @@ class Marquise(Base):
                     tokens.remove(token)
                     wood_needed -= 1
 
-            for neighbor in board.get_adjacent_clearings(clearing):
+            for neighbor in board.get_adjacent_clearings(current_clearing):
                 if neighbor not in visited:
                     queue.append((neighbor, distance + 1))
                     
@@ -304,7 +320,7 @@ class Marquise(Base):
                             "spend_bird": lambda: self.spend_bird(display, lobby.get_player(lobby.current_player)),
                             "march": lambda: self.march(display, board),
                             "recruit": lambda: self.recruit(display, board),
-                            "build": lambda: self.build(display, board),
+                            "build": lambda: self.build(display, board, current_player),
                             "overwork": lambda: self.overwork(display, board, lobby.get_player(lobby.current_player)),
                             "battle": lambda: self.battle(display, lobby, board, cards)
                         }
