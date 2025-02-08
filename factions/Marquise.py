@@ -163,8 +163,6 @@ class Marquise(Base):
         wood_costs = []
         [wood_costs.append(self.wood_cost[::-1][building-1]) for building in self.buildings.values()]
               
-        print("wood costs", wood_costs)
-              
         groups = self.get_controlled_groups(board)
         wood_per_group = self.get_wood_per_group(board, groups)
         for group, wood_count in zip(groups, wood_per_group):
@@ -221,25 +219,32 @@ class Marquise(Base):
 
     def use_wood_for_building(self, board, group, clearing, cost):
         wood_needed = cost
+        wood_collected = 0
         visited = set()
-        queue = [(clearing, 0)]
+        queue = [clearing]
+        controlled_clearings = {
+            c for c in board.graph.nodes if board.graph.nodes[c]["control"] == self.id
+        }
 
         while queue and wood_needed > 0:
-            current_clearing, distance = queue.pop(0)
-            if current_clearing in visited or current_clearing not in group: continue
+            current_clearing = queue.pop(0)
+            if current_clearing in visited:
+                continue
             visited.add(current_clearing)
 
-            tokens = board.graph.nodes[current_clearing]["tokens"]
-            for token in tokens:
-                if token["type"] == "wood" and wood_needed > 0:
-                    tokens.remove(token)
+            if current_clearing in controlled_clearings:
+                tokens = board.graph.nodes[current_clearing]["tokens"]
+                wood_tokens = [t for t in tokens if t["type"] == "wood"]
+                while wood_tokens and wood_needed > 0:
+                    tokens.remove(wood_tokens.pop())
                     wood_needed -= 1
+                    wood_collected += 1
 
             for neighbor in board.get_adjacent_clearings(current_clearing):
                 if neighbor not in visited:
-                    queue.append((neighbor, distance + 1))
-                    
-        self.tokens["wood"] += cost
+                    queue.append(neighbor)
+
+        self.tokens["wood"] -= wood_collected
         
     def get_controlled_groups(self, board):
         controlled_clearings = [clearing for clearing in board.graph.nodes if board.graph.nodes[clearing]["control"] == self.id]

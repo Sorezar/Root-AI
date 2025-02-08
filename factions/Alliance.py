@@ -257,8 +257,7 @@ class Alliance(Base):
                         possible_actions = self.get_possible_actions(board, self.daylight_actions, current_player, cards, items)
                 display.draw()
                 display.draw_actions(self.id, self.daylight_actions, possible_actions)
-                pygame.display.flip()
-        return        
+                pygame.display.flip()        
 
     def evening_phase(self, display, board, lobby, current_player, cards, items):
         # 1 Military Operations
@@ -271,7 +270,7 @@ class Alliance(Base):
                     exit()
                 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if display.is_button_pass_clicked(event.pos): return 
+                    if display.is_button_pass_clicked(event.pos): break 
                     
                     action = display.is_action_button_clicked(pygame.mouse.get_pos())
                     if action in possible_actions:
@@ -287,7 +286,10 @@ class Alliance(Base):
                 display.draw()
                 display.draw_actions(self.id, self.evening_actions, possible_actions)
                 pygame.display.flip()
-        return
+        
+        # 2 Draw cards
+        self.number_card_draw_bonus = sum(1 for base in self.buildings.values() if base == 0)
+        self.draw(display, current_player, cards)
     
     def play(self, display, board, lobby, current_player, cards, items):
         self.birdsong_phase(display, board, current_player)

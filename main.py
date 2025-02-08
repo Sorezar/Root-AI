@@ -63,14 +63,6 @@ def initial_setup(lobby, board, display, cards):
     canopee.faction.units -= 6
     board.graph.nodes[roost_clearing]["units"][canopee.faction.id] = 6
     board.update_control(roost_clearing)
-    
-    # Alliance (Debug)
-    alliance.faction.units -= 1
-    board.graph.nodes[roost_clearing]["units"][alliance.faction.id] = 1
-    alliance.faction.buildings["base_fox"] -= 1
-    board.graph.nodes[7]["buildings"].append({"type": "base_fox", "owner": alliance.faction.id})
-    alliance.faction.tokens["sympathy"] -= 1
-    board.graph.nodes[7]["tokens"].append({"type": "sympathy", "owner": alliance.faction.id})
 
 def run(display, lobby, board, cards, items):
     running = True
