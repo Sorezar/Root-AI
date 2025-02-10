@@ -13,7 +13,8 @@ class Player:
             "hammer":   0,
             "sword":    0,
             "teapot":   0,
-            "gold":     0
+            "gold":     0,
+            "torch":    0
         }
         self.points  = 0
         self.id      = id

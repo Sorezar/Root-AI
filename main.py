@@ -89,7 +89,7 @@ if __name__ == "__main__":
     lobby.add_player("J1", Marquise())
     lobby.add_player("J2", Canopee()) 
     lobby.add_player("J3", Alliance())
-    #lobby.add_player("J4", Vagabond())
+    lobby.add_player("J4", Vagabond(lobby))
     
     board   = RootBoard(MAP_FILE)
     items   = Items()

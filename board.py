@@ -49,7 +49,8 @@ class RootBoard:
                 self.forests[forest_id] = {
                     "adjacent_clearings": adjacent_clearings,
                     "center": center,
-                    "items": forest.get("items", [])
+                    "items": forest.get("items", []),
+                    "vagabond": False
                 }
 
             # Ajout des connexions (arêtes)

@@ -250,6 +250,14 @@ class RootDisplay:
                     if token_type in self.token_images:
                         token_pos_x = start_x + i * (config.TOKEN_SIZE + 5)
                         self.screen.blit(self.token_images[token_type], (token_pos_x, token_pos_y))
+                        
+        # Dessiner les unités dans les forêts
+        for forest_id, forest_data in forests.items():
+            for faction_id, unit_count in forest_data.get("units", {}).items():
+                if unit_count > 0:
+                    pos = forest_data["center"]
+                    for i in range(unit_count):
+                        pygame.draw.circle(self.screen, config.COLORS["units"].get(faction_id), pos, config.UNIT_RADIUS)
 
     def draw_players(self):
         num_players = len(self.lobby.players)
@@ -873,6 +881,76 @@ class RootDisplay:
 
             # Rafraîchir l'écran
             pygame.display.flip()
+        
+    def is_point_in_polygon(self,point, polygon):
+        x, y = point
+        inside = False
+        for i in range(len(polygon)):
+            x1, y1 = polygon[i]
+            x2, y2 = polygon[(i + 1) % len(polygon)]
+            if ((y1 > y) != (y2 > y)) and (x < (x2 - x1) * (y - y1) / (y2 - y1) + x1):
+                inside = not inside
+        return inside
+
+    def ask_for_slip(self, clearings, forests, pass_available=False):
+        selected_target = None
+        circle_radius = config.NODE_RADIUS - 10
+        growing = True
+        animation_speed = 0.4
+
+        while selected_target not in clearings and selected_target not in forests:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = event.pos
+                    if pass_available and self.is_button_pass_clicked(pos):
+                        return "pass"
+                    for clearing in clearings:
+                        clearing_pos = self.board.graph.nodes[clearing]["pos"]
+                        rect_area = pygame.Rect(
+                            clearing_pos[0] - config.NODE_RADIUS,
+                            clearing_pos[1] - config.NODE_RADIUS,
+                            config.NODE_RADIUS * 2,
+                            config.NODE_RADIUS * 2
+                        )
+                        # Vérifier si on a cliqué sur une clairière
+                        if rect_area.collidepoint(pos):
+                            selected_target = clearing
+                            break
+
+                    # Si aucune clairière n'a été sélectionnée, vérifier les forêts
+                    if not selected_target:
+                        for forest in forests:
+                            polygon_points = list(self.board.get_forest_polygon_points(forest))
+                            if self.is_point_in_polygon(pos, polygon_points):
+                                selected_target = forest
+                                break
+
+            if growing:
+                circle_radius += animation_speed
+                if circle_radius >= config.NODE_RADIUS:
+                    growing = False
+            else:
+                circle_radius -= animation_speed
+                if circle_radius <= config.NODE_RADIUS - 10:
+                    growing = True
+
+            self.draw()
+
+            for clearing in clearings:
+                p = self.board.graph.nodes[clearing]["pos"]
+                pygame.draw.circle(self.screen, (255, 0, 0), p, int(circle_radius), 2)
+
+            line_width = max(1, int(circle_radius - (config.NODE_RADIUS - 5)))
+            for forest in forests:
+                polygon_points = list(self.board.get_forest_polygon_points(forest))
+                pygame.draw.polygon(self.screen, (255, 0, 0), polygon_points, line_width)
+
+            pygame.display.flip()
+
+        return selected_target
         
 ###############################################################################################
 #################################### FONCTIONS D'EVENEMENT ####################################
