@@ -4,6 +4,7 @@ class Cards:
     def __init__(self, deck):
         self.deck = deck
         self.discard = []
+        self.quests = []
         
     def draw(self, number=1):
         cards = []

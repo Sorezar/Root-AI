@@ -139,8 +139,6 @@ class RootBoard:
         
         # Si on part d'une clairière
         if isinstance(location, int):
-            if location not in self.graph:
-                raise ValueError(f"Clairière {location} non trouvée")
             neighbors = list(self.graph.neighbors(location))
             if is_river:
                 return neighbors
@@ -149,25 +147,23 @@ class RootBoard:
             
         # Si on part d'une forêt
         elif isinstance(location, str):
-            if location not in self.forests:
-                raise ValueError(f"Forêt {location} non trouvée")
             return self.forests[location]['adjacent_clearings']
-            
-        else:
-            raise ValueError("La location doit être un ID de clairière (int) ou de forêt (str)")
     
-    def get_adjacent_forests(self, clearing_id):
-        if not isinstance(clearing_id, int):
-            raise ValueError("L'ID de clairière doit être un entier")
-            
-        if clearing_id not in self.graph:
-            raise ValueError(f"Clairière {clearing_id} non trouvée")
-            
+    def get_adjacent_forests(self, location):
         adjacent_forests = []
-        for forest_id, forest_data in self.forests.items():
-            if clearing_id in forest_data['adjacent_clearings']:
-                adjacent_forests.append(forest_id)
-                
+
+        if isinstance(location, int):  # Si on part d'une clairière
+            for forest_id, forest_data in self.forests.items():
+                if location in forest_data['adjacent_clearings']:
+                    adjacent_forests.append(forest_id)
+        
+        elif isinstance(location, str):  # Si on part d'une forêt
+            for forest_id, forest_data in self.forests.items():
+                if forest_id != location:
+                    common_clearings = set(self.forests[location]['adjacent_clearings']).intersection(forest_data['adjacent_clearings'])
+                    if len(common_clearings) >= 2:
+                        adjacent_forests.append(forest_id)
+        
         return adjacent_forests
     
     def get_clearings_with_units(self, faction_id=None):

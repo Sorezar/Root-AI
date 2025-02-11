@@ -25,6 +25,8 @@ def initial_setup(lobby, board, display, cards):
             canopee = player
         elif player.faction.id == 2:
             alliance = player
+        elif player.faction.id == 3:
+            vagabond = player
 
     # Piocher des cartes pour chaque joueur
     for player in lobby.players:
@@ -63,6 +65,11 @@ def initial_setup(lobby, board, display, cards):
     canopee.faction.units -= 6
     board.graph.nodes[roost_clearing]["units"][canopee.faction.id] = 6
     board.update_control(roost_clearing)
+    
+    # Vagabond
+    # TODO : Choisir un emplacement pour le Vagabond
+    board.forests["F1"]["vagabond"] = True
+    vagabond.faction.pos = "F1"
 
 def run(display, lobby, board, cards, items):
     running = True

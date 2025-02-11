@@ -1,0 +1,92 @@
+[
+    {
+        "id": 1,
+        "name": "Fundraising",
+        "cost": ["teapot", "gold"],
+        "color": "fox"
+    },
+    {
+        "id": 2,
+        "name": "Errand",
+        "cost": ["teapot", "boot"],
+        "color": "fox"
+    },
+    {
+        "id": 3,
+        "name": "Logistics Help",
+        "cost": ["boot", "bag"],
+        "color": "fox"
+    },
+    {
+        "id": 4,
+        "name": "Repair a Shed",
+        "cost": ["torch", "hammer"],
+        "color": "fox"
+    },
+    {
+        "id": 5,
+        "name": "Give a Speech",
+        "cost": ["torch", "teapot"],
+        "color": "fox"
+    },
+    {
+        "id": 6,
+        "name": "Guard Duty",
+        "cost": ["torch", "sword"],
+        "color": "rabbit"
+    },
+    {
+        "id": 7,
+        "name": "Errand",
+        "cost": ["teapot", "boot"],
+        "color": "rabbit"
+    },
+    {
+        "id": 8,
+        "name": "Give a Speech",
+        "cost": ["torch", "teapot"],
+        "color": "rabbit"
+    },
+    {
+        "id": 9,
+        "name": "Fend off a Bear",
+        "cost": ["torch", "crossbow"],
+        "color": "rabbit"
+    },
+    {
+        "id": 10,
+        "name": "Expel Bandits",
+        "cost": ["sword", "sword"],
+        "color": "rabbit"
+    },
+    {
+        "id": 11,
+        "name": "Expel Bandits",
+        "cost": ["sword", "sword"],
+        "color": "mouse"
+    },
+    {
+        "id": 12,
+        "name": "Guard Duty",
+        "cost": ["torch", "sword"],
+        "color": "mouse"
+    },
+    {
+        "id": 13,
+        "name": "Fend off a Bear",
+        "cost": ["torch", "crossbow"],
+        "color": "mouse"
+    },
+    {
+        "id": 14,
+        "name": "Escort",
+        "cost": ["boot", "boot"],
+        "color": "mouse"
+    },
+    {
+        "id": 15,
+        "name": "Logistics Help",
+        "cost": ["boot", "bag"],
+        "color": "mouse"
+    }
+]

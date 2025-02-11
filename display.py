@@ -251,13 +251,14 @@ class RootDisplay:
                         token_pos_x = start_x + i * (config.TOKEN_SIZE + 5)
                         self.screen.blit(self.token_images[token_type], (token_pos_x, token_pos_y))
                         
-        # Dessiner les unités dans les forêts
+        # Dessiner le vagabond dans la forêt
         for forest_id, forest_data in forests.items():
-            for faction_id, unit_count in forest_data.get("units", {}).items():
-                if unit_count > 0:
-                    pos = forest_data["center"]
-                    for i in range(unit_count):
-                        pygame.draw.circle(self.screen, config.COLORS["units"].get(faction_id), pos, config.UNIT_RADIUS)
+            if forest_data.get("vagabond", False):
+                pos = forest_data["center"]
+                pygame.draw.circle(self.screen, (128, 128, 128), pos, config.UNIT_RADIUS)
+                text = self.unit_font.render("V", True, (0, 0, 0))
+                text_rect = text.get_rect(center=pos)
+                self.screen.blit(text, text_rect)
 
     def draw_players(self):
         num_players = len(self.lobby.players)
