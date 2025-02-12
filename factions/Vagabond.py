@@ -19,7 +19,7 @@ class Vagabond(Base):
             "bag":      [0,0],
             "boot":     [0,0],
             "crossbow": [0,0],
-            "hammer":   [2,0],
+            "hammer":   [0,0],
             "sword":    [0,0],
             "teapot":   [0,0],
             "gold":     [0,0],
@@ -44,9 +44,6 @@ class Vagabond(Base):
         }
         for item, qty in gear.get(self.vagabond, {}).items():
             self.items[item][0] = qty
-            
-        print(self.items)
-            
 
 ############################################################################################################
 ###################################### VERIFICATIONS ACTIONS POSSIBLES #####################################
@@ -98,14 +95,78 @@ class Vagabond(Base):
         
         return False, []
         
+    def is_quest_possible(self, board, cards):
+        if self.pos is None or str(self.pos).startswith("F"):
+            return False, []
+        
+        clearing_color = board.graph.nodes[self.pos]["type"]
+        possible_quests = []
+        
+        for quest in cards.active_quests:
+            if quest.color == clearing_color:
+                if all(self.items[item][0] >= quest.cost.count(item) for item in set(quest.cost)):
+                    possible_quests.append(quest)
+        
+        return bool(possible_quests), possible_quests
+        
+    def is_strike_possible(self, board):
+        if self.pos is None or str(self.pos).startswith("F"):
+            return False, []
+        
+        node = board.graph.nodes[self.pos]
+        if any(node["units"].values()) or any(building != "ruins" for building in node["buildings"]) or node["tokens"]:
+            return True, [self.pos]
+        
+        return False, []
+         
+    def is_repair_possible(self):
+        if self.items["hammer"][0] >= 1 and any(qty[0] > 0 or qty[1] > 0 for qty in self.damaged_items.values()):
+            return True
+        return False
+        
+    def is_craft_possible(self, board, cards, current_player):
+        
+        if self.pos is None or str(self.pos).startswith("F"):
+            return False, []
+        
+        objects    = cards.get_objects(current_player)
+        craftables = cards.get_cratable_cards(current_player)
+        usables = objects + craftables
+        
+        # Check if the player can craft the item (Plus d'item = pas usable)
+
+        nb_hammers = self.items["hammer"][0]
+        clearing_color = board.graph.nodes[self.pos]["type"]
+
+        valid_usables = []
+        for card in usables:
+            if card['cost_type'] == "none":
+                if card['cost'] <= nb_hammers:
+                    valid_usables.append(card)
+            elif card['cost_type'] == "each": continue # Impossible pour le vagabond
+            elif card['cost'] <= nb_hammers and card['cost_type'] == clearing_color:
+                valid_usables.append(card)
+                
+        return bool(valid_usables), valid_usables
+        
     def get_possible_actions(self,board, actions, current_player, cards, items):
         possible_actions = []
         
         for action in self.actions:
             is_action_possible_method = getattr(self, f'is_{action}_possible')
-            if action == "move" or action == "battle" or action == "explore" or action == "aid":
+            if action == "repair":
+                if is_action_possible_method():
+                    possible_actions.append(action)
+            if action == "move" or action == "battle" or action == "explore" or action == "aid" or action == "strike":
                 if is_action_possible_method(board)[0]:
                     possible_actions.append(action)
+            if action == "quest":
+                if is_action_possible_method(board, cards)[0]:
+                    possible_actions.append(action)
+            if action == "craft":
+                if is_action_possible_method(board, cards, current_player)[0]:
+                    possible_actions.append(action)
+                    
         return possible_actions
     
 ############################################################################################################

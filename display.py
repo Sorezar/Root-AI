@@ -578,9 +578,7 @@ class RootDisplay:
             self.draw_supporters_and_officers(current_player)
             
         elif current_player.faction.id == 3: # Vagabond
-            self.draw_quests()
-        
-        
+            self.draw_quests()        
         
         if self.show_battle_results:
             self.draw_battle_results()
