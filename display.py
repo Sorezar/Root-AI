@@ -4,12 +4,13 @@ import os
 import math
 
 class RootDisplay:
-    def __init__(self, board, lobby, items):
+    def __init__(self, board, lobby, items, cards):
         pygame.init()
         pygame.display.set_caption("Root")
         self.board  = board
         self.lobby  = lobby
         self.items  = items
+        self.cards  = cards
         self.screen = pygame.display.set_mode([config.WIDTH, config.HEIGHT])
         self.clock  = pygame.time.Clock()
         self.font   = pygame.font.SysFont(None, 24)
@@ -29,6 +30,7 @@ class RootDisplay:
         self.card_images_crafted_4 = self.preload_images("sprites/cards/base_deck/crafted_4", (config.CRAFTED_CARDS_WIDTH_4, config.CRAFTED_CARDS_HEIGHT_4))
         self.card_images_crafted_6 = self.preload_images("sprites/cards/base_deck/crafted_6", (config.CRAFTED_CARDS_WIDTH_6, config.CRAFTED_CARDS_HEIGHT_6))
         self.clearing_types        = self.preload_images("sprites/type", (config.SYMBOL_SIZE, config.SYMBOL_SIZE))
+        self.quests_images         = self.preload_images("sprites/cards/quests", (config.QUESTS_WIDTH, config.QUESTS_HEIGHT))
         self.action_images         = {}
         for faction_id in range(len(os.listdir("sprites/actions"))):
             faction_folder = os.path.join("sprites/actions", str(faction_id))
@@ -142,23 +144,48 @@ class RootDisplay:
                 item_count += 1
 
     def draw_crafted_items(self, player):
+        
         crafted_items_bg_rect = pygame.Rect(config.CRAFTED_ITEMS_ZONE_X, config.CRAFTED_ITEMS_ZONE_Y, config.CRAFTED_ITEMS_ZONE_WIDTH, config.CRAFTED_ITEMS_ZONE_HEIGHT)
         pygame.draw.rect(self.screen, (135, 206, 235), crafted_items_bg_rect)
-
-        items_list = player.items
         
         x = config.CRAFTED_ITEMS_ZONE_X + (config.ITEMS_ZONE_WIDTH  - (6 * (config.ITEM_SIZE + 10))) // 2
         total_height = (2 * (config.ITEM_SIZE + 10)) - 10
         y = config.CRAFTED_ITEMS_ZONE_Y + (config.ITEMS_ZONE_HEIGHT - total_height) // 2
         
-        item_count = 0
-        for item, count in items_list.items():
-            for _ in range(count):
-                slot_pos = (x + (item_count // 2) * (config.ITEM_SIZE + 10), y + (item_count % 2) * (config.ITEM_SIZE + 10))
-                pygame.draw.rect(self.screen, config.COLORS["slots"], (*slot_pos, config.ITEM_SIZE, config.ITEM_SIZE))
-                pygame.draw.rect(self.screen, config.COLORS["borders"], (*slot_pos, config.ITEM_SIZE, config.ITEM_SIZE), 1)
-                self.screen.blit(self.item_images[item], slot_pos)
-                item_count += 1
+        if player.faction.id == 3:
+            items_list = player.faction.items
+            damaged_items_list = player.faction.damaged_items
+            combined_items = {item: [items_list[item][0], items_list[item][1], damaged_items_list[item][0], damaged_items_list[item][1]] for item in items_list}
+            
+            item_count = 0
+            for item, counts in combined_items.items():
+                for i, count in enumerate(counts):
+                    for _ in range(count):
+                        slot_pos = (x + (item_count // 2) * (config.ITEM_SIZE + 10), y + (item_count % 2) * (config.ITEM_SIZE + 10))
+                        pygame.draw.rect(self.screen, config.COLORS["slots"], (*slot_pos, config.ITEM_SIZE, config.ITEM_SIZE))
+                        pygame.draw.rect(self.screen, config.COLORS["borders"], (*slot_pos, config.ITEM_SIZE, config.ITEM_SIZE), 1)
+                        self.screen.blit(self.item_images[item], slot_pos)
+                        if i == 1 or i == 3:
+                            overlay = pygame.Surface((config.ITEM_SIZE, config.ITEM_SIZE))
+                            overlay.set_alpha(128)
+                            overlay.fill((128, 128, 128))
+                            self.screen.blit(overlay, slot_pos)
+                        if i == 2 or i == 3:
+                            pygame.draw.line(self.screen, (255, 0, 0), slot_pos, (slot_pos[0] + config.ITEM_SIZE, slot_pos[1] + config.ITEM_SIZE), 2)
+                            pygame.draw.line(self.screen, (255, 0, 0), (slot_pos[0] + config.ITEM_SIZE, slot_pos[1]), (slot_pos[0], slot_pos[1] + config.ITEM_SIZE), 2)
+                        item_count += 1
+        
+        else:
+            items_list = player.items
+            
+            item_count = 0
+            for item, count in items_list.items():
+                for _ in range(count):
+                    slot_pos = (x + (item_count // 2) * (config.ITEM_SIZE + 10), y + (item_count % 2) * (config.ITEM_SIZE + 10))
+                    pygame.draw.rect(self.screen, config.COLORS["slots"], (*slot_pos, config.ITEM_SIZE, config.ITEM_SIZE))
+                    pygame.draw.rect(self.screen, config.COLORS["borders"], (*slot_pos, config.ITEM_SIZE, config.ITEM_SIZE), 1)
+                    self.screen.blit(self.item_images[item], slot_pos)
+                    item_count += 1
 
     def draw_board(self):
         
@@ -225,8 +252,11 @@ class RootDisplay:
             for faction, count in data["units"].items():
                 if count > 0:
                     faction_color = config.COLORS["units"].get(faction)
-                    unit_pos  = (pos[0] + offset, pos[1] + (config.NODE_RADIUS // 3) )
-                    unit_text = self.unit_font.render(str(count), True, config.COLORS["text_units"].get(faction))
+                    unit_pos  = (pos[0] + offset, pos[1] + (config.NODE_RADIUS // 3))
+                    if faction == 3:
+                        unit_text = self.unit_font.render("V", True, config.COLORS["text_units"].get(faction))
+                    else:
+                        unit_text = self.unit_font.render(str(count), True, config.COLORS["text_units"].get(faction))
                     pygame.draw.circle(self.screen, faction_color, unit_pos, config.UNIT_RADIUS)
                     self.screen.blit(unit_text, (unit_pos[0] - 5, unit_pos[1] - 5))
                     offset += 15
@@ -437,11 +467,38 @@ class RootDisplay:
         self.screen.blit(defender_roll_text, (scaled_pos[0] - defender_roll_text.get_width() // 2, scaled_pos[1] - 70))
         self.screen.blit(attacker_damage_text, (scaled_pos[0] - attacker_damage_text.get_width() // 2, scaled_pos[1] - 40))
         self.screen.blit(defender_damage_text, (scaled_pos[0] - defender_damage_text.get_width() // 2, scaled_pos[1] - 10))
+    
+    def draw_quests(self):
+        quests_bg_rect = pygame.Rect(config.QUESTS_ZONE_X, config.QUESTS_ZONE_Y, config.QUESTS_ZONE_WIDTH, config.QUESTS_ZONE_HEIGHT)
+        pygame.draw.rect(self.screen, (204, 255, 204), quests_bg_rect)  # Eucalyptus background color
 
-    def draw_history(self):
+        quests_list = self.cards.active_quests
+        
+        num_quests = len(quests_list)
+        total_width = num_quests * config.QUESTS_WIDTH + (num_quests - 1) * 10
+        x_offset = config.QUESTS_ZONE_X + (config.QUESTS_ZONE_WIDTH - total_width) // 2
+        y_offset = config.QUESTS_ZONE_Y + (config.QUESTS_ZONE_HEIGHT - config.QUESTS_HEIGHT) // 2
+
+        for quest in quests_list:
+            quest_image = self.quests_images[str(quest['id'])]
+            if quest_image:
+                self.screen.blit(quest_image, (x_offset, y_offset))
+            x_offset += config.QUESTS_WIDTH + 10
+        
+    def draw_history(self, shortened=False):
+        
+        start_y = config.HISTORY_Y + config.QUESTS_ZONE_HEIGHT if shortened else config.HISTORY_Y
+        height = config.HISTORY_HEIGHT - config.QUESTS_ZONE_HEIGHT if shortened else config.HISTORY_HEIGHT
+        
         # Dessiner le background de l'historique
-        history_bg_rect = pygame.Rect(config.HISTORY_X, config.HISTORY_Y, config.HISTORY_WIDTH, config.HISTORY_HEIGHT)
+        history_bg_rect = pygame.Rect(config.HISTORY_X, start_y, config.HISTORY_WIDTH, height)
         pygame.draw.rect(self.screen, (220, 220, 220), history_bg_rect)
+        
+        # Ecrire "Historique" en haut centré de la zone
+        title_font = pygame.font.SysFont(None, 24)
+        title_text = title_font.render("Historique", True, (0, 0, 0))
+        title_rect = title_text.get_rect(center=(config.HISTORY_X + config.HISTORY_WIDTH // 2, start_y + 20))
+        self.screen.blit(title_text, title_rect)
 
     def draw_crafted_cards(self, player):
         crafted_cards_bg_rect = pygame.Rect(config.CRAFTED_CARDS_ZONE_X, config.CRAFTED_CARDS_ZONE_Y, config.CRAFTED_CARDS_ZONE_WIDTH, config.CRAFTED_CARDS_ZONE_HEIGHT)
@@ -507,17 +564,24 @@ class RootDisplay:
         
         self.draw_players()
         self.draw_items()
-        self.draw_history()
+        self.draw_history(current_player.faction.id == 3)
         self.draw_board()
         self.draw_cards(current_player)
         self.draw_crafted_cards(current_player)
         self.draw_crafted_items(current_player)
         self.draw_button_pass()
         
-        if current_player.faction.id == 1:  # Canopée
+        if current_player.faction.id == 1: # Canopée
             self.draw_decree(current_player)
-        elif current_player.faction.id == 2:  # Alliance
+            
+        elif current_player.faction.id == 2: # Alliance
             self.draw_supporters_and_officers(current_player)
+            
+        elif current_player.faction.id == 3: # Vagabond
+            self.draw_quests()
+        
+        
+        
         if self.show_battle_results:
             self.draw_battle_results()
 

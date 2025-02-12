@@ -91,7 +91,6 @@ def run(display, lobby, board, cards, items):
 if __name__ == "__main__":
 
     # Initialisation des joueurs
-    print("Initialisation des joueurs")
     lobby = Lobby()
     lobby.add_player("J1", Marquise())
     lobby.add_player("J2", Canopee()) 
@@ -101,9 +100,11 @@ if __name__ == "__main__":
     board   = RootBoard(MAP_FILE)
     items   = Items()
     tests   = RootTest()
-    cards   = Cards(json.load(open(CARDS_FILE)))
-    display = RootDisplay(board, lobby, items)
+    cards   = Cards(json.load(open(CARDS_FILE)), json.load(open(QUESTS_FILE)))
+    display = RootDisplay(board, lobby, items, cards)
+    
     cards.shuffle()
+    cards.get_quest(3)
     
     # Mise en place initiale
     initial_setup(lobby, board, display, cards)

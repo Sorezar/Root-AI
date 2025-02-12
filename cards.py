@@ -1,10 +1,11 @@
 import random
 
 class Cards:
-    def __init__(self, deck):
+    def __init__(self, deck, quests):
         self.deck = deck
         self.discard = []
-        self.quests = []
+        self.quests = quests
+        self.active_quests = []
         
     def draw(self, number=1):
         cards = []
@@ -18,6 +19,11 @@ class Cards:
         
     def shuffle(self):
         random.shuffle(self.deck)
+        random.shuffle(self.quests)
+    
+    def get_quest(self, number=1):
+        for _ in range(number):
+            self.active_quests.append(self.quests.pop())
         
 ############################################################################################################
 ########################################### FONCTION DES CARTES ############################################

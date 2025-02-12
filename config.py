@@ -4,7 +4,8 @@ import pygame
 MAP_FILE = "maps/fall.json"
 
 # Cartes
-CARDS_FILE = "decks/base_deck.json"
+CARDS_FILE  = "decks/base_deck.json"
+QUESTS_FILE = "quests/quests.json"
 
 # Dimensions de l'écran
 WIDTH = 1920
@@ -21,6 +22,12 @@ ITEMS_ZONE_X = 0
 ITEMS_ZONE_Y = 0.22 * HEIGHT
 ITEMS_ZONE_WIDTH  = 0.2 * WIDTH
 ITEMS_ZONE_HEIGHT = 0.1 * HEIGHT
+
+# Zone Quêtes
+QUESTS_ZONE_X = 0
+QUESTS_ZONE_Y = 0.32 * HEIGHT
+QUESTS_ZONE_WIDTH  = 0.2 * WIDTH
+QUESTS_ZONE_HEIGHT = 0.15 * HEIGHT
 
 # Zone Historique
 HISTORY_X = 0
@@ -69,6 +76,8 @@ CRAFTED_CARDS_WIDTH_4  = 154 * SCALE
 CRAFTED_CARDS_HEIGHT_4 = 210 * SCALE
 CRAFTED_CARDS_WIDTH_6  = 95 * SCALE
 CRAFTED_CARDS_HEIGHT_6 = 129 * SCALE
+QUESTS_WIDTH  = 110 * SCALE
+QUESTS_HEIGHT = 150 * SCALE
 
 NODE_RADIUS    = 50 * SCALE
 UNIT_RADIUS    = 12 * SCALE

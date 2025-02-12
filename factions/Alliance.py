@@ -167,7 +167,7 @@ class Alliance(Base):
     def _check_clearing_for_sympathy(self, board, clearing, possible_clearings, costs):
         clearing_type = board.graph.nodes[clearing]['type']
         cost = 3 if self.tokens["sympathy"] <= 4 else 2 if self.tokens["sympathy"] <= 7 else 1
-        if any(board.graph.nodes[clearing]['units'][faction] > 3 for faction in board.graph.nodes[clearing]['units']):
+        if any(board.graph.nodes[clearing]['units'][faction] >= 3 for faction in board.graph.nodes[clearing]['units']):
             cost += 1
         if self.supporters[clearing_type] + self.supporters["bird"] >= cost:
             possible_clearings.append(clearing)
@@ -184,13 +184,13 @@ class Alliance(Base):
             if clearing == "pass": break
         
             cost = 3 if self.tokens["sympathy"] <= 4 else 2 if self.tokens["sympathy"] <= 7 else 1
-            if any(board.graph.nodes[clearing]['units'][faction] > 3 for faction in board.graph.nodes[clearing]['units']):
+            if any(board.graph.nodes[clearing]['units'][faction] >= 3 for faction in board.graph.nodes[clearing]['units']):
                 cost += 1
             
             while self.supporters[board.graph.nodes[clearing]['type']] > 0:
                 self.supporters[board.graph.nodes[clearing]['type']] -= 1
             self.tokens["sympathy"] -= 1
-            board.graph.nodes[clearing]['tokens'].append({"type" : "sympathy", "faction" : "Alliance"})
+            board.graph.nodes[clearing]['tokens'].append({"type" : "sympathy", "owner" : self.id})
             possible, clearings, costs = self.is_spread_sympathy_possible(board)
 
     def revolt(self, display, board, current_player):

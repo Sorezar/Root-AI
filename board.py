@@ -217,5 +217,4 @@ class RootBoard:
         if faction_id == 2:
             return sum(1 for token in self.graph.nodes[clearing_id]["tokens"] if token["type"] == "sympathy")
         if faction_id == 3:
-            # A implementer, nombre de marteau utilisable par le vagabond
             pass

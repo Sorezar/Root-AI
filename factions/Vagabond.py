@@ -19,14 +19,17 @@ class Vagabond(Base):
             "bag":      [0,0],
             "boot":     [0,0],
             "crossbow": [0,0],
-            "hammer":   [0,0],
+            "hammer":   [2,0],
             "sword":    [0,0],
             "teapot":   [0,0],
             "gold":     [0,0],
             "torch":    [0,0]
         }
         self.relationships = {p.faction.id: 0 for p in lobby.players if p.faction.id != 3}
-        self.vagabond = "ranger"
+        self.vagabond = "Ranger"
+        self.pos = None
+        self.quests = [0,0,0]
+        self.actions = ["move", "battle", "explore", "aid", "quest", "strike", "repair", "craft"]
         
         gear = {
             "Thief":      {"boot":1,"torch":1,"teapot":1,"sword":1},
@@ -40,10 +43,10 @@ class Vagabond(Base):
             "Harrier":    {"gold":1,"torch":1,"sword":1,"crossbow":1}
         }
         for item, qty in gear.get(self.vagabond, {}).items():
-            self.items[item] = [qty, 0, 0]
+            self.items[item][0] = qty
             
-        self.pos = None
-        self.actions = ["move", "battle", "explore", "aid", "quest", "strike", "repair", "craft"]
+        print(self.items)
+            
 
 ############################################################################################################
 ###################################### VERIFICATIONS ACTIONS POSSIBLES #####################################
@@ -52,7 +55,7 @@ class Vagabond(Base):
     def is_move_possible(self, board):
         possible_clearings = []
         for clearing in board.get_adjacent_clearings(self.pos):
-            controlling_faction = board.graphe.nodes[clearing]["control"]
+            controlling_faction = board.graph.nodes[clearing]["control"]
             if self.relationships.get(controlling_faction, 0) == -1:
                 if self.items["boot"][0] >= 2:
                     possible_clearings.append(clearing)
@@ -94,21 +97,17 @@ class Vagabond(Base):
                     return True, [self.pos]
         
         return False, []
-    
-    def is_quest_possible(self, board):
-        if self.pos is None or str(self.pos).startswith("F"):
-            return False, []
         
-        has_quest_card = any(card.type == "quest" for card in self.cards)
-        if has_quest_card:
-            return True, [self.pos]
-        
-        return False, []
-        
-        
-
     def get_possible_actions(self,board, actions, current_player, cards, items):
-        pass
+        possible_actions = []
+        
+        for action in self.actions:
+            is_action_possible_method = getattr(self, f'is_{action}_possible')
+            if action == "move" or action == "battle" or action == "explore" or action == "aid":
+                if is_action_possible_method(board)[0]:
+                    possible_actions.append(action)
+        return possible_actions
+    
 ############################################################################################################
 ################################################# ACTIONS ##################################################
 ############################################################################################################
@@ -178,7 +177,7 @@ class Vagabond(Base):
         if str(movement).startswith("F"):
             board.forests[movement]["vagabond"] = True
         else:
-            board.graph.nodes[movement]["units"][self.id] += 1
+            board.graph.nodes[movement]["units"][self.id] = 1
         
         self.pos = movement
             
